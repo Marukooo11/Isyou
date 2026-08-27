@@ -3,8 +3,6 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Isyou 职业探索与行动路径 Web Demo">
-<title>Isyou · Demo</title>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -51,7 +49,7 @@
 
     <!-- ════ 0 首次进入 ════ -->
     <sc-if value="{{ isWelcome }}" hint-placeholder-val="{{ false }}">
-      <div style="position: relative; height: 680px; overflow: hidden; background: radial-gradient(120% 95% at 24% 6%, #FDFBF3 0%, #F5F2E4 46%, #EAEDDF 100%);">
+      <div style="position: relative; height: 700px; overflow: hidden; background: radial-gradient(120% 95% at 24% 6%, #FDFBF3 0%, #F5F2E4 46%, #EAEDDF 100%);">
 
         <!-- 桌面纹理（极轻） -->
         
@@ -131,7 +129,7 @@
 
     <!-- ════ 1 能力探索 ════ -->
     <sc-if value="{{ isExplore }}" hint-placeholder-val="{{ true }}">
-      <div style="display: flex; min-height: 600px;">
+      <div style="display: flex; min-height: 700px;">
         <div style="width: 208px; flex: none; border-right: 1px dashed #E3DED1; background: #F7F4EC; padding: 24px 20px; display: flex; flex-direction: column; gap: 18px;">
           <div style="font-family: 'EB Garamond', serif; font-size: 10px; letter-spacing: .16em; color: #A5A597;">MY NOTEBOOK</div>
           <div style="display: flex; flex-direction: column; gap: 13px;">
@@ -177,6 +175,17 @@
             </sc-for>
           </div>
 
+          <sc-if value="{{ showCustom }}" hint-placeholder-val="{{ false }}">
+            <div style="padding: 15px 17px; background: #FAF8F3; border: 1px solid #D9D4C4; display: flex; flex-direction: column; gap: 10px;">
+              <div style="font-size: 11px; color: #8E8E80;">写下你当时的做法，多短都可以</div>
+              <textarea value="{{ customText }}" onChange="{{ editCustom }}" placeholder="比如：我先把已经做完的那部分存下来，再去问要改哪里" style="width: 100%; box-sizing: border-box; min-height: 78px; resize: vertical; padding: 11px 13px; border: 1px solid #E3DED1; background: #FDFCF8; font-family: 'Noto Serif SC', serif; font-size: 13px; line-height: 1.8; color: #29302E; outline: none;"></textarea>
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 14px;">
+                <span style="{{ customHintStyle }}">{{ customHint }}</span>
+                <span onClick="{{ submitCustom }}" style="{{ customBtnStyle }}">提交 ✓</span>
+              </div>
+            </div>
+          </sc-if>
+
           <sc-if value="{{ answered }}" hint-placeholder-val="{{ false }}">
             <div style="padding: 14px 17px; background: #F4F1E9; border-left: 2px solid #8FA882; display: flex; flex-direction: column; gap: 8px;">
               <div style="font-size: 11px; color: #8E8E80;">想补一句吗？（选填）</div>
@@ -203,7 +212,7 @@
 
     <!-- ════ 2 这就是你 ════ -->
     <sc-if value="{{ isPortrait }}" hint-placeholder-val="{{ false }}">
-      <div style="padding: 34px 40px 40px; display: flex; flex-direction: column; gap: 26px; min-height: 600px;">
+      <div style="padding: 34px 40px 40px; display: flex; flex-direction: column; gap: 26px; min-height: 700px; box-sizing: border-box;">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
           <div style="display: flex; flex-direction: column; gap: 8px;">
             <div style="font-family: 'EB Garamond', serif; font-size: 11px; letter-spacing: .2em; color: #A5A597;">YOUR MAP · 2026.08</div>
@@ -239,7 +248,7 @@
 
     <!-- ════ 3 岗位匹配 ════ -->
     <sc-if value="{{ isMatch }}" hint-placeholder-val="{{ false }}">
-      <div style="padding: 32px 40px 40px; display: flex; flex-direction: column; gap: 22px; min-height: 600px;">
+      <div style="padding: 32px 40px 40px; display: flex; flex-direction: column; gap: 22px; min-height: 700px; box-sizing: border-box;">
         <div style="display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid #EDE9DE; padding-bottom: 18px;">
           <div style="display: flex; flex-direction: column; gap: 7px;">
             <div style="font-size: 19px; font-weight: 500;">按你的图谱，这 5 个岗位对得上</div>
@@ -248,29 +257,32 @@
           <span style="font-family: 'EB Garamond', serif; font-size: 11px; color: #A5A597;">5 / 5</span>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div style="display: flex; flex-direction: column; gap: 10px;">
           <sc-for list="{{ jobs }}" as="j" hint-placeholder-count="5">
             <div onClick="{{ j.open }}" style="{{ j.style }}">
-              <div style="display: flex; justify-content: space-between; align-items: baseline;">
-                <div style="display: flex; flex-direction: column; gap: 5px;">
-                  <span style="font-size: 16px; font-weight: 600;">{{ j.title }}</span>
-                  <span style="font-size: 12px; color: #8E8E80;">{{ j.meta }}</span>
+              <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 20px;">
+                <div style="{{ j.headStyle }}">
+                  <span style="font-size: 15px; font-weight: 600;">{{ j.title }}</span>
+                  <span style="{{ j.metaStyle }}">{{ j.meta }}</span>
                 </div>
-                <span style="font-family: 'EB Garamond', serif; font-size: 13px; color: #A5A597;">{{ j.score }}</span>
+                <div style="display: flex; align-items: baseline; gap: 14px; flex: none;">
+                  <span style="{{ j.moreStyle }}">{{ j.moreLabel }}</span>
+                  <span style="font-family: 'EB Garamond', serif; font-size: 13px; color: #A5A597;">{{ j.score }}</span>
+                </div>
               </div>
               <sc-if value="{{ j.detailed }}" hint-placeholder-val="{{ false }}">
-                <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 14px;">
+                <div style="display: flex; flex-direction: column; gap: 9px; margin-top: 12px;">
                   <div style="display: flex; gap: 12px;">
                     <span style="width: 3px; background: #8FA882; flex: none;"></span>
-                    <div><div style="font-size: 12px; color: #6E8465; margin-bottom: 4px;">任务结构</div><div style="font-size: 13px; line-height: 1.8;">{{ j.task }}</div></div>
+                    <div><div style="font-size: 11px; color: #6E8465; margin-bottom: 3px;">任务结构</div><div style="font-size: 13px; line-height: 1.7;">{{ j.task }}</div></div>
                   </div>
                   <div style="display: flex; gap: 12px;">
                     <span style="width: 3px; background: #D89A6C; flex: none;"></span>
-                    <div><div style="font-size: 12px; color: #B77F4E; margin-bottom: 4px;">还差什么</div><div style="font-size: 13px; line-height: 1.8;">{{ j.gap }}</div></div>
+                    <div><div style="font-size: 11px; color: #B77F4E; margin-bottom: 3px;">还差什么</div><div style="font-size: 13px; line-height: 1.7;">{{ j.gap }}</div></div>
                   </div>
-                  <div style="display: flex; gap: 10px; margin-top: 4px;">
-                    <span onClick="{{ j.goJob }}" style="font-size: 12px; padding: 9px 17px; background: #29302E; color: #FAF8F3; cursor: pointer;">看完整岗位信息</span>
-                    <span onClick="{{ j.goTrain }}" style="font-size: 12px; padding: 9px 17px; border: 1px solid #D89A6C; color: #A9713F; cursor: pointer;">{{ j.trainLabel }}</span>
+                  <div style="display: flex; gap: 10px; margin-top: 3px;">
+                    <span onClick="{{ j.goJob }}" style="font-size: 12px; letter-spacing: .04em; padding: 9px 18px; background: #B4535E; color: #FDF7F5; cursor: pointer;">看完整岗位信息 →</span>
+                    <span onClick="{{ j.goTrain }}" style="font-size: 12px; padding: 8px 16px; border: 1px solid #D89A6C; color: #A9713F; cursor: pointer;">{{ j.trainLabel }}</span>
                   </div>
                 </div>
               </sc-if>
@@ -282,7 +294,7 @@
 
     <!-- ════ 4 岗位详情 ════ -->
     <sc-if value="{{ isJob }}" hint-placeholder-val="{{ false }}">
-      <div style="padding: 34px 40px 40px; display: flex; flex-direction: column; gap: 24px; min-height: 600px;">
+      <div style="padding: 34px 40px 40px; display: flex; flex-direction: column; gap: 24px; min-height: 700px; box-sizing: border-box;">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #EDE9DE; padding-bottom: 20px;">
           <div style="display: flex; flex-direction: column; gap: 8px;">
             <span onClick="{{ backToMatch }}" style="font-size: 11px; color: #A5A597; cursor: pointer;">← 回到匹配列表</span>
@@ -291,39 +303,50 @@
           </div>
           <div style="display: flex; gap: 8px;">
             <span style="font-size: 12px; padding: 9px 15px; border: 1px solid #D2CCBC; color: #6E7268; cursor: pointer;">存进本子</span>
-            <span style="font-size: 12px; padding: 9px 18px; background: #29302E; color: #FAF8F3; cursor: pointer;">我想投</span>
+            <span style="font-size: 12px; letter-spacing: .04em; padding: 9px 20px; background: #B4535E; color: #FDF7F5; cursor: pointer;">我想投 ✓</span>
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-          <sc-for list="{{ jobBlocks }}" as="b" hint-placeholder-count="4">
-            <div style="display: flex; flex-direction: column; gap: 11px; padding: 20px 22px; background: #FAF8F3; border: 1px solid #E3DED1;">
-              <div style="font-family: 'EB Garamond', serif; font-size: 10px; letter-spacing: .2em; color: #A5A597;">{{ b.tag }}</div>
-              <div style="display: flex; flex-direction: column; gap: 9px;">
-                <sc-for list="{{ b.lines }}" as="l" hint-placeholder-count="4">
-                  <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.8;">
-                    <span style="{{ l.dot }}">·</span>
-                    <span style="{{ l.text }}">{{ l.body }}</span>
+        <div style="display: flex; gap: 20px; align-items: flex-start;">
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px;">
+            <sc-for list="{{ jobBlocks }}" as="b" hint-placeholder-count="4">
+              <div onClick="{{ b.toggle }}" style="{{ b.style }}">
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px;">
+                  <div style="display: flex; align-items: baseline; gap: 12px; min-width: 0;">
+                    <span style="font-family: 'EB Garamond', serif; font-size: 10px; letter-spacing: .18em; color: #A5A597; flex: none;">{{ b.num }}</span>
+                    <span style="font-size: 14px; font-weight: 600;">{{ b.name }}</span>
+                    <span style="{{ b.summaryStyle }}">{{ b.summary }}</span>
                   </div>
-                </sc-for>
+                  <span style="font-size: 11px; color: #A5A597; flex: none;">{{ b.toggleLabel }}</span>
+                </div>
+                <sc-if value="{{ b.open }}" hint-placeholder-val="{{ false }}">
+                  <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px dotted #E3DED1;">
+                    <sc-for list="{{ b.lines }}" as="l" hint-placeholder-count="4">
+                      <div style="display: flex; gap: 10px; font-size: 13px; line-height: 1.75;">
+                        <span style="{{ l.dot }}">·</span>
+                        <span style="{{ l.text }}">{{ l.body }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
               </div>
-            </div>
-          </sc-for>
-        </div>
-
-        <div style="display: flex; gap: 20px; align-items: stretch;">
-          <div style="flex: 1; padding: 18px 22px; background: #FDF6EF; border-left: 2px solid #D89A6C;">
-            <div style="font-size: 13px; font-weight: 600; margin-bottom: 8px; color: #A9713F;">这个岗位对你的一个挑战</div>
-            <div style="font-size: 13px; line-height: 1.85; color: #4C5148;">每周的 15 分钟视频例会。你在图谱里更适合书面沟通 —— 这一门有对应练习，三课时，可以先去看看再决定投不投。</div>
-            <span onClick="{{ goTraining }}" style="display: inline-block; margin-top: 12px; font-size: 12px; padding: 8px 15px; border: 1px solid #D89A6C; color: #A9713F; cursor: pointer;">去看「短会议参与」</span>
+            </sc-for>
           </div>
-          <div style="width: 268px; flex: none; padding: 18px 22px; background: #FAF8F3; border: 1px solid #E3DED1;">
-            <div style="font-size: 13px; font-weight: 600; margin-bottom: 10px;">面试流程（已知）</div>
-            <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12px; line-height: 1.75; color: #4C5148;">
-              <div>1. 线上标注小测，限时 40 分钟</div>
-              <div>2. 一轮视频面，1 人，约 30 分钟</div>
-              <div>3. 可申请不开摄像头 <span style="color: #6E8465;">✓ 已确认</span></div>
-              <div style="color: #A5A597;">4. 是否需笔试：企业未提供</div>
+
+          <div style="width: 288px; flex: none; display: flex; flex-direction: column; gap: 14px;">
+            <div style="padding: 18px 20px; background: #FDF6EF; border-left: 2px solid #D89A6C;">
+              <div style="font-size: 13px; font-weight: 600; margin-bottom: 8px; color: #A9713F;">这个岗位对你的一个挑战</div>
+              <div style="font-size: 13px; line-height: 1.8; color: #4C5148;">每周的 15 分钟视频例会。你在图谱里更适合书面沟通。</div>
+              <span onClick="{{ goTraining }}" style="display: inline-block; margin-top: 12px; font-size: 12px; padding: 8px 15px; border: 1px solid #D89A6C; color: #A9713F; cursor: pointer;">去看「短会议参与」</span>
+            </div>
+            <div style="padding: 18px 20px; background: #FAF8F3; border: 1px solid #E3DED1;">
+              <div style="font-size: 13px; font-weight: 600; margin-bottom: 10px;">面试流程（已知）</div>
+              <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12px; line-height: 1.75; color: #4C5148;">
+                <div>1. 线上标注小测，限时 40 分钟</div>
+                <div>2. 一轮视频面，1 人，约 30 分钟</div>
+                <div>3. 可申请不开摄像头 <span style="color: #6E8465;">✓ 已确认</span></div>
+                <div style="color: #A5A597;">4. 是否需笔试：企业未提供</div>
+              </div>
             </div>
           </div>
         </div>
@@ -332,7 +355,7 @@
 
     <!-- ════ 5 培训 ════ -->
     <sc-if value="{{ isTraining }}" hint-placeholder-val="{{ false }}">
-      <div style="padding: 34px 40px 40px; display: flex; flex-direction: column; gap: 24px; min-height: 600px;">
+      <div style="padding: 34px 40px 40px; display: flex; flex-direction: column; gap: 24px; min-height: 700px; box-sizing: border-box;">
         <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid #EDE9DE; padding-bottom: 20px;">
           <div style="display: flex; flex-direction: column; gap: 7px;">
             <span style="font-size: 20px; font-weight: 500;">{{ pagesTitle }}</span>
@@ -362,7 +385,7 @@
               </sc-for>
             </div>
             <div style="display: flex; gap: 12px; align-items: center; margin-top: 4px;">
-              <span onClick="{{ finishLesson }}" style="font-size: 13px; padding: 10px 20px; background: #29302E; color: #FAF8F3; cursor: pointer;">{{ lessonBtn }}</span>
+              <span onClick="{{ finishLesson }}" style="font-size: 13px; letter-spacing: .04em; padding: 11px 22px; background: #B4535E; color: #FDF7F5; cursor: pointer;">{{ lessonBtn }}</span>
               <span style="font-size: 12px; color: #A5A597;">约 12 分钟 · 可中途退出</span>
             </div>
           </div>
@@ -470,25 +493,25 @@ const JOBS = [
 ];
 
 const JOB_BLOCKS = [
-  { tag: "01 · TASK　任务结构", lines: [
+  { tag: "01 · TASK　任务结构", summary: "规则文档化，不接临时变更", lines: [
     ["ok", "标注规范为文档，季度更新一次"],
     ["ok", "日常任务由系统派发，不需自行协调"],
     ["ok", "需求变更由组长统一下发，提前一天"],
     ["ok", "日产量有明确指标，可自行安排时段"]
   ]},
-  { tag: "02 · PLACE　工作环境", lines: [
+  { tag: "02 · PLACE　工作环境", summary: "完全远程，无打卡", lines: [
     ["info", "完全远程，无需到岗"],
     ["info", "无打卡，需在当日内完成量"],
     ["info", "设备由公司提供"],
     ["unknown", "是否需入职培训到场：企业未提供"]
   ]},
-  { tag: "03 · SENSORY　感官条件", lines: [
+  { tag: "03 · SENSORY　感官条件", summary: "无持续人声，可戴耳机", lines: [
     ["info", "无持续人声，可全程戴耳机"],
     ["info", "屏幕为主，无强光无异味"],
     ["info", "可自行控制休息间隔"],
     ["match", "与你图谱的「低感官负荷」一致"]
   ]},
-  { tag: "04 · TALK　沟通方式", lines: [
+  { tag: "04 · TALK　沟通方式", summary: "文字为主，每周一次视频", lines: [
     ["info", "日常以文字为主，固定一位对接组长"],
     ["warn", "每周一次 15 分钟视频例会，可不发言"],
     ["info", "无客户接触，无电话"]
@@ -505,9 +528,12 @@ class Component extends DCLogic {
     helpOpen: false,
     openAxis: null,
     openJob: 0,
+    openBlock: 2,
     done: [true, true, false],
     quiet: false,
-    bookHover: false
+    bookHover: false,
+    custom: {},
+    submitted: {}
   };
 
   go = (screen) => () => this.setState({ screen, helpOpen: false });
@@ -532,7 +558,7 @@ class Component extends DCLogic {
     const pageCount = 14 + st.done.filter(Boolean).length - 2;
 
     return {
-      paperStyle: "background: " + paperBg + "; border: 1px solid #D9D4C4; box-shadow: 0 18px 44px -18px rgba(56,60,52,.42);",
+      paperStyle: "background: " + paperBg + "; border: 1px solid #D9D4C4; box-shadow: 0 18px 44px -18px rgba(56,60,52,.42); height: 700px; overflow: hidden auto;",
       quietLabel: quiet ? "安静模式 · 开" : "安静模式 · 关",
       quietBtnStyle: "cursor: pointer; font-size: 11px; padding: 7px 13px; border: 1px solid " + (quiet ? "#29302E" : "#D2CCBC") + "; color: " + (quiet ? "#29302E" : "#6E7268") + ";",
       toggleQuiet: () => this.setState(s => ({ quiet: !s.quiet })),
@@ -548,9 +574,9 @@ class Component extends DCLogic {
       bookLinesR: [92, 78, 86, 70, 82, 46].map(w => ({ style: "height: 4px; width: " + w + "%; background: #E9E4D6;" })),
       startFlow: () => this.setState({ screen: "explore" }),
       skipToPortrait: () => this.setState({ screen: "portrait" }),
-      stepBarStyle: st.screen === "welcome" ? "display: none;" : "display: flex; gap: 0; border: 1px solid #D9D4C4; background: #FAF8F3;",
+      stepBarStyle: "display: flex; gap: 0; border: 1px solid #D9D4C4; background: #FAF8F3; visibility: " + (st.screen === "welcome" ? "hidden" : "visible") + ";",
 
-      restart: () => this.setState({ screen: "welcome", qi: 0, answers: {}, helpOpen: false, openAxis: null, openJob: 0, done: [true, true, false] }),
+      restart: () => this.setState({ screen: "welcome", qi: 0, answers: {}, helpOpen: false, openAxis: null, openJob: 0, openBlock: 2, done: [true, true, false], custom: {}, submitted: {} }),
 
       steps: screens.map(([id, num, label]) => ({
         num, label, go: this.go(id),
@@ -587,8 +613,25 @@ class Component extends DCLogic {
         };
       }),
 
-      answered: typeof ans === "number",
+      answered: typeof ans === "number" && ans !== q.options.length - 1,
       noteText: q.note,
+
+      showCustom: ans === q.options.length - 1,
+      customText: st.custom[st.qi] || "",
+      editCustom: (ev) => {
+        const v = ev.target.value;
+        this.setState(s => ({ custom: Object.assign({}, s.custom, { [s.qi]: v }) }));
+      },
+      submitCustom: () => {
+        const v = (this.state.custom[this.state.qi] || "").trim();
+        if (!v) return;
+        this.setState(s => ({ submitted: Object.assign({}, s.submitted, { [s.qi]: true }) }));
+      },
+      customHint: st.submitted[st.qi]
+        ? "已记下，随时可以改"
+        : ((st.custom[st.qi] || "").trim() ? "写完点提交" : "写下来才能记进本子"),
+      customHintStyle: "font-size: 11px; color: " + (st.submitted[st.qi] ? "#6E8465" : "#A5A597") + ";",
+      customBtnStyle: "cursor: pointer; font-size: 12px; letter-spacing: .04em; padding: 9px 20px; background: " + ((st.custom[st.qi] || "").trim() ? "#B4535E" : "#CDB5B2") + "; color: #FDF7F5;",
 
       prevQ: () => this.setState(s => ({ qi: Math.max(0, s.qi - 1), helpOpen: false })),
       prevStyle: "cursor: " + (st.qi === 0 ? "default" : "pointer") + "; font-size: 12px; color: " + (st.qi === 0 ? "#D2CCBC" : "#8E8E80") + ";",
@@ -596,15 +639,20 @@ class Component extends DCLogic {
         if (st.qi < QUESTIONS.length - 1) this.setState(s => ({ qi: s.qi + 1, helpOpen: false }));
         else this.setState({ screen: "portrait" });
       },
-      nextLabel: st.qi < QUESTIONS.length - 1 ? "下一题" : "看看结果",
-      nextStyle: "cursor: pointer; font-size: 13px; padding: 10px 24px; background: " + (ans === undefined ? "#A8A89A" : "#29302E") + "; color: #FAF8F3;",
+      nextLabel: st.qi < QUESTIONS.length - 1 ? "下一题 →" : "看看结果 →",
+      nextStyle: "cursor: pointer; font-size: 13px; letter-spacing: .04em; padding: 11px 26px; background: " + (ans === undefined ? "#CDB5B2" : "#B4535E") + "; color: #FDF7F5;",
 
       notebook: QUESTIONS.map((qq, i) => {
         const a = st.answers[i];
         const skipped = typeof a === "string";
-        const filled = a !== undefined;
+        const isCustom = a === qq.options.length - 1;
+        const filled = a !== undefined && (!isCustom || st.submitted[i]);
         return {
-          text: skipped ? "暂时跳过 · 可回来补" : (filled ? qq.tip : "还没答"),
+          text: skipped
+            ? "暂时跳过 · 可回来补"
+            : (isCustom
+              ? (st.submitted[i] ? "你自己写的答案" : "写完提交就记下")
+              : (filled ? qq.tip : "还没答")),
           dotStyle: "width: 9px; height: 9px; margin-top: 5px; flex: none; background: " + (skipped ? "#D2CCBC" : (filled ? "#8FA882" : "#EDE9DE")) + ";",
           textStyle: "font-size: 12px; line-height: 1.7; color: " + (filled ? "#6E7268" : "#BFBBAC") + ";"
         };
@@ -620,17 +668,34 @@ class Component extends DCLogic {
           : "background: #FAF8F3; border: 1px solid #E3DED1;")
       })),
 
-      jobs: JOBS.map((j, i) => ({
-        title: j.title, meta: j.meta, score: j.score, task: j.task, gap: j.gap, trainLabel: j.trainLabel,
-        detailed: st.openJob === i,
-        open: () => this.setState(s => ({ openJob: s.openJob === i ? null : i })),
-        goJob: () => this.setState({ screen: "job" }),
-        goTrain: () => this.setState({ screen: "training" }),
-        style: "cursor: pointer; padding: 18px 22px; border: " + (st.openJob === i ? "1.5px solid #8FA882" : "1px solid #E3DED1") + "; background: #FAF8F3; opacity: " + (st.openJob === null || st.openJob === i ? "1" : (i > 2 ? ".62" : ".85")) + ";"
-      })),
+      jobs: JOBS.map((j, i) => {
+        const on = st.openJob === i;
+        const anyOpen = st.openJob !== null;
+        return {
+          title: j.title, meta: j.meta, score: j.score, task: j.task, gap: j.gap, trainLabel: j.trainLabel,
+          detailed: on,
+          open: () => this.setState(s => ({ openJob: s.openJob === i ? null : i })),
+          goJob: () => this.setState({ screen: "job" }),
+          goTrain: () => this.setState({ screen: "training" }),
+          headStyle: "display: flex; min-width: 0; " + (on || !anyOpen
+            ? "flex-direction: column; gap: 5px;"
+            : "align-items: baseline; gap: 14px;"),
+          metaStyle: "font-size: 12px; color: #8E8E80; " + (on || !anyOpen ? "" : "white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"),
+          moreLabel: on ? "收起" : "展开匹配理由",
+          moreStyle: "font-size: 11px; color: #A5A597;",
+          style: "cursor: pointer; border: " + (on ? "1.5px solid #8FA882" : "1px solid #E3DED1") + "; background: #FAF8F3; padding: " + (on || !anyOpen ? "16px 20px" : "12px 20px") + ";"
+        };
+      }),
 
-      jobBlocks: JOB_BLOCKS.map(b => ({
-        tag: b.tag,
+      jobBlocks: JOB_BLOCKS.map((b, i) => ({
+        num: b.tag.split(" · ")[0],
+        name: b.tag.split("　")[1],
+        summary: b.summary,
+        summaryStyle: "font-size: 12px; color: #A5A597; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;",
+        open: st.openBlock === i,
+        toggle: () => this.setState(s => ({ openBlock: s.openBlock === i ? null : i })),
+        toggleLabel: st.openBlock === i ? "收起" : "展开",
+        style: "cursor: pointer; padding: 14px 20px; background: #FAF8F3; border: " + (st.openBlock === i ? "1.5px solid #8FA882" : "1px solid #E3DED1") + ";",
         lines: b.lines.map(([kind, body]) => ({
           body,
           dot: "color: " + ({ ok: "#8FA882", info: "#A8BCCB", warn: "#D89A6C", match: "#8FA882", unknown: "#C4C0AE" }[kind]) + "; flex: none;",
@@ -660,7 +725,7 @@ class Component extends DCLogic {
         if (i === -1) return null;
         const d = s.done.slice(); d[i] = true; return { done: d };
       }),
-      lessonBtn: st.done.every(Boolean) ? "这门已学完" : "继续第 " + (st.done.indexOf(false) + 1) + " 课",
+      lessonBtn: st.done.every(Boolean) ? "这门已学完 ✓" : "继续第 " + (st.done.indexOf(false) + 1) + " 课 →",
 
       hint: {
         welcome: "",
