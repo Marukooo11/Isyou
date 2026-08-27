@@ -29,21 +29,20 @@ Isyou 是一个帮助用户理解自身能力、探索职业可能，并将方�
 ## Repository Structure
 
 * `frontend/`：Web 页面与交互
-* `backend/`：AI / Agent / 匹配逻辑与接口
+* `backend/`（按需）：仅在需要保护 API Key、封装模型接口或处理跨域时使用
 * `assets/`：图片、截图、流程图等
 * `.env.example`：环境变量示例
 
 ## Current Ownership
 
-| 模块            | 负责人 | 当前状态        |
-| ------------- | --- | ----------- |
-| 用户信息收集 / 前端呈现 | TBD | In Progress |
-| 用户画像 / 核心逻辑   | TBD | In Progress |
-| 职业匹配 / Skill  | TBD | In Progress |
-| 商业化相关         | TBD | In Progress |
-| 整体整合 / Demo   | TBD | In Progress |
+| 模块 | 负责人 | 当前状态 |
+| --- | --- | --- |
+| 用户提问逻辑 | [Song Tian Xin](https://github.com/xts5210) | In Progress |
+| 信息收集 Skill | [Inna](https://github.com/Inna9725) | In Progress |
+| 商业化 | [LiXin](https://github.com/lixinkimkin-gif) | In Progress |
+| 前端 / 设计 / 整体整合 | TBD | In Progress |
 
-后续根据实际分工持续更新。
+后端暂不作为独立模块分配；如 Demo 接入方案需要，再确认最小实现范围与负责人。
 
 ## Collaboration
 
@@ -59,4 +58,3 @@ Isyou 是一个帮助用户理解自身能力、探索职业可能，并将方�
 **先跑通，再做漂亮；先保证完整，再补智能。**
 
 如果某个功能无法在截止时间前稳定实现，优先使用 mock 或固定数据保证 Demo 链路完整。
-
