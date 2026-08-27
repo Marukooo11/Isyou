@@ -2,12 +2,25 @@
 
 Isyou 是一个帮助用户理解自身能力、探索职业可能，并将方向转化为具体行动路径的 Web Demo。
 
-## Online Demo
+## Team Preview
 
-- [打开 Isyou Web Demo](https://marukooo11.github.io/Isyou/)
-- [查看产品设计笔记](https://marukooo11.github.io/Isyou/design-notes.html)
+本仓库保持 Private，不使用公开 GitHub Pages。已获得仓库权限的团队成员可直接在本页查看当前界面，或克隆仓库体验完整交互。
 
-本地预览：在仓库根目录执行 `python3 -m http.server 8000`，然后打开 `http://localhost:8000`。
+本地预览：在仓库根目录执行 `python3 -m http.server 8000`，然后打开 `http://localhost:8000`。主 Demo 入口是 `index.html`，产品设计笔记是 `design-notes.html`。
+
+## Current UI · 2026-08-28
+
+| 欢迎页 | 能力探索 |
+| --- | --- |
+| ![欢迎页](assets/previews/00-welcome.png) | ![能力探索](assets/previews/01-exploration.png) |
+
+| 能力图谱 | 岗位匹配 |
+| --- | --- |
+| ![能力图谱](assets/previews/02-ability-map.png) | ![岗位匹配](assets/previews/03-job-match.png) |
+
+| 岗位详情 | 培训路径 |
+| --- | --- |
+| ![岗位详情](assets/previews/04-job-detail.png) | ![培训路径](assets/previews/05-training.png) |
 
 ## Demo Goal
 
