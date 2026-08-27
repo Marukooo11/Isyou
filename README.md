@@ -2,11 +2,15 @@
 
 Isyou 是一个帮助用户理解自身能力、探索职业可能，并将方向转化为具体行动路径的 Web Demo。
 
+## Frontend
+
+当前可运行的前端实现位于 [`frontend/`](frontend/)，包含主 Demo、产品设计页、运行时脚本和页面素材。
+
 ## Team Preview
 
 本仓库保持 Private，不使用公开 GitHub Pages。已获得仓库权限的团队成员可直接在本页查看当前界面，或克隆仓库体验完整交互。
 
-本地预览：在仓库根目录执行 `python3 -m http.server 8000`，然后打开 `http://localhost:8000`。主 Demo 入口是 `index.html`，产品设计笔记是 `design-notes.html`。
+本地预览：进入 `frontend/` 后执行 `python3 -m http.server 8000`，然后打开 `http://localhost:8000`。
 
 ## Current UI · 2026-08-28
 
@@ -48,10 +52,10 @@ Isyou 是一个帮助用户理解自身能力、探索职业可能，并将方�
 
 ## Repository Structure
 
-* `index.html`：可交互的主 Demo
-* `design-notes.html`：产品设计笔记
-* `support.js` / `image-slot.js`：页面运行时支持
-* `uploads/`：页面图片素材
+* `frontend/`：前端代码、运行时和页面素材
+* `frontend/index.html`：可交互的主 Demo
+* `frontend/design-notes.html`：产品设计笔记
+* `assets/previews/`：供团队快速评审的界面截图
 
 ## Current Ownership
 
