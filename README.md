@@ -1,6 +1,6 @@
 # Isyou
 
-> 结论：Isyou 已跑通“注册/登录 → 35 题条件问卷 → 自动保存 → output1.v1.0 画像 → 642 职业方向匹配 → Quest Coach → Gap Map/每日行动”的 MVP 链路；前端和 API 可由一个 Python 进程或 Docker 容器同时提供。
+> 结论：Isyou 已跑通“注册/登录 → 35 题问卷 → output1 画像 → 642 职业方向 → 实时搜索 5 个 JD → 用户选择与原页核验 → 具体 JD Coach”的 MVP 链路；浏览器只访问同源 Python API，内部 Node job-matcher 负责联网搜索。
 
 Isyou 帮助用户从真实经历中理解自身能力、探索职业方向，并把目标转化为可持续的行动路径。当前仓库同时包含可交互前端、零第三方依赖的 Python 后端、SQLite 持久化、642 个职业的方向匹配器和确定性 Quest Coach 参考实现。
 
@@ -8,10 +8,15 @@ Isyou 帮助用户从真实经历中理解自身能力、探索职业方向，�
 
 ## 快速开始
 
-无需安装 Python 包。在仓库根目录启动单服务 Demo：
+安装 job-matcher 的两个锁定依赖并配置搜索 provider：
 
 ```bash
-COACH_ALLOW_DEMO_DATE=1 AUTH_DEV_SHOW_CODE=1 python3 backend/server.py
+cd job-matcher
+npm ci
+cp .env.example .env.local
+# 在 .env.local 填写 provider 配置
+cd ..
+COACH_ALLOW_DEMO_DATE=1 AUTH_DEV_SHOW_CODE=1 python3 scripts/run_stack.py
 ```
 
 打开：
@@ -19,6 +24,7 @@ COACH_ALLOW_DEMO_DATE=1 AUTH_DEV_SHOW_CODE=1 python3 backend/server.py
 - 产品主链路：`http://127.0.0.1:8001/`；
 - 注册/登录：`http://127.0.0.1:8001/auth.html`；
 - 真实问卷：`http://127.0.0.1:8001/questionnaire.html`；
+- 真实岗位：`http://127.0.0.1:8001/job-search.html`；
 - 完整开发联调：`http://127.0.0.1:8001/career-coach-demo.html`；
 - 健康检查：`http://127.0.0.1:8001/api/v1/health`。
 
@@ -41,7 +47,9 @@ Docker 镜像默认启用 `AUTH_DEMO_MODE=1`，验证码会自动回填，只适
   → 完成 35 题条件问卷并自动保存草稿
   → 确定性评分生成并保存 output1.v1.0 画像
   → 在 642 个职业中生成 5 个探索方向
-  → 用户选择方向并转换为 Career Context
+  → 用户授权后实时搜索 5 个公开岗位候选
+  → 用户选择一个候选，服务端核验原页面和硬约束
+  → 将 output2.jd.v1.0 转换为具体岗位 Career Context
   → 创建归属于该 user_id 的 Quest Coach 会话
   → 确认 Gap Map、阶段计划和每日任务
   → 保存提交证据并在下一学习日 Review
@@ -58,6 +66,8 @@ Docker 镜像默认启用 `AUTH_DEMO_MODE=1`，验证码会自动回填，只适
 - **问卷交接**：纳入问卷 4.0 正文、评分规则和正式字段契约；联调页可直接导入上游生成的本地 JSON；
 - **信息收集**：结构化 35 题、B3/B7 条件分支、按账号保存/恢复、Big Five/证据/多元智能/求职事实评分及画像版本递增；
 - **Career Adapter**：把用户选择的职业方向、画像事实、证据、约束和待确认项转换为稳定 `career_context`；
+- **真实岗位**：Node job-matcher 搜索候选、核验原页面、执行硬约束，并由 Python 按账号保存搜索与选择；
+- **JobCoachAdapter**：把结构化选定 JD 和 output1 用户事实转换为 Coach 的具体岗位要求；
 - **Quest Coach**：首次对话、Gap Map、阶段计划、Day 1、卡点降级、结果提交、次日 Review 和动态 Day 2；
 - **联调界面**：主产品页、独立注册登录页、Career → Coach 全链路页和原始 API 调试页；
 - **部署入口**：后端同源托管前端、支持云平台 `PORT`、Docker/Procfile 和 SQLite 持久卷；
@@ -75,13 +85,17 @@ Docker 镜像默认启用 `AUTH_DEMO_MODE=1`，验证码会自动回填，只适
 | 问卷题库 | `GET /api/v1/questionnaire/schema` | 否 |
 | 保存/恢复问卷 | `POST/GET /api/v1/questionnaire/draft` | Bearer |
 | 完成问卷并匹配 | `POST /api/v1/questionnaire/complete` | Bearer |
+| 搜索真实岗位候选 | `POST /api/v1/job-search/candidates` | Bearer + 联网授权 |
+| 选择并核验岗位 | `POST /api/v1/job-search/select` | Bearer |
+| 从选定 JD 创建 Coach | `POST /api/v1/job-search/coach-sessions` | Bearer |
+| 恢复岗位搜索状态 | `GET /api/v1/job-search/state` | Bearer |
 | 已保存画像 | `GET /api/v1/users/me/profile` | Bearer |
 | 评估职业方向 | `POST /api/v1/career/evaluations` | Bearer |
 | 评估并创建 Coach | `POST /api/v1/career/coach-sessions` | Bearer |
 | 读取 Coach 会话 | `GET /api/v1/coach/sessions/{session_id}` | Bearer |
 | 推进 Coach | `POST /api/v1/coach/sessions/{session_id}/turns` | Bearer |
 
-详细说明见 [`docs/deployment.md`](docs/deployment.md)、[`docs/questionnaire-api.md`](docs/questionnaire-api.md)、[`docs/questionnaire/README.md`](docs/questionnaire/README.md)、[`docs/auth-api.md`](docs/auth-api.md)、[`docs/career-api.md`](docs/career-api.md) 和 [`docs/coach-api.md`](docs/coach-api.md)。
+前端/UI 直接使用 [`documentation/frontend-integration.md`](documentation/frontend-integration.md)。接口与部署说明见 [`docs/job-search-api.md`](docs/job-search-api.md)、[`docs/deployment.md`](docs/deployment.md)、[`docs/questionnaire-api.md`](docs/questionnaire-api.md)、[`docs/auth-api.md`](docs/auth-api.md)、[`docs/career-api.md`](docs/career-api.md) 和 [`docs/coach-api.md`](docs/coach-api.md)。
 
 ## 测试
 
@@ -89,7 +103,7 @@ Docker 镜像默认启用 `AUTH_DEMO_MODE=1`，验证码会自动回填，只适
 PYTHONPATH=backend COACH_HTTP_LOG=0 python3 -m unittest discover -s backend/tests -v
 ```
 
-当前 18 项测试覆盖认证、35 题 schema/分支、草稿持久化、正式证据字段、画像版本、问卷 → 5 个方向、用户隔离及 Career → Coach → Gap Map HTTP 链路。
+当前 20 项 Python 测试与 13 项 Node 测试覆盖认证、问卷、画像、联网授权、隐私裁剪、JD 原页核验、硬约束、跨账号隔离及问卷 → 候选 → 选定 JD → Coach HTTP 链路。
 
 ## 当前边界
 
@@ -97,9 +111,9 @@ PYTHONPATH=backend COACH_HTTP_LOG=0 python3 -m unittest discover -s backend/test
 - 当前前端使用 `localStorage` 保存 Bearer token；生产建议迁移为 HTTPS + Secure/HttpOnly/SameSite Cookie，并补 IP/设备限流、密码重置、联系方式换绑和账号注销；
 - 当前自由文本使用确定性结构化规则，不做 LLM 语义抽取、动态追问或同义词归一；未知信息仍保持为空；
 - 职业主分来自 Big Five 与多元智能，技能/经历只参与就绪判断和同分排序，结果是职业方向探索，不是真实岗位胜任度；
-- 真实 JD 的地点、薪资、职级和资格过滤，以及真实模型 provider 尚未接入；
+- 实时 JD 依赖部署者配置 OpenAI 或 Google 搜索 provider；同步候选搜索首次可能约 45 秒；
 - 642 职业库含 AI 初标，仅供内部方向探索，公开发布前需要复核来源和许可；
-- 主 Demo 的部分能力图谱和岗位展示数据仍为前端 mock，真实账号化链路以 `career-coach-demo.html` 和后端 API 为准。
+- 主首页的部分展示数据仍为前端 mock；真实账号化链路以 `questionnaire.html → job-search.html → coach.html` 为准。
 
 ## 仓库结构
 
@@ -108,6 +122,7 @@ backend/
   auth/             # 用户、验证码、密码和登录会话
   questionnaire/    # 35 题 schema、分支、草稿与 output1 评分器
   career/           # 职业匹配器、642 职业库与 Career Adapter
+  job_search/       # Node 代理、用户级编排与 JobCoachAdapter
   coach/            # Quest Coach 状态机与 SQLite 会话存储
   tests/            # 单元测试与 HTTP E2E
   server.py         # 零依赖 HTTP 服务
@@ -115,10 +130,13 @@ frontend/
   index.html        # 产品主 Demo
   auth.html         # 注册/登录
   questionnaire.html # 真实问卷、自动保存和结果入口
+  job-search.html   # 真实岗位搜索、选择、核验和 Coach 入口
   coach.html        # 正式 Coach 界面
   career-coach-demo.html
 docs/               # Auth、Career、Coach API 契约
   questionnaire/    # 问卷 4.0、评分规则、output1 契约与 JS 参考引擎
+documentation/      # UI 联调、架构、权限、变量与测试覆盖图
+job-matcher/        # 实时搜索、原页核验和 output2.jd.v1.0
 assets/previews/    # 团队评审截图
 Dockerfile          # 单容器 Demo
 Procfile            # 通用云平台启动入口

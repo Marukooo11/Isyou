@@ -67,7 +67,7 @@
       <p id="result-summary"></p>
       <div id="result-list" class="result-list"></div>
       <div id="result-warning"></div>
-      <div class="footer"><button id="edit" class="action">返回修改</button><button id="career" class="action primary">进入职业方向与 Coach</button></div>
+      <div class="footer"><button id="edit" class="action">返回修改</button><button id="career" class="action primary">搜索真实岗位</button></div>
     </section>
   </main>
   <script src="./coach-client.js"></script>
@@ -247,10 +247,12 @@
       ui.result.classList.add("visible");
       const evaluation = result.career_evaluation;
       const ready = evaluation.profile_status.job_matching_ready;
-      ui["result-summary"].textContent = ready ? "问卷、画像和职业匹配已经完成。你可以选择一个方向进入 Coach。" : "画像已保存，但求职事实还不完整。你可以返回补答，或先保留心理与能力画像。";
+      ui["result-summary"].textContent = ready ? "问卷、画像和职业方向已经完成。下一步可以搜索 5 个真实岗位，选择后进入 Coach。" : "画像已保存，但求职事实还不完整。你可以返回补答，或先保留心理与能力画像。";
       ui["result-list"].innerHTML = "";
       evaluation.recommended_occupations.forEach(function (item) { ui["result-list"].appendChild(element("div", "result-item", item.rank + ". " + item.occupation_name + " · " + item.match_score)); });
       const missing = evaluation.profile_status.missing_critical_fields || [];
+      ui.career.dataset.ready = String(ready);
+      ui.career.textContent = ready ? "搜索真实岗位" : "返回补答";
       ui["result-warning"].replaceChildren();
       if (missing.length) ui["result-warning"].appendChild(element("div", "warning", "还缺：" + missing.join("、")));
       setStatus("问卷已完成并保存", false);
@@ -261,7 +263,10 @@
       sectionIndex += 1; render(); await saveDraft(true); window.scrollTo({top:0,behavior:"smooth"});
     };
     ui.edit.onclick = function () { ui.result.classList.remove("visible"); ui.app.style.display = "grid"; render(); };
-    ui.career.onclick = function () { location.href = "./career-coach-demo.html"; };
+    ui.career.onclick = function () {
+      if (ui.career.dataset.ready !== "true") return ui.edit.click();
+      location.href = "./job-search.html";
+    };
 
     (async function boot() {
       try {

@@ -6,7 +6,7 @@
 
 交互输出：5 个来自实时搜索的岗位候选名称、公司和来源链接。候选仅表示“搜索发现”，用户选择前不宣称已完成页面核验。
 
-最终输出：用户选定岗位经原始页面核验后生成的 `jd_selected.md`。文件不包含用户画像、匹配分、能力差距、训练目标或 Coach 计划，可直接作为 B 模块输入。
+最终输出：用户选定岗位经原始页面核验后，同时生成结构化 `selected_job`（`output2.jd.v1.0`）和 `jd_selected.md`。Markdown 不包含用户画像、能力差距、训练目标或 Coach 计划；Python `JobCoachAdapter` 使用结构化对象接入 Coach，避免反向解析 Markdown。
 
 ## 两阶段接口
 
@@ -35,7 +35,9 @@
 }
 ```
 
-服务端只核验所选岗位，执行硬约束检查，成功后返回 `file.filename=jd_selected.md` 和 Markdown 内容。
+服务端只核验所选岗位，执行硬约束检查，成功后返回 `selected_job`、`file.filename=jd_selected.md` 和 Markdown 内容。
+
+浏览器不应直接调用本模块。正式联调入口是 Python API 的 `/api/v1/job-search/*`，由它完成 Bearer 鉴权、账号隔离、候选持久化和 Coach handoff。
 
 ## 运行
 

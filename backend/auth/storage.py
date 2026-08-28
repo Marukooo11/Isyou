@@ -83,6 +83,32 @@ class SQLiteAuthStore:
                         completed_at TEXT,
                         FOREIGN KEY(user_id) REFERENCES users(user_id)
                     );
+
+                    CREATE TABLE IF NOT EXISTS job_search_runs (
+                        search_id TEXT PRIMARY KEY,
+                        user_id TEXT NOT NULL,
+                        profile_json TEXT NOT NULL,
+                        result_json TEXT NOT NULL,
+                        created_at TEXT NOT NULL,
+                        FOREIGN KEY(user_id) REFERENCES users(user_id)
+                    );
+
+                    CREATE INDEX IF NOT EXISTS idx_job_search_user
+                    ON job_search_runs(user_id, created_at DESC);
+
+                    CREATE TABLE IF NOT EXISTS selected_jobs (
+                        selection_id TEXT PRIMARY KEY,
+                        user_id TEXT NOT NULL,
+                        search_id TEXT NOT NULL,
+                        candidate_id TEXT NOT NULL,
+                        result_json TEXT NOT NULL,
+                        created_at TEXT NOT NULL,
+                        FOREIGN KEY(user_id) REFERENCES users(user_id),
+                        FOREIGN KEY(search_id) REFERENCES job_search_runs(search_id)
+                    );
+
+                    CREATE INDEX IF NOT EXISTS idx_selected_job_user
+                    ON selected_jobs(user_id, created_at DESC);
                     """
                 )
 
@@ -347,4 +373,125 @@ class SQLiteAuthStore:
             return None
         result = dict(row)
         result["answers"] = json.loads(result.pop("answers_json"))
+        return result
+
+    def create_job_search_run(
+        self,
+        search_id: str,
+        user_id: str,
+        profile: dict[str, Any],
+        result: dict[str, Any],
+        created_at: str,
+    ) -> None:
+        with closing(self._connect()) as connection:
+            with connection:
+                connection.execute(
+                    """
+                    INSERT INTO job_search_runs
+                        (search_id, user_id, profile_json, result_json, created_at)
+                    VALUES (?, ?, ?, ?, ?)
+                    """,
+                    (
+                        search_id,
+                        user_id,
+                        json.dumps(profile, ensure_ascii=False),
+                        json.dumps(result, ensure_ascii=False),
+                        created_at,
+                    ),
+                )
+
+    def get_job_search_run(
+        self,
+        search_id: str,
+        user_id: str,
+    ) -> dict[str, Any] | None:
+        with closing(self._connect()) as connection:
+            row = connection.execute(
+                """
+                SELECT * FROM job_search_runs
+                WHERE search_id = ? AND user_id = ?
+                """,
+                (search_id, user_id),
+            ).fetchone()
+        return self._decode_job_search(row)
+
+    def get_latest_job_search_run(self, user_id: str) -> dict[str, Any] | None:
+        with closing(self._connect()) as connection:
+            row = connection.execute(
+                """
+                SELECT * FROM job_search_runs
+                WHERE user_id = ? ORDER BY created_at DESC, rowid DESC LIMIT 1
+                """,
+                (user_id,),
+            ).fetchone()
+        return self._decode_job_search(row)
+
+    def create_selected_job(
+        self,
+        selection_id: str,
+        user_id: str,
+        search_id: str,
+        candidate_id: str,
+        result: dict[str, Any],
+        created_at: str,
+    ) -> None:
+        with closing(self._connect()) as connection:
+            with connection:
+                connection.execute(
+                    """
+                    INSERT INTO selected_jobs
+                        (selection_id, user_id, search_id, candidate_id, result_json, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        selection_id,
+                        user_id,
+                        search_id,
+                        candidate_id,
+                        json.dumps(result, ensure_ascii=False),
+                        created_at,
+                    ),
+                )
+
+    def get_selected_job(
+        self,
+        selection_id: str,
+        user_id: str,
+    ) -> dict[str, Any] | None:
+        with closing(self._connect()) as connection:
+            row = connection.execute(
+                """
+                SELECT * FROM selected_jobs
+                WHERE selection_id = ? AND user_id = ?
+                """,
+                (selection_id, user_id),
+            ).fetchone()
+        return self._decode_selected_job(row)
+
+    def get_latest_selected_job(self, user_id: str) -> dict[str, Any] | None:
+        with closing(self._connect()) as connection:
+            row = connection.execute(
+                """
+                SELECT * FROM selected_jobs
+                WHERE user_id = ? ORDER BY created_at DESC, rowid DESC LIMIT 1
+                """,
+                (user_id,),
+            ).fetchone()
+        return self._decode_selected_job(row)
+
+    @staticmethod
+    def _decode_job_search(row: sqlite3.Row | None) -> dict[str, Any] | None:
+        if not row:
+            return None
+        result = dict(row)
+        result["profile"] = json.loads(result.pop("profile_json"))
+        result["result"] = json.loads(result.pop("result_json"))
+        return result
+
+    @staticmethod
+    def _decode_selected_job(row: sqlite3.Row | None) -> dict[str, Any] | None:
+        if not row:
+            return None
+        result = dict(row)
+        result["result"] = json.loads(result.pop("result_json"))
         return result

@@ -38,6 +38,35 @@ function uniqueCandidates(results, occupations, count) {
   return candidates;
 }
 
+function selectedJobView(opportunity) {
+  return {
+    schema_version: "output2.jd.v1.0",
+    opportunity_id: opportunity.opportunity_id,
+    title: opportunity.title,
+    company: opportunity.company,
+    location: opportunity.location,
+    work_mode: opportunity.work_mode,
+    employment_type: opportunity.employment_type,
+    compensation: opportunity.compensation,
+    status: opportunity.status,
+    published_at: opportunity.published_at,
+    source_url: opportunity.url,
+    source_type: opportunity.source_type,
+    verification_status: opportunity.verification_status,
+    retrieved_at: opportunity.retrieved_at,
+    direction_id: opportunity.direction_id,
+    direction_title: opportunity.direction_title,
+    tasks: opportunity.tasks || [],
+    required: opportunity.required || [],
+    preferred: opportunity.preferred || [],
+    tools: opportunity.tools || [],
+    education_experience: opportunity.education_experience || [],
+    schedule_location_collaboration: opportunity.schedule_location_collaboration || [],
+    conditions: opportunity.conditions || [],
+    constraint_checks: opportunity.constraint_checks || []
+  };
+}
+
 export async function searchJobCandidates(request, dependencies = {}) {
   const safeProfile = createSearchSafeProfile(request?.profile);
   const vector = compileMarketSearchVector(safeProfile);
@@ -90,6 +119,7 @@ export async function generateSelectedJob(request, dependencies = {}) {
       opportunity_id: scored.opportunity_id,
       content: renderOpportunityMarkdown(scored, 1)
     },
+    selected_job: selectedJobView(scored),
     verification_status: scored.verification_status
   };
 }

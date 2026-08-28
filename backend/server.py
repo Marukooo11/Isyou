@@ -15,6 +15,7 @@ from auth import AuthService, DevelopmentCodeDelivery, SQLiteAuthStore
 from career import CareerService
 from coach import CoachService, SQLiteCoachStore
 from coach.errors import CoachError, InvalidRequest
+from job_search import JobMatcherClient, JobSearchService
 from questionnaire import QuestionnaireService
 
 
@@ -28,11 +29,12 @@ class CoachRequestHandler(BaseHTTPRequestHandler):
     career_service: CareerService
     auth_service: AuthService
     questionnaire_service: QuestionnaireService
+    job_search_service: JobSearchService
     allowed_origins: set[str] = set()
     allow_demo_date = False
     frontend_dir: Path | None = None
 
-    server_version = "IsyouCoach/0.4"
+    server_version = "IsyouCoach/0.5"
 
     def do_OPTIONS(self) -> None:
         if not self._origin_allowed():
@@ -59,12 +61,13 @@ class CoachRequestHandler(BaseHTTPRequestHandler):
                     {
                         "status": "ok",
                         "service": "isyou-coach",
-                        "version": "0.4.0",
+                        "version": "0.5.0",
                         "features": {
                             "auth": True,
                             "quest_coach": True,
                             "career_adapter": True,
                             "questionnaire": True,
+                            "real_job_search": True,
                             "occupation_count": self.career_service.matcher.occupation_count,
                         },
                     },
@@ -90,6 +93,10 @@ class CoachRequestHandler(BaseHTTPRequestHandler):
             if request_path == "/api/v1/questionnaire/draft":
                 user = self._authenticate()
                 self._write_json(200, self.questionnaire_service.get_draft(user["user_id"]))
+                return
+            if request_path == "/api/v1/job-search/state":
+                user = self._authenticate()
+                self._write_json(200, self.job_search_service.get_state(user["user_id"]))
                 return
             match = SESSION_PATH.match(request_path)
             if match:
@@ -167,6 +174,24 @@ class CoachRequestHandler(BaseHTTPRequestHandler):
             if request_path == "/api/v1/career/coach-sessions":
                 response = self.career_service.create_coach_session(
                     payload, self._now(), user_id=user["user_id"]
+                )
+                self._write_json(201, response)
+                return
+            if request_path == "/api/v1/job-search/candidates":
+                response = self.job_search_service.search_candidates(
+                    user["user_id"], payload, self._now()
+                )
+                self._write_json(200, response)
+                return
+            if request_path == "/api/v1/job-search/select":
+                response = self.job_search_service.select_candidate(
+                    user["user_id"], payload, self._now()
+                )
+                self._write_json(200, response)
+                return
+            if request_path == "/api/v1/job-search/coach-sessions":
+                response = self.job_search_service.create_coach_session(
+                    user["user_id"], payload, self._now()
                 )
                 self._write_json(201, response)
                 return
@@ -332,6 +357,14 @@ def build_server() -> ThreadingHTTPServer:
     CoachRequestHandler.questionnaire_service = QuestionnaireService(auth_store)
     CoachRequestHandler.career_service = CareerService(
         CoachRequestHandler.service, profile_store=auth_store
+    )
+    CoachRequestHandler.job_search_service = JobSearchService(
+        auth_store,
+        CoachRequestHandler.service,
+        JobMatcherClient(
+            os.environ.get("JOB_MATCHER_BASE_URL", "http://127.0.0.1:3000"),
+            timeout_seconds=float(os.environ.get("JOB_MATCHER_TIMEOUT_SECONDS", "90")),
+        ),
     )
     CoachRequestHandler.allowed_origins = {item.strip() for item in origins.split(",") if item.strip()}
     CoachRequestHandler.allow_demo_date = os.environ.get("COACH_ALLOW_DEMO_DATE", "0") == "1"

@@ -12,6 +12,7 @@ from pathlib import Path
 from auth import AuthService, SQLiteAuthStore
 from career import CareerService
 from coach import CoachService, SQLiteCoachStore
+from job_search import JobSearchService
 from server import CoachRequestHandler
 from questionnaire import QuestionnaireService
 
@@ -20,6 +21,79 @@ from questionnaire_fixture import ready_questionnaire_answers
 
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURE = ROOT / "frontend" / "fixtures" / "profile-ready.json"
+
+
+class FakeJobMatcherClient:
+    def __init__(self):
+        self.search_calls = []
+        self.select_calls = []
+
+    def search_candidates(self, payload):
+        self.search_calls.append(payload)
+        return {
+            "status": "complete",
+            "generated_at": "2026-08-28T12:00:00+08:00",
+            "candidate_count": 5,
+            "candidates": [
+                {
+                    "candidate_id": f"CANDIDATE-{index:03d}",
+                    "title": "数据分析师" if index == 1 else f"岗位候选 {index}",
+                    "company": f"演示公司 {index}",
+                    "location": "上海",
+                    "snippet": "公开岗位搜索摘要",
+                    "source_url": f"https://jobs.example.com/{index}",
+                    "source_type": "web_search_result",
+                    "direction_id": "OCC-0001",
+                    "direction_title": "数据分析",
+                    "discovery_status": "search_result_unverified",
+                }
+                for index in range(1, 6)
+            ],
+            "warning": None,
+        }
+
+    def select_candidate(self, payload):
+        self.select_calls.append(payload)
+        candidate = payload["candidate"]
+        selected_job = {
+            "schema_version": "output2.jd.v1.0",
+            "opportunity_id": "OPP-SELECTED",
+            "title": candidate["title"],
+            "company": candidate["company"],
+            "location": candidate["location"],
+            "work_mode": "hybrid",
+            "employment_type": "全职",
+            "compensation": "15k-20k",
+            "status": "active",
+            "published_at": "2026-08-27",
+            "source_url": candidate["source_url"],
+            "source_type": "structured_job_page",
+            "verification_status": "verified",
+            "retrieved_at": "2026-08-28T12:01:00+08:00",
+            "direction_id": candidate["direction_id"],
+            "direction_title": candidate["direction_title"],
+            "tasks": ["整理业务数据", "制作分析报告"],
+            "required": ["熟练使用 SQL", "能够独立完成数据分析"],
+            "preferred": ["有实习经历"],
+            "tools": ["SQL", "Excel"],
+            "education_experience": ["本科及以上"],
+            "schedule_location_collaboration": ["每周到岗三天"],
+            "conditions": [
+                {"condition": "travel", "status": "unknown_to_confirm"}
+            ],
+            "constraint_checks": [],
+        }
+        return {
+            "status": "complete",
+            "generated_at": "2026-08-28T12:01:00+08:00",
+            "verification_status": "verified",
+            "selected_job": selected_job,
+            "file": {
+                "filename": "jd_selected.md",
+                "opportunity_id": "OPP-SELECTED",
+                "content": "---\nschema_version: output2.jd.v1.0\n---\n# 数据分析师\n",
+            },
+        }
 
 
 class CareerHttpFlowTest(unittest.TestCase):
@@ -34,6 +108,10 @@ class CareerHttpFlowTest(unittest.TestCase):
         CoachRequestHandler.service = coach
         CoachRequestHandler.career_service = CareerService(coach, profile_store=auth_store)
         CoachRequestHandler.questionnaire_service = QuestionnaireService(auth_store)
+        self.job_matcher = FakeJobMatcherClient()
+        CoachRequestHandler.job_search_service = JobSearchService(
+            auth_store, coach, self.job_matcher
+        )
         CoachRequestHandler.allowed_origins = set()
         CoachRequestHandler.allow_demo_date = True
         CoachRequestHandler.frontend_dir = ROOT / "frontend"
@@ -205,6 +283,89 @@ class CareerHttpFlowTest(unittest.TestCase):
             )["profile_id"],
             result["profile"]["profile_id"],
         )
+
+    def test_questionnaire_to_real_jd_to_coach_over_http(self):
+        registered = self.register("job-flow@example.com", "job_flow_user")
+        token = registered["access_token"]
+        answers = ready_questionnaire_answers()
+        answers["J9"]["can_use_for_web_job_search"] = True
+        status, completed = self.post(
+            "/api/v1/questionnaire/complete", {"answers": answers}, token
+        )
+        self.assertEqual(status, 200)
+        self.assertTrue(completed["profile"]["consent"]["can_use_for_web_job_search"])
+
+        status, candidates = self.post(
+            "/api/v1/job-search/candidates", {"market": "CN"}, token
+        )
+        self.assertEqual(status, 200)
+        self.assertEqual(candidates["candidate_count"], 5)
+        self.assertEqual(len(self.job_matcher.search_calls), 1)
+        search_id = candidates["search_id"]
+
+        other = self.register("job-other@example.com", "job_other_user")
+        status, denied = self.post(
+            "/api/v1/job-search/select",
+            {"search_id": search_id, "candidate_id": "CANDIDATE-001"},
+            other["access_token"],
+        )
+        self.assertEqual(status, 404)
+        self.assertEqual(denied["error"]["code"], "JOB_SEARCH_NOT_FOUND")
+
+        status, selected = self.post(
+            "/api/v1/job-search/select",
+            {"search_id": search_id, "candidate_id": "CANDIDATE-001"},
+            token,
+        )
+        self.assertEqual(status, 200)
+        self.assertEqual(selected["selected_job"]["schema_version"], "output2.jd.v1.0")
+        self.assertEqual(selected["file"]["filename"], "jd_selected.md")
+
+        status, state = self.request("GET", "/api/v1/job-search/state", token=token)
+        self.assertEqual(status, 200)
+        self.assertEqual(state["search"]["search_id"], search_id)
+        self.assertEqual(state["selection"]["selection_id"], selected["selection_id"])
+
+        status, handoff = self.post(
+            "/api/v1/job-search/coach-sessions",
+            {
+                "selection_id": selected["selection_id"],
+                "preferences": {"available_minutes": 20},
+            },
+            token,
+        )
+        self.assertEqual(status, 201)
+        self.assertEqual(handoff["coach"]["phase"], "onboarding")
+        self.assertEqual(
+            handoff["career_context"]["selected_direction"]["title"],
+            "数据分析师",
+        )
+        self.assertTrue(
+            any(
+                item["text"] == "熟练使用 SQL"
+                for item in handoff["career_context"]["target_requirements"]
+            )
+        )
+        saved = CoachRequestHandler.service.store.get_session(
+            handoff["coach"]["session_id"]
+        )
+        self.assertEqual(saved["user_id"], registered["user"]["user_id"])
+
+    def test_job_search_requires_explicit_web_consent(self):
+        registered = self.register("no-web@example.com", "no_web_user")
+        token = registered["access_token"]
+        status, _ = self.post(
+            "/api/v1/questionnaire/complete",
+            {"answers": ready_questionnaire_answers()},
+            token,
+        )
+        self.assertEqual(status, 200)
+        status, denied = self.post(
+            "/api/v1/job-search/candidates", {"market": "CN"}, token
+        )
+        self.assertEqual(status, 403)
+        self.assertEqual(denied["error"]["code"], "WEB_SEARCH_NOT_AUTHORIZED")
+        self.assertEqual(self.job_matcher.search_calls, [])
 
 
 if __name__ == "__main__":

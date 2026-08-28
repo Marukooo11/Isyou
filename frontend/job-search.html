@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f2efe6">
+  <title>真实岗位 · Isyou</title>
+  <style>
+    :root { --ink:#29302e; --muted:#74776f; --line:#d8d2c2; --paper:#fffdf8; --green:#6e8465; --red:#9b4c45; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); background:#e5e7de; font:14px/1.6 system-ui,"PingFang SC",sans-serif; }
+    main { width:min(980px,calc(100% - 28px)); margin:24px auto 64px; }
+    header { display:flex; justify-content:space-between; gap:18px; align-items:flex-end; margin-bottom:14px; }
+    h1 { margin:0; font:500 28px/1.25 Georgia,"Songti SC",serif; } h2,h3 { margin:0; }
+    .muted,#status { color:var(--muted); font-size:12px; }
+    .panel { padding:22px; border:1px solid var(--line); background:var(--paper); box-shadow:0 22px 58px -44px rgba(40,50,38,.7); }
+    .intro { display:flex; justify-content:space-between; gap:20px; align-items:center; }
+    .intro p { max-width:650px; margin:8px 0 0; color:#555a54; }
+    button { min-height:42px; padding:9px 16px; border:1px solid #bdb6a5; background:#faf8f1; color:var(--ink); cursor:pointer; }
+    button.primary { border-color:var(--green); background:var(--green); color:white; }
+    button:disabled { opacity:.5; cursor:wait; }
+    #candidates { display:grid; gap:10px; margin-top:16px; }
+    .candidate { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:16px; padding:16px; border:1px solid var(--line); background:white; }
+    .candidate h3 { font-size:16px; } .candidate p { margin:5px 0 0; color:#5c6059; }
+    .meta { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; color:var(--muted); font-size:12px; }
+    .selected { margin-top:16px; padding:18px; border-left:4px solid var(--green); background:#f1f4ed; }
+    .selected ul { margin:8px 0 0; padding-left:20px; }
+    .actions { display:flex; flex-wrap:wrap; gap:9px; margin-top:14px; }
+    .error { color:var(--red)!important; }
+    .warning { margin-top:12px; padding:10px; color:#7b554c; background:#f8ece7; }
+    @media (max-width:700px) { header,.intro { align-items:flex-start; flex-direction:column; } .candidate { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div><h1>真实岗位</h1><div class="muted">公开岗位搜索 → 用户选择 → 原页面核验 → Coach</div></div>
+      <div><div id="account" class="muted"></div><div id="status" aria-live="polite">正在恢复…</div></div>
+    </header>
+    <section class="panel">
+      <div class="intro">
+        <div><h2>从画像进入真实机会</h2><p>系统只会使用你已经授权的非敏感求职字段。搜索结果在选择前只是候选；选择后才核验原始页面并生成 Coach 所需的岗位要求。</p></div>
+        <button id="search" class="primary" type="button">搜索 5 个岗位</button>
+      </div>
+      <div id="warning"></div>
+      <div id="candidates"></div>
+      <section id="selected" class="selected" hidden>
+        <h2 id="selected-title"></h2>
+        <div id="selected-meta" class="meta"></div>
+        <h3 style="margin-top:14px">已核验要求</h3>
+        <ul id="selected-required"></ul>
+        <div class="actions">
+          <a id="source" target="_blank" rel="noopener noreferrer"><button type="button">查看原岗位</button></a>
+          <button id="start-coach" class="primary" type="button">为这个岗位启动 Coach</button>
+        </div>
+      </section>
+    </section>
+  </main>
+  <script src="./coach-client.js"></script>
+  <script>
+    const client = new IsyouCoach.CoachClient({ storageKey:"isyou_coach_product_session_v2" });
+    const ui = Object.fromEntries(["account","status","search","warning","candidates","selected","selected-title","selected-meta","selected-required","source","start-coach"].map(function (id) { return [id, document.getElementById(id)]; }));
+    let searchId = null;
+    let selectionId = null;
+
+    function setStatus(text, error) { ui.status.textContent = text; ui.status.classList.toggle("error", Boolean(error)); }
+    function setBusy(value) { document.querySelectorAll("button").forEach(function (button) { button.disabled = value; }); }
+    function element(tag, className, text) { const node = document.createElement(tag); if (className) node.className = className; if (text != null) node.textContent = text; return node; }
+    function showWarning(text) { ui.warning.replaceChildren(); if (text) ui.warning.appendChild(element("div", "warning", text)); }
+
+    function renderCandidates(search) {
+      searchId = search.search_id;
+      ui.candidates.replaceChildren();
+      (search.candidates || []).forEach(function (candidate) {
+        const card = element("article", "candidate");
+        const copy = element("div");
+        copy.append(element("h3", "", candidate.title), element("p", "", candidate.company || "公司未知"));
+        const meta = element("div", "meta");
+        [candidate.location, candidate.direction_title, "选择后核验原页面"].filter(Boolean).forEach(function (item) { meta.appendChild(element("span", "", item)); });
+        copy.appendChild(meta);
+        const button = element("button", "", "选择并核验"); button.type = "button";
+        button.onclick = function () { selectCandidate(candidate.candidate_id); };
+        card.append(copy, button); ui.candidates.appendChild(card);
+      });
+      showWarning(search.warning || "候选来自搜索发现，选择前不代表岗位仍有效或完全符合限制。");
+    }
+
+    function renderSelection(selection) {
+      selectionId = selection.selection_id;
+      const job = selection.selected_job;
+      ui.selected.hidden = false;
+      ui["selected-title"].textContent = job.title;
+      ui["selected-meta"].textContent = [job.company, job.location, job.employment_type, job.verification_status].filter(Boolean).join(" · ");
+      ui["selected-required"].replaceChildren();
+      (job.required || []).slice(0, 8).forEach(function (item) { ui["selected-required"].appendChild(element("li", "", item)); });
+      if (!(job.required || []).length) ui["selected-required"].appendChild(element("li", "", "原页面未提取出明确要求，Coach 会把它标为待确认。"));
+      ui.source.href = job.source_url;
+      ui.selected.scrollIntoView({ behavior:"smooth", block:"start" });
+    }
+
+    async function search() {
+      selectionId = null; ui.selected.hidden = true;
+      setBusy(true); setStatus("正在搜索公开岗位，首次可能需要约 45 秒…", false); showWarning("");
+      try { const result = await client.searchJobCandidates(); renderCandidates(result); setStatus("找到 " + result.candidate_count + " 个候选", false); }
+      catch (error) { setStatus((error.code ? error.code + " · " : "") + error.message, true); if (error.code === "WEB_SEARCH_NOT_AUTHORIZED") showWarning("返回问卷 J9 开启“允许检索公开招聘信息”后，再发起搜索。"); }
+      finally { setBusy(false); }
+    }
+
+    async function selectCandidate(candidateId) {
+      setBusy(true); setStatus("正在访问并核验所选岗位原页面…", false);
+      try { const result = await client.selectJobCandidate(searchId, candidateId); renderSelection(result); setStatus("岗位已核验，可以启动 Coach", false); }
+      catch (error) { setStatus((error.code ? error.code + " · " : "") + error.message, true); }
+      finally { setBusy(false); }
+    }
+
+    async function startCoach() {
+      if (!selectionId) return;
+      setBusy(true); setStatus("正在根据岗位要求创建 Coach…", false);
+      try {
+        const result = await client.startCoachFromSelectedJob(selectionId, { preferences:{ language:"zh-CN", available_minutes:20, communication_style:"clear_and_supportive" } });
+        sessionStorage.setItem("isyou_career_context", JSON.stringify(result.career_context));
+        location.href = "./coach.html?mode=api";
+      } catch (error) { setStatus((error.code ? error.code + " · " : "") + error.message, true); setBusy(false); }
+    }
+
+    ui.search.onclick = search;
+    ui["start-coach"].onclick = startCoach;
+    (async function boot() {
+      try {
+        const account = await client.me();
+        if (!account) return location.replace("./auth.html?next=job-search.html");
+        ui.account.textContent = account.user.username + " · " + account.user.masked_contact;
+        const state = await client.getJobSearchState();
+        if (state.search) renderCandidates(state.search);
+        if (state.selection) renderSelection(state.selection);
+        setStatus(state.search ? "已恢复上次岗位搜索" : "画像就绪后可以开始搜索", false);
+      } catch (error) {
+        if (error.code === "AUTH_REQUIRED") location.replace("./auth.html?next=job-search.html");
+        else setStatus(error.message, true);
+      }
+    })();
+  </script>
+</body>
+</html>

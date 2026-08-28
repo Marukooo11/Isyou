@@ -103,6 +103,35 @@
       });
     }
 
+    async getJobSearchState() {
+      return this._request("GET", "/api/v1/job-search/state");
+    }
+
+    async searchJobCandidates(options) {
+      const config = options || {};
+      return this._request("POST", "/api/v1/job-search/candidates", {
+        market: config.market || "CN",
+        language: config.language || "zh-CN",
+      });
+    }
+
+    async selectJobCandidate(searchId, candidateId) {
+      return this._request("POST", "/api/v1/job-search/select", {
+        search_id: searchId,
+        candidate_id: candidateId,
+      });
+    }
+
+    async startCoachFromSelectedJob(selectionId, options) {
+      const config = options || {};
+      const response = await this._request("POST", "/api/v1/job-search/coach-sessions", {
+        selection_id: selectionId,
+        preferences: config.preferences || {},
+      });
+      this._remember(response.coach);
+      return response;
+    }
+
     async logout() {
       if (this.authToken) await this._request("POST", "/api/v1/auth/logout", {});
       this.clear();

@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "node server.mjs",
-    "test": "node --test tests",
+    "test": "node --test tests/*.test.mjs",
     "check": "node --check api/job-search/run.mjs && node --check api/job-search/candidates.mjs && node --check api/job-search/select.mjs && node --check lib/job-search/pipeline.mjs && node --check lib/job-search/selection-pipeline.mjs && node --check server.mjs",
     "probe:provider": "node scripts/probe-provider.mjs",
     "smoke:candidates": "node scripts/smoke-candidates.mjs",

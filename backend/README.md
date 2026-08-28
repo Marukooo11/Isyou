@@ -1,13 +1,14 @@
 # Isyou Coach Backend
 
-结论：这是一个零第三方依赖、可同时托管前端和 API 的 Demo 后端。完整链路为“验证码注册/登录 → 35 题问卷/草稿 → output1 评分 → 职业方向匹配 → Career Context → Quest Coach”。
+结论：Python API 本身零第三方依赖，并与内部 Node job-matcher 组成完整 Demo 后端。链路为“注册/登录 → 问卷 → output1 → 职业方向 → 真实 JD → JobCoachAdapter → Coach”。
 
 ## 运行
 
 在仓库根目录执行：
 
 ```bash
-python3 backend/server.py
+cd job-matcher && npm ci && cp .env.example .env.local && cd ..
+python3 scripts/run_stack.py
 ```
 
 默认地址：`http://127.0.0.1:8001`，同时提供 `frontend/` 静态文件。
@@ -18,6 +19,7 @@ python3 backend/server.py
 - Coach 原始响应：`http://127.0.0.1:8001/coach-demo.html`
 - Career → Coach 完整联调：`http://127.0.0.1:8001/career-coach-demo.html`
 - 真实问卷：`http://127.0.0.1:8001/questionnaire.html`
+- 真实岗位：`http://127.0.0.1:8001/job-search.html`
 
 ## 环境变量
 
@@ -33,11 +35,14 @@ python3 backend/server.py
 | `COACH_HTTP_LOG` | `1` | 设为 `0` 关闭访问日志 |
 | `AUTH_DEV_SHOW_CODE` | `1` | 仅本地联调：在响应中显示验证码；非回环地址会拒绝启动 |
 | `AUTH_DEMO_MODE` | `0` | 公开 Hackathon Demo 显式回填验证码；不得输入真实资料或用于生产 |
+| `JOB_MATCHER_BASE_URL` | `http://127.0.0.1:3000` | Python 访问内部岗位服务 |
+| `JOB_MATCHER_TIMEOUT_SECONDS` | `90` | 候选搜索/核验超时 |
+| `JOB_MATCHER_HOST/PORT` | `127.0.0.1/3000` | Node 内部监听地址 |
 
 联调跨天 Review：
 
 ```bash
-COACH_ALLOW_DEMO_DATE=1 python3 backend/server.py
+COACH_ALLOW_DEMO_DATE=1 python3 scripts/run_stack.py
 ```
 
 ## 测试
@@ -48,7 +53,7 @@ COACH_ALLOW_DEMO_DATE=1 python3 backend/server.py
 PYTHONPATH=backend python3 -m unittest discover -s backend/tests -v
 ```
 
-当前共 11 项测试，覆盖认证、用户隔离、职业匹配和 Coach 状态链路。
+当前 20 项 Python 测试覆盖认证、问卷、用户隔离、职业方向、岗位编排和 Coach；Node 模块另有 13 项测试。
 
 ## 当前实现边界
 
@@ -75,14 +80,15 @@ PYTHONPATH=backend python3 -m unittest discover -s backend/tests -v
 - 合成画像联调页和 HTTP 端到端测试。
 - 35 题结构化 schema、条件分支、草稿恢复和确定性 `output1.v1.0` 评分器；
 - 前端/API 单服务部署、同源 CORS、云平台 `PORT`、Docker 与 Procfile。
+- 真实岗位候选搜索、选择后原页核验、按用户保存搜索/选择和 `output2.jd.v1.0`；
+- 选定 JD 到具体岗位 Coach context 的转换与 HTTP E2E。
 
 尚未实现：
 
 - 真实模型 provider；
 - 真实短信与邮件 delivery provider（本地当前回填 `dev_code`）；
-- Career Skill 的实时数据接入；
 - LLM 自由文本语义抽取、动态追问和复杂同义词归一；
-- 真实招聘信息检索与 JD 层地点、薪资、职级过滤；
+- 搜索 provider 无密钥时不能执行实时 JD 请求；
 - 二进制文件上传；
 - 生产级 delivery、数据库、部署监控与隐私合规。
 

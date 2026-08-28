@@ -9,12 +9,12 @@ cd frontend
 python3 -m http.server 8000
 ```
 
-浏览器打开 `http://localhost:8000`。这是前后端分离的开发方式；默认推荐直接运行 `python3 backend/server.py`，然后打开 `http://127.0.0.1:8001/`，由后端同源托管前端。
+浏览器打开 `http://localhost:8000`。这是前后端分离方式；完整真实岗位链路默认运行 `python3 scripts/run_stack.py`，然后打开 `http://127.0.0.1:8001/`。
 
 完整 Coach 联调需要在仓库根目录另开终端：
 
 ```bash
-COACH_ALLOW_DEMO_DATE=1 python3 backend/server.py
+COACH_ALLOW_DEMO_DATE=1 python3 scripts/run_stack.py
 ```
 
 从主 Demo 的岗位匹配页点击“让 Coach 为我规划”，未登录时会先进入 `auth.html`，完成注册或登录后回到 Coach。
@@ -26,6 +26,7 @@ COACH_ALLOW_DEMO_DATE=1 python3 backend/server.py
 - `coach-client.js`：Coach API 客户端。
 - `auth.html`：手机号/邮箱验证码注册，以及密码或验证码登录页。
 - `questionnaire.html`：35 题条件问卷、自动保存/恢复、完成评分与 Career 联动。
+- `job-search.html`：实时岗位候选、用户选择、原页核验与具体 JD Coach 入口。
 - `career-coach-demo.html`：账号 → 导入问卷 `output1.v1.0` JSON → 五个职业方向 → Coach 的完整开发联调页。
 - `coach-demo.html`：面向开发者的原始 API 数据联调页。
 - `design-notes.html`：产品设计笔记。
@@ -39,4 +40,6 @@ COACH_ALLOW_DEMO_DATE=1 python3 backend/server.py
 - 两种模式使用相同的 `ui_blocks` 响应结构。前端包含 `question`、`gap_map`、`stage_plan`、`daily_task`、`review`、`feedback`、`evidence_update`、`notice` 八类渲染器。
 - 访问令牌、会话 ID 和前端对话记录保存在 `localStorage`；后端画像与 Coach 状态保存在 SQLite，切换目标岗位会自动创建新的 Coach 会话，刷新不会丢进度。
 - URL 参数：`?mode=api` 强制真实 API，`?mode=demo` 强制浏览器 Demo；默认 `auto`。
-- 当前边界：本地验证码和本地问卷 JSON 导入已可联调；35 题施测/答案解析仍等待上游信息收集代码，真实短信/邮件 delivery provider、真实模型 provider、Career Skill 实时数据和生产部署待接入。
+- 当前边界：35 题、真实 JD 和 Coach 已联通；实时搜索需要服务端 provider 密钥。真实短信/邮件、模型驱动 Coach 和生产安全仍待接入。
+
+UI 设计和前端联调以 [`../documentation/frontend-integration.md`](../documentation/frontend-integration.md) 为准。

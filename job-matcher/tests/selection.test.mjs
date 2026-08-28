@@ -27,4 +27,8 @@ test("用户选定后只生成一份 jd_selected.md", async () => {
   const result = await generateSelectedJob({ profile: sample, candidate: { candidate_id: "CANDIDATE-001", title: "数据分析师", company: "示例公司", source_url: "https://jobs.example.com/selected" } }, { verifyResult });
   assert.equal(result.file.filename, "jd_selected.md");
   assert.match(result.file.content, /# 数据分析师/);
+  assert.equal(result.selected_job.schema_version, "output2.jd.v1.0");
+  assert.equal(result.selected_job.opportunity_id, "OPP-SELECTED");
+  assert.equal(result.selected_job.title, "数据分析师");
+  assert.deepEqual(result.selected_job.required, ["本科"]);
 });

@@ -9,7 +9,8 @@ import selectHandler from "./api/job-search/select.mjs";
 dotenv.config({ path: resolve(import.meta.dirname, ".env.local"), override: true });
 
 const root = resolve(import.meta.dirname);
-const port = Number(process.env.PORT || 3000);
+const port = Number(process.env.JOB_MATCHER_PORT || 3000);
+const host = process.env.JOB_MATCHER_HOST || "127.0.0.1";
 const mime = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".json": "application/json; charset=utf-8", ".md": "text/markdown; charset=utf-8" };
 
 async function readBody(request, maxBytes = 1_000_000) {
@@ -61,6 +62,6 @@ createServer(async (request, response) => {
   }
   if (!["GET", "HEAD"].includes(request.method)) return response.writeHead(405).end("Method Not Allowed");
   return serveStatic(request, response);
-}).listen(port, () => {
-  console.log(`Qiguang local server: http://localhost:${port}`);
+}).listen(port, host, () => {
+  console.log(`Qiguang local server: http://${host}:${port}`);
 });

@@ -1,1 +1,1 @@
-web: python backend/server.py
+web: python scripts/run_stack.py
