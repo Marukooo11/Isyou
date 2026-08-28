@@ -90,25 +90,46 @@ class CoachServiceFlowTest(unittest.TestCase):
             self.day_one,
         )
         self.assertEqual(response["phase"], "submission_review")
+        self.assertEqual(response["ui_blocks"][0]["type"], "review")
+        self.assertEqual(response["ui_blocks"][0]["data"]["reviewed_by"], "coach")
+        self.assertEqual(response["workspace"]["outputs"][0]["status"], "reviewed")
 
         next_day = self.day_one + timedelta(days=1)
         response = self.service.get_session(session_id, next_day)
-        self.assertEqual(response["phase"], "daily_review")
+        self.assertEqual(response["phase"], "daily_learning")
         self.assertEqual(response["state_summary"]["current_day"], 2)
+        self.assertEqual(response["ui_blocks"][0]["type"], "review")
+        self.assertEqual(response["ui_blocks"][1]["type"], "daily_task")
+        self.assertIn("断点", response["ui_blocks"][1]["data"]["title"])
 
+    def test_coach_review_advances_when_submission_has_specific_process(self):
+        response = self.service.create_session(self.context, self.day_one)
+        session_id = response["session_id"]
+        for request_id, event_type in [
+            ("r1", "answer_question"),
+            ("r2", "confirm_gap_map"),
+            ("r3", "confirm_plan"),
+        ]:
+            response = self.service.handle_turn(
+                session_id,
+                event(request_id, response["state_version"], event_type),
+                self.day_one,
+            )
         response = self.service.handle_turn(
             session_id,
             event(
-                "r5",
+                "r4",
                 response["state_version"],
-                "answer_question",
-                action_id="review_partial",
-                message="只完成了一部分",
+                "submit_result",
+                message="我找到旧模型截图，并写清了 Blender 建模步骤和最不确定的灯光部分。",
             ),
-            next_day,
+            self.day_one,
         )
-        self.assertEqual(response["phase"], "daily_learning")
-        self.assertIn("断点", response["ui_blocks"][0]["data"]["title"])
+        review = response["ui_blocks"][0]["data"]
+        self.assertEqual(review["outcome"], "ready_to_transfer")
+        next_day = self.day_one + timedelta(days=1)
+        response = self.service.get_session(session_id, next_day)
+        self.assertIn("变化", response["ui_blocks"][1]["data"]["title"])
 
     def test_blocker_reduces_task(self):
         response = self.service.create_session(self.context, self.day_one)
@@ -149,4 +170,3 @@ class CoachServiceFlowTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

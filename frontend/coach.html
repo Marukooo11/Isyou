@@ -3,84 +3,67 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#e4e6dc">
-  <meta name="description" content="Isyou 成长 Coach，根据目标、差距和真实进度动态规划每天的行动。">
-  <title>Isyou 成长 Coach</title>
+  <meta name="theme-color" content="#f2efe6">
+  <meta name="description" content="Isyou 成长手帐与侧边栏 Coach。">
+  <title>Isyou · 我的成长手帐</title>
   <link rel="stylesheet" href="./coach.css">
 </head>
 <body>
-  <div class="app-shell">
-    <header class="topbar">
-      <button class="topbar__back" id="back-button" type="button">返回岗位</button>
-      <div class="topbar__brand">Isyou</div>
-      <div class="topbar__actions">
-        <div class="connection" id="connection" aria-live="polite">
-          <span class="connection__mark" aria-hidden="true"></span>
-          <span id="connection-label">正在连接 Coach</span>
+  <header class="topbar">
+    <button class="ink-button" id="back-button" type="button">← 岗位方向</button>
+    <a class="brand" href="./index.html" aria-label="返回 Isyou 首页">Isyou</a>
+    <div class="topbar__actions">
+      <span class="connection" id="connection-label" aria-live="polite">连接中</span>
+      <button class="ink-button" id="quiet-button" type="button" aria-pressed="false">安静模式</button>
+      <button class="ink-button" id="reset-button" type="button">重新开始</button>
+      <button class="coach-toggle" id="coach-toggle" type="button" aria-expanded="true" aria-controls="coach-drawer">收起 Coach</button>
+    </div>
+  </header>
+  <div class="book-shell" id="book-shell">
+    <main class="notebook" id="notebook">
+      <div class="paper-edge" aria-hidden="true"></div>
+      <header class="notebook__header">
+        <div>
+          <p class="eyebrow">MY GROWTH NOTEBOOK</p>
+          <h1 id="target-title">正在整理你的成长手帐</h1>
+          <p class="notebook__subtitle" id="notebook-subtitle">先确认目标和起点，再决定今天学什么。</p>
         </div>
-        <button class="quiet-button" id="pause-button" type="button">暂停</button>
-        <button class="text-button" id="reset-button" type="button">重新规划</button>
-      </div>
-    </header>
-
-    <main class="workspace">
-      <aside class="sidebar" aria-label="成长路径">
-        <div class="sidebar__target-label">当前目标</div>
-        <h1 class="sidebar__target" id="target-title">为你规划中</h1>
-        <p class="sidebar__target-meta" id="target-meta">先确认目标和能力起点，再进入每天的行动。</p>
-        <ol class="journey" id="journey">
-          <li class="journey__item is-active" data-step="discover">
-            <span class="journey__number">1</span>
-            <span class="journey__copy"><span class="journey__name">认识你</span><span class="journey__hint">目标与起点</span></span>
-          </li>
-          <li class="journey__item" data-step="gap">
-            <span class="journey__number">2</span>
-            <span class="journey__copy"><span class="journey__name">确认差距</span><span class="journey__hint">证据与未知</span></span>
-          </li>
-          <li class="journey__item" data-step="plan">
-            <span class="journey__number">3</span>
-            <span class="journey__copy"><span class="journey__name">一起规划</span><span class="journey__hint">阶段与节奏</span></span>
-          </li>
-          <li class="journey__item" data-step="learn">
-            <span class="journey__number">4</span>
-            <span class="journey__copy"><span class="journey__name">每天行动</span><span class="journey__hint">复盘后调整</span></span>
-          </li>
-        </ol>
-        <div class="sidebar__footer">
-          <div class="day-status"><span>学习日</span><strong id="sidebar-day">Day 1</strong></div>
-          <div class="day-status" style="margin-top: 9px;"><span>进度</span><strong id="sidebar-progress">首次对话</strong></div>
-        </div>
-      </aside>
-
-      <section class="coach-pane" aria-label="Coach 对话">
-        <header class="summary">
-          <div>
-            <div class="summary__label">成长 Coach</div>
-            <div class="summary__title" id="summary-title">先聊聊你真正想解决的事</div>
-          </div>
-          <div class="summary__meta" id="summary-meta">Day 1</div>
-        </header>
-
-        <div class="timeline" id="timeline" aria-live="polite" aria-busy="true">
-          <div class="loading" id="loading-state" aria-label="Coach 正在准备">
-            <div class="skeleton"></div>
-            <div class="skeleton"></div>
-          </div>
-        </div>
-
-        <form class="composer" id="composer">
-          <div class="composer__row">
-            <textarea id="message-input" aria-label="回复 Coach" placeholder="写下你的回答，也可以点击上面的选项" rows="2"></textarea>
-            <button class="primary-button" id="send-button" type="submit">发送</button>
-          </div>
-          <div class="composer__hint" id="composer-hint">你的回答会用来调整后续规划，不会覆盖你已经完成的记录。</div>
-        </form>
+        <div class="page-count"><strong id="page-count">1</strong><span>页记录</span></div>
+      </header>
+      <nav class="page-nav" aria-label="手帐章节">
+        <a class="is-active" href="#today-section">今天</a>
+        <a href="#knowledge-section">已有知识</a>
+        <a href="#outputs-section">已有产出</a>
+      </nav>
+      <p class="margin-note" id="page-note" aria-live="polite">Coach 正在把你的目标整理成第一页。</p>
+      <section class="notebook-section today-section" id="today-section">
+        <div class="section-heading"><div><span class="section-index">01</span><h2>今天这页</h2></div><span class="day-label" id="day-label">DAY 1</span></div>
+        <div id="today-content" class="section-content skeleton-stack" aria-live="polite" aria-busy="true"><div class="skeleton"></div><div class="skeleton is-short"></div></div>
+      </section>
+      <section class="notebook-section" id="knowledge-section">
+        <div class="section-heading"><div><span class="section-index">02</span><h2>已经知道的</h2></div><span class="pencil-label">只写有来源的内容</span></div>
+        <div id="knowledge-content" class="section-content"></div>
+      </section>
+      <section class="notebook-section" id="outputs-section">
+        <div class="section-heading"><div><span class="section-index">03</span><h2>留下的产出</h2></div><span class="pencil-label">每条都可回看</span></div>
+        <div id="outputs-content" class="section-content"></div>
       </section>
     </main>
+    <aside class="coach-drawer is-open" id="coach-drawer" aria-label="Coach 侧边栏">
+      <header class="drawer-header">
+        <div><p class="eyebrow">SIDE COACH</p><h2>Coach</h2></div>
+        <div class="drawer-header__actions"><button class="icon-button" id="pause-button" type="button">暂停</button><button class="icon-button close-drawer" id="close-drawer" type="button" aria-label="收起 Coach">×</button></div>
+      </header>
+      <div class="drawer-status"><span id="phase-label">准备中</span><span id="drawer-day">Day 1</span></div>
+      <div class="conversation" id="timeline" aria-live="polite" aria-busy="true"></div>
+      <form class="composer" id="composer">
+        <label for="message-input">写给 Coach</label>
+        <textarea id="message-input" rows="3" placeholder="写下一句具体情况，也可以选择上面的回答"></textarea>
+        <div class="composer__footer"><span id="composer-hint">你的回答会成为后续判断的依据。</span><button class="send-button" id="send-button" type="submit">发送</button></div>
+      </form>
+    </aside>
+    <button class="drawer-tab" id="drawer-tab" type="button" aria-controls="coach-drawer" aria-expanded="false"><span>打开</span> Coach</button>
   </div>
-
-  <div class="toast is-hidden" id="toast" role="status"></div>
-
   <script src="./coach-client.js"></script>
   <script src="./coach-page.js"></script>
 </body>

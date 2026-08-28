@@ -57,7 +57,23 @@ Content-Type: application/json
 GET /api/v1/coach/sessions/{session_id}
 ```
 
-如果上一学习日已结束且当前日期已变化，此接口会将状态推进到 `daily_review`，因此页面刷新后应以返回的最新 `state_version` 为准。
+如果上一学习日已结束且当前日期已变化，Coach 会读取上次提交时已经完成的 Review，直接把状态推进到 `daily_learning` 并返回调整后的新任务。前端不再要求用户自评“完成 / 部分完成 / 卡住”，页面刷新后应以返回的最新 `state_version` 为准。
+
+## Review 归属
+
+`submit_result` 只提交用户实际做了什么及相关证据。Coach 在同一轮完成 Review，返回 `review` 卡片，并把结果写入 `workspace.outputs[].review`。关键字段：
+
+```json
+{
+  "reviewed_by": "coach",
+  "outcome": "ready_to_transfer",
+  "observation": "这次提交包含了可以继续核验的具体结果或过程说明。",
+  "boundary": "这是一条过程证据；单次提交不等于已经稳定掌握。",
+  "next_adjustment": "下一次加入一个小变化，验证这项能力能否迁移。",
+  "next_mode": "advance",
+  "source_evidence_id": "evidence-uuid"
+}
+```
 
 ## 提交一轮交互
 
@@ -115,9 +131,20 @@ resume
     "current_day": 1,
     "progress_label": "确认 Gap Map"
   },
+  "workspace": {
+    "notebook_pages": 2,
+    "known_items": [],
+    "open_gaps": [],
+    "outputs": [],
+    "stage_plan": [],
+    "current_task": null,
+    "latest_review": null
+  },
   "updated_at": "2026-08-28T20:30:02+08:00"
 }
 ```
+
+`workspace` 是左侧成长手帐的恢复数据源：前端用它渲染已有知识、待验证项、当前任务、历史产出和最近 Review，不从聊天文案反推状态。
 
 P0 卡片类型：
 

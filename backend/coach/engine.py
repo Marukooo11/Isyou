@@ -73,18 +73,44 @@ class CoachEngine:
     ) -> tuple[dict[str, Any], dict[str, Any], bool]:
         state = deepcopy(original_state)
         last_date = state.get("last_learning_date")
+        if state.get("phase") == "daily_review":
+            review = ((state.get("previous_session") or {}).get("review") or {})
+            state["phase"] = "daily_learning"
+            state["current_task"] = self._build_daily_task(state, review.get("next_mode") or "continue")
+            state["state_version"] += 1
+            state["updated_at"] = now.isoformat()
+            response = self._daily_task_response(
+                state,
+                self._next_day_intro(review),
+                prefix_blocks=[{"id": "legacy-review", "type": "review", "data": review}] if review else [],
+            )
+            state["last_response"] = response
+            return state, response, True
         if (
             state.get("phase") == "submission_review"
             and state.get("day_completed")
             and last_date
             and date.fromisoformat(last_date) < today
         ):
-            state["phase"] = "daily_review"
             state["current_day"] += 1
             state["day_completed"] = False
+            review = ((state.get("previous_session") or {}).get("review") or {})
+            mode = review.get("next_mode") or "continue"
+            state["phase"] = "daily_learning"
+            state["current_task"] = self._build_daily_task(state, mode)
             state["state_version"] += 1
             state["updated_at"] = now.isoformat()
-            response = self._daily_review_response(state)
+            response = self._daily_task_response(
+                state,
+                self._next_day_intro(review),
+                prefix_blocks=[
+                    {
+                        "id": f"review-day-{state['current_day'] - 1}",
+                        "type": "review",
+                        "data": review,
+                    }
+                ] if review else [],
+            )
             state["last_response"] = response
             return state, response, True
         return state, self._refresh_response(state), False
@@ -137,8 +163,6 @@ class CoachEngine:
                 ],
                 [],
             )
-        elif phase == "daily_review":
-            response = self._handle_daily_review(state, event)
         else:
             raise InvalidRequest(f"当前阶段暂不接受新的交互：{phase}")
 
@@ -240,58 +264,36 @@ class CoachEngine:
                 "day": state["current_day"],
                 "summary": message or "用户提交了当天任务结果。",
                 "attachments": evidence,
-                "completion_status": "partial" if event.get("action_id") == "task-partial" else "completed",
-                "status": "pending_review",
+                "completion_status": "submitted",
+                "status": "reviewed",
                 "created_at": now.isoformat(),
             }
+            review = self._review_submission(state, evidence_record)
+            evidence_record["review"] = review
             state["evidence_log"].append(evidence_record)
             state["previous_session"] = {
                 "day": state["current_day"],
                 "task": state["current_task"],
                 "result": evidence_record,
+                "review": review,
             }
             state["last_learning_date"] = now.date().isoformat()
             state["day_completed"] = True
             state["phase"] = "submission_review"
             return self._response(
                 state,
-                "我已经记下今天的结果。它现在是一条待复核证据；明天 Review 后再决定它能支持什么能力判断。",
+                "我已经完成这次 Review，并把判断边界和下一步调整记进你的本子。你不需要再给自己打分。",
                 [
                     {
-                        "id": "feedback",
-                        "type": "feedback",
-                        "data": {
-                            "result": "received",
-                            "strength": "你完成了一个可以继续讨论的具体产物或说明。",
-                            "boundary": "仅凭一次提交还不能直接证明已经掌握。",
-                        },
+                        "id": f"review-day-{state['current_day']}",
+                        "type": "review",
+                        "data": review,
                     },
                     {"id": "evidence-update", "type": "evidence_update", "data": evidence_record},
                 ],
                 [],
             )
         raise InvalidRequest("当前课程支持提交结果、报告卡点或请求帮助。")
-
-    def _handle_daily_review(self, state: dict[str, Any], event: dict[str, Any]) -> dict[str, Any]:
-        if event["type"] not in {"message", "answer_question"}:
-            raise InvalidRequest("请先完成前一天的 Review。")
-        action_id = event.get("action_id") or ""
-        text = (event.get("message") or "").lower()
-        if action_id == "review_blocked" or "没" in text or "卡" in text:
-            mode = "reduce"
-            intro = "昨天的主要问题是任务摩擦。今天先降低难度，不增加新的学习负担。"
-        elif action_id == "review_partial" or "部分" in text:
-            mode = "continue"
-            intro = "昨天已经产生了一部分证据。今天从断点继续，不重新做整节内容。"
-        else:
-            mode = "advance"
-            intro = "昨天的起点任务已经完成。今天提高一点点难度，用新任务验证能否迁移。"
-
-        if state["evidence_log"]:
-            state["evidence_log"][-1]["status"] = "reviewed"
-        state["phase"] = "daily_learning"
-        state["current_task"] = self._build_daily_task(state, mode)
-        return self._daily_task_response(state, intro)
 
     def _onboarding_response(self, state: dict[str, Any]) -> dict[str, Any]:
         target = self._target_title(state)
@@ -312,41 +314,62 @@ class CoachEngine:
             [{"id": "answer-start", "label": "提交回答", "event_type": "answer_question"}],
         )
 
-    def _daily_review_response(self, state: dict[str, Any]) -> dict[str, Any]:
-        previous = state.get("previous_session") or {}
-        return self._response(
-            state,
-            "开始今天的内容前，我们先复盘昨天。重点不是打卡，而是判断任务是否合适、产生了什么证据。",
-            [
-                {
-                    "id": f"review-day-{previous.get('day', state['current_day'] - 1)}",
-                    "type": "review",
-                    "data": {
-                        "previous_day": previous.get("day", state["current_day"] - 1),
-                        "previous_task": previous.get("task"),
-                        "prompt": "昨天完成到哪里？最大的困难是什么？",
-                    },
-                }
-            ],
-            [
-                {"id": "review-complete", "label": "顺利完成", "event_type": "answer_question", "action_id": "review_complete"},
-                {"id": "review-partial", "label": "只完成一部分", "event_type": "answer_question", "action_id": "review_partial"},
-                {"id": "review-blocked", "label": "基本没开始 / 卡住", "event_type": "answer_question", "action_id": "review_blocked"},
-            ],
-        )
-
-    def _daily_task_response(self, state: dict[str, Any], message: str) -> dict[str, Any]:
+    def _daily_task_response(
+        self,
+        state: dict[str, Any],
+        message: str,
+        prefix_blocks: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
         return self._response(
             state,
             message,
-            [{"id": f"task-day-{state['current_day']}", "type": "daily_task", "data": state["current_task"]}],
+            (prefix_blocks or [])
+            + [{"id": f"task-day-{state['current_day']}", "type": "daily_task", "data": state["current_task"]}],
             [
-                {"id": "task-done", "label": "我完成了", "event_type": "submit_result"},
-                {"id": "task-partial", "label": "我只完成了一部分", "event_type": "submit_result"},
+                {"id": "task-submit", "label": "提交给 Coach Review", "event_type": "submit_result"},
                 {"id": "task-blocked", "label": "我卡住了", "event_type": "report_blocker"},
                 {"id": "task-help", "label": "我需要帮助", "event_type": "request_help"},
             ],
         )
+
+    def _review_submission(self, state: dict[str, Any], evidence: dict[str, Any]) -> dict[str, Any]:
+        summary = (evidence.get("summary") or "").strip()
+        lowered = summary.lower()
+        blocked = any(word in lowered for word in ("没找到", "没有找到", "卡住", "无法", "没完成"))
+        if blocked:
+            outcome = "needs_support"
+            next_mode = "reduce"
+            observation = "这次提交记录了真实卡点，仍然是有效的学习证据。"
+            adjustment = "下一次把任务缩小到一条记录，先降低启动摩擦。"
+        elif len(summary) < 12:
+            outcome = "needs_detail"
+            next_mode = "continue"
+            observation = "已经有一条结果记录，但做法和判断依据还不够具体。"
+            adjustment = "下一次沿用这份结果，只补充工具、做法或一个反馈问题。"
+        else:
+            outcome = "ready_to_transfer"
+            next_mode = "advance"
+            observation = "这次提交包含了可以继续核验的具体结果或过程说明。"
+            adjustment = "下一次加入一个小变化，验证这项能力能否迁移。"
+        return {
+            "reviewed_by": "coach",
+            "previous_day": state.get("current_day", 1),
+            "previous_task": deepcopy(state.get("current_task")),
+            "outcome": outcome,
+            "observation": observation,
+            "boundary": "这是一条过程证据；单次提交不等于已经稳定掌握。",
+            "next_adjustment": adjustment,
+            "next_mode": next_mode,
+            "source_evidence_id": evidence.get("id"),
+        }
+
+    @staticmethod
+    def _next_day_intro(review: dict[str, Any]) -> str:
+        if review.get("next_mode") == "reduce":
+            return "我已根据上次提交完成 Review。今天先降低难度，不增加新的学习负担。"
+        if review.get("next_mode") == "advance":
+            return "我已根据上次提交完成 Review。今天提高一点点难度，验证能否迁移。"
+        return "我已根据上次提交完成 Review。今天从已有结果继续，不要求重做。"
 
     def _build_gap_map(self, state: dict[str, Any]) -> list[dict[str, Any]]:
         context = state.get("career_context") or {}
@@ -498,10 +521,37 @@ class CoachEngine:
                     "current_day": state.get("current_day", 1),
                     "progress_label": self._progress_label(state["phase"]),
                 },
+                "workspace": self._workspace(state),
                 "updated_at": state["updated_at"],
             }
         )
         return result
+
+    def _workspace(self, state: dict[str, Any]) -> dict[str, Any]:
+        profile = ((state.get("career_context") or {}).get("user_profile") or {})
+        facts = profile.get("facts") or []
+        known_items = []
+        for index, fact in enumerate(facts):
+            if isinstance(fact, dict):
+                known_items.append({
+                    "id": fact.get("id") or f"fact-{index + 1}",
+                    "text": fact.get("text") or fact.get("value") or str(fact),
+                    "source_ref": fact.get("source_ref"),
+                })
+            else:
+                known_items.append({"id": f"fact-{index + 1}", "text": str(fact), "source_ref": None})
+        gaps = deepcopy(state.get("gap_map") or [])
+        outputs = deepcopy(state.get("evidence_log") or [])
+        page_count = 1 + int(bool(gaps)) + int(bool(state.get("stage_plan"))) + len(outputs) + max(0, int(state.get("current_day", 1)) - 1)
+        return {
+            "notebook_pages": page_count,
+            "known_items": known_items,
+            "open_gaps": gaps,
+            "outputs": outputs,
+            "stage_plan": deepcopy(state.get("stage_plan") or []),
+            "current_task": deepcopy(state.get("current_task")),
+            "latest_review": deepcopy(((state.get("previous_session") or {}).get("review"))),
+        }
 
     def _target_title(self, state: dict[str, Any]) -> str:
         selected = (state.get("career_context") or {}).get("selected_direction") or {}
@@ -514,7 +564,6 @@ class CoachEngine:
             "gap_analysis": "确认 Gap Map",
             "plan_review": "确认阶段计划",
             "daily_learning": "当天课程",
-            "submission_review": "等待次日 Review",
-            "daily_review": "前一天复盘",
+            "submission_review": "Coach 已完成 Review",
             "paused": "已暂停",
         }.get(phase, phase)
