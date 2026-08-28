@@ -31,6 +31,25 @@
       return response;
     }
 
+    async evaluateCareer(profile, selectedOccupationId) {
+      return this._request("POST", "/api/v1/career/evaluations", {
+        profile: profile,
+        selected_occupation_id: selectedOccupationId || undefined,
+      });
+    }
+
+    async startFromCareerProfile(profile, selectedOccupationId, options) {
+      const config = options || {};
+      const response = await this._request("POST", "/api/v1/career/coach-sessions", {
+        profile: profile,
+        selected_occupation_id: selectedOccupationId || undefined,
+        client_user_id: config.clientUserId,
+        preferences: config.preferences || {},
+      });
+      this._remember(response.coach);
+      return response;
+    }
+
     async restore() {
       if (!this.sessionId) return null;
       try {

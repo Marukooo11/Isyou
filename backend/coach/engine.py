@@ -350,12 +350,24 @@ class CoachEngine:
     def _build_gap_map(self, state: dict[str, Any]) -> list[dict[str, Any]]:
         context = state.get("career_context") or {}
         requirements = context.get("target_requirements") or []
+        user_profile = context.get("user_profile") or {}
+        evidence = user_profile.get("evidence") or []
+        evidence_refs = [
+            item.get("id")
+            for item in evidence
+            if isinstance(item, dict) and item.get("id")
+        ]
         first_requirement = requirements[0] if requirements else None
         requirement_refs = [first_requirement.get("id")] if first_requirement else []
         requirement_reason = (
             first_requirement.get("text")
             if first_requirement
             else "当前还没有足够的目标要求来源，需要 Career Skill 补充或由 Coach 继续核验。"
+        )
+        starting_reason = (
+            f"当前已有 {len(evidence_refs)} 条画像证据，但还需要核验它们与目标方向的关联，以及目前能够独立完成到什么程度。"
+            if evidence_refs
+            else "已有经历能说明接触过相关方向，但不足以判断目前能够独立完成到什么程度。"
         )
         return [
             {
@@ -365,18 +377,18 @@ class CoachEngine:
                 "status": "unknown",
                 "priority": "high",
                 "target_requirement_refs": requirement_refs,
-                "user_evidence_refs": [],
-                "reason": "已有经历能说明接触过相关方向，但不足以判断目前能够独立完成到什么程度。",
+                "user_evidence_refs": evidence_refs,
+                "reason": starting_reason,
                 "next_validation": "用一份已有作品、练习或具体经历定位起点。",
             },
             {
                 "id": "gap-evidence",
                 "type": "evidence",
-                "title": "缺少可复核的能力证据",
-                "status": "confirmed" if first_requirement else "unknown",
+                "title": "现有证据与目标方向的关联性待核验" if evidence_refs else "缺少可复核的能力证据",
+                "status": "in_progress" if evidence_refs else "confirmed" if first_requirement else "unknown",
                 "priority": "high",
                 "target_requirement_refs": requirement_refs,
-                "user_evidence_refs": [],
+                "user_evidence_refs": evidence_refs,
                 "reason": requirement_reason,
                 "next_validation": "先寻找已有材料，不要求用户从零完成高压力作品。",
             },

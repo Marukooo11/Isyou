@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Isyou Career → Coach 联调</title>
+  <style>
+    :root { color-scheme: light; --paper:#fffdf8; --ink:#29302e; --line:#dcd5c4; --green:#647d5c; --muted:#73776f; }
+    * { box-sizing: border-box; }
+    body { margin:0; font:14px/1.65 system-ui,sans-serif; color:var(--ink); background:#f4f0e6; }
+    main { width:min(1080px,calc(100% - 32px)); margin:24px auto 48px; }
+    header,.panel,.message,.block { background:var(--paper); border:1px solid var(--line); }
+    header { padding:16px 18px; display:flex; justify-content:space-between; gap:16px; align-items:center; }
+    h1,h2 { margin:0; } h1 { font-size:18px; } h2 { font-size:15px; margin-bottom:10px; }
+    .status,.hint,small { color:var(--muted); font-size:12px; }
+    .grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:14px; margin-top:14px; }
+    .panel { padding:15px; min-width:0; }
+    textarea { width:100%; min-height:300px; resize:vertical; padding:10px; border:1px solid var(--line); font:12px/1.5 ui-monospace,monospace; }
+    button { border:1px solid #b8b09d; background:#faf8f2; padding:8px 12px; cursor:pointer; }
+    button.primary { color:white; background:var(--green); border-color:var(--green); }
+    button:disabled { opacity:.5; cursor:wait; }
+    .actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+    .recommendations { display:grid; gap:8px; }
+    label.card { display:block; border:1px solid var(--line); padding:10px; cursor:pointer; }
+    label.card:has(input:checked) { border-color:var(--green); box-shadow:inset 3px 0 var(--green); }
+    .card strong { margin-left:5px; }
+    .card p { margin:5px 0 0; color:var(--muted); }
+    #timeline { display:grid; gap:10px; }
+    .message,.block { padding:12px 14px; }
+    .message { border-left:3px solid var(--green); }
+    pre { white-space:pre-wrap; word-break:break-word; margin:6px 0 0; font:12px/1.5 ui-monospace,monospace; }
+    .composer { display:flex; gap:8px; margin-top:10px; }
+    .composer textarea { min-height:58px; font:inherit; }
+    .error { color:#a33; }
+    @media (max-width:760px) { .grid { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>Career Profile → 职业方向 → Quest Coach</h1>
+        <div id="status" class="status">正在载入联调画像…</div>
+      </div>
+      <button id="reset">清除 Coach 会话</button>
+    </header>
+
+    <div class="grid">
+      <section class="panel">
+        <h2>1. output1.v1.0 画像</h2>
+        <p class="hint">默认加载合成数据。可替换为信息收集 Skill 的真实输出；不要把 API Key 放进这里。</p>
+        <textarea id="profile" spellcheck="false"></textarea>
+        <div class="actions"><button id="evaluate" class="primary">评估职业方向</button></div>
+      </section>
+
+      <section class="panel">
+        <h2>2. 选择职业方向</h2>
+        <div id="recommendations" class="recommendations"><p class="hint">评估后显示五个方向。</p></div>
+        <div class="actions"><button id="start" class="primary" disabled>用所选方向启动 Coach</button></div>
+        <p id="boundary" class="hint"></p>
+      </section>
+    </div>
+
+    <section class="panel" style="margin-top:14px">
+      <h2>3. Coach 会话</h2>
+      <div id="timeline"><p class="hint">启动后会先进入 onboarding，回答后进入 Gap Map。</p></div>
+      <div class="composer">
+        <textarea id="message" placeholder="输入回答、结果或卡点"></textarea>
+        <button id="send">发送</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="coach-client.js"></script>
+  <script>
+    const query = new URLSearchParams(location.search);
+    const client = new IsyouCoach.CoachClient({
+      baseUrl: query.get("api") || "http://127.0.0.1:8001",
+      storageKey: "isyou_career_coach_session_id"
+    });
+    const profileInput = document.querySelector("#profile");
+    const recommendations = document.querySelector("#recommendations");
+    const timeline = document.querySelector("#timeline");
+    const status = document.querySelector("#status");
+    const message = document.querySelector("#message");
+    let lastProfile = null;
+
+    function setBusy(value) {
+      document.querySelectorAll("button").forEach(function (button) {
+        button.disabled = value || (button.id === "start" && !document.querySelector('input[name="occupation"]:checked'));
+      });
+    }
+
+    function fail(error) {
+      status.textContent = error.code ? error.code + " · " + error.message : error.message;
+      status.classList.add("error");
+    }
+
+    function parseProfile() {
+      try { return JSON.parse(profileInput.value); }
+      catch (_) { throw new Error("画像不是有效 JSON，请检查格式。"); }
+    }
+
+    function renderEvaluation(evaluation) {
+      recommendations.innerHTML = "";
+      evaluation.recommended_occupations.forEach(function (item, index) {
+        const label = document.createElement("label");
+        label.className = "card";
+        const radio = document.createElement("input");
+        radio.type = "radio";
+        radio.name = "occupation";
+        radio.value = item.occupation_id;
+        radio.checked = index === 0;
+        radio.onchange = function () { document.querySelector("#start").disabled = false; };
+        const title = document.createElement("strong");
+        title.textContent = item.rank + ". " + item.occupation_name + " · " + item.match_score;
+        const detail = document.createElement("p");
+        detail.textContent = item.current_readiness + "｜" + (item.reason.join("；") || "当前主要来自方向标签匹配");
+        label.append(radio, title, detail);
+        recommendations.appendChild(label);
+      });
+      if (!evaluation.recommended_occupations.length) {
+        const missing = evaluation.profile_status.missing_critical_fields || [];
+        recommendations.textContent = "画像尚未就绪：" + missing.join("、");
+      }
+      document.querySelector("#start").disabled = !evaluation.recommended_occupations.length;
+      document.querySelector("#boundary").textContent = evaluation.boundary.note;
+      status.textContent = "职业方向评估完成 · " + evaluation.library.occupation_count + " 个职业参与排序";
+    }
+
+    function renderCoach(response) {
+      timeline.innerHTML = "";
+      status.textContent = response.phase + " · Day " + response.state_summary.current_day + " · v" + response.state_version;
+      const coachMessage = document.createElement("article");
+      coachMessage.className = "message";
+      coachMessage.textContent = response.coach_message;
+      timeline.appendChild(coachMessage);
+      response.ui_blocks.forEach(function (block) {
+        const node = document.createElement("article");
+        node.className = "block";
+        const type = document.createElement("small");
+        type.textContent = block.type;
+        const data = document.createElement("pre");
+        data.textContent = JSON.stringify(block.data, null, 2);
+        node.append(type, data);
+        timeline.appendChild(node);
+      });
+      const actions = document.createElement("div");
+      actions.className = "actions";
+      response.quick_actions.forEach(function (action) {
+        const button = document.createElement("button");
+        button.textContent = action.label;
+        button.onclick = function () {
+          runTurn({
+            type: action.event_type,
+            action_id: action.action_id || action.id,
+            message: message.value,
+            evidence: action.event_type === "submit_result" ? [{ type:"note", value:message.value || "联调结果" }] : []
+          });
+        };
+        actions.appendChild(button);
+      });
+      timeline.appendChild(actions);
+    }
+
+    async function execute(task, renderer) {
+      setBusy(true);
+      status.classList.remove("error");
+      try { renderer(await task()); }
+      catch (error) { fail(error); }
+      finally { setBusy(false); }
+    }
+
+    function runTurn(event) {
+      execute(function () { return client.turn(event); }, renderCoach);
+    }
+
+    document.querySelector("#evaluate").onclick = function () {
+      execute(function () {
+        lastProfile = parseProfile();
+        return client.evaluateCareer(lastProfile);
+      }, renderEvaluation);
+    };
+    document.querySelector("#start").onclick = function () {
+      lastProfile = lastProfile || parseProfile();
+      const selected = document.querySelector('input[name="occupation"]:checked');
+      if (!selected) return fail(new Error("请先选择一个职业方向。"));
+      execute(
+        function () {
+          return client.startFromCareerProfile(lastProfile, selected.value, {
+            clientUserId: "career-demo-user",
+            preferences: { language:"zh-CN", available_minutes:30, communication_style:"clear_and_supportive" }
+          });
+        },
+        function (result) { renderEvaluation(result.career_evaluation); renderCoach(result.coach); }
+      );
+    };
+    document.querySelector("#send").onclick = function () {
+      runTurn({ type:"message", message:message.value, evidence:[] });
+    };
+    document.querySelector("#reset").onclick = function () {
+      client.clear();
+      timeline.innerHTML = '<p class="hint">会话已清除。可以重新评估并启动。</p>';
+    };
+
+    (async function boot() {
+      try {
+        const restored = await client.restore();
+        if (restored) renderCoach(restored);
+        const response = await fetch("fixtures/profile-ready.json");
+        profileInput.value = JSON.stringify(await response.json(), null, 2);
+        status.textContent = restored ? status.textContent : "合成画像已载入，可以开始评估";
+      } catch (error) { fail(error); }
+    })();
+  </script>
+</body>
+</html>

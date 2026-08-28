@@ -2,6 +2,8 @@
 
 > 前端只依赖本文件中的接口和响应结构。Coach 的 mock、真实模型或后续领域适配不得改变这些基础字段。
 
+职业画像评估及一键创建会话见 [`career-api.md`](career-api.md)。该接口生成的 `coach` 对象与本文件的 `CoachResponse` 完全一致。
+
 ## Health
 
 ```http
@@ -141,4 +143,3 @@ notice
 ```
 
 前端遇到 `STATE_CONFLICT` 时调用恢复会话接口，不要用旧状态重试写入。
-

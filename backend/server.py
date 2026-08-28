@@ -9,6 +9,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
+from career import CareerService
 from coach import CoachService, SQLiteCoachStore
 from coach.errors import CoachError, InvalidRequest
 
@@ -20,6 +21,7 @@ MAX_BODY_BYTES = 1_000_000
 
 class CoachRequestHandler(BaseHTTPRequestHandler):
     service: CoachService
+    career_service: CareerService
     allowed_origins: set[str] = set()
     allow_demo_date = False
 
@@ -42,7 +44,19 @@ class CoachRequestHandler(BaseHTTPRequestHandler):
             return
         try:
             if self.path == "/api/v1/health":
-                self._write_json(200, {"status": "ok", "service": "isyou-coach", "version": "0.1.0"})
+                self._write_json(
+                    200,
+                    {
+                        "status": "ok",
+                        "service": "isyou-coach",
+                        "version": "0.2.0",
+                        "features": {
+                            "quest_coach": True,
+                            "career_adapter": True,
+                            "occupation_count": self.career_service.matcher.occupation_count,
+                        },
+                    },
+                )
                 return
             match = SESSION_PATH.match(self.path)
             if match:
@@ -61,6 +75,14 @@ class CoachRequestHandler(BaseHTTPRequestHandler):
             return
         try:
             payload = self._read_json()
+            if self.path == "/api/v1/career/evaluations":
+                response = self.career_service.evaluate(payload, self._now())
+                self._write_json(200, response)
+                return
+            if self.path == "/api/v1/career/coach-sessions":
+                response = self.career_service.create_coach_session(payload, self._now())
+                self._write_json(201, response)
+                return
             if self.path == "/api/v1/coach/sessions":
                 response = self.service.create_session(payload, self._now())
                 self._write_json(201, response)
@@ -154,6 +176,7 @@ def build_server() -> ThreadingHTTPServer:
         "http://127.0.0.1:8000,http://localhost:8000",
     )
     CoachRequestHandler.service = CoachService(SQLiteCoachStore(database_path))
+    CoachRequestHandler.career_service = CareerService(CoachRequestHandler.service)
     CoachRequestHandler.allowed_origins = {item.strip() for item in origins.split(",") if item.strip()}
     CoachRequestHandler.allow_demo_date = os.environ.get("COACH_ALLOW_DEMO_DATE", "0") == "1"
     return ThreadingHTTPServer((host, port), CoachRequestHandler)
