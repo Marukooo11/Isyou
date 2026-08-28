@@ -18,12 +18,19 @@ class CareerService:
         coach_service: CoachService,
         matcher: CareerMatcher | None = None,
         adapter: CareerAdapter | None = None,
+        profile_store: Any | None = None,
     ):
         self.coach_service = coach_service
         self.matcher = matcher or CareerMatcher()
         self.adapter = adapter or CareerAdapter(self.matcher)
+        self.profile_store = profile_store
 
-    def evaluate(self, payload: dict[str, Any], now: datetime) -> dict[str, Any]:
+    def evaluate(
+        self,
+        payload: dict[str, Any],
+        now: datetime,
+        user_id: str | None = None,
+    ) -> dict[str, Any]:
         if not isinstance(payload, dict):
             raise InvalidRequest("请求体必须是 JSON 对象。")
         profile = payload.get("profile")
@@ -38,8 +45,11 @@ class CareerService:
                 matched,
                 payload.get("selected_occupation_id"),
             )
+        if user_id and self.profile_store:
+            self.profile_store.save_profile(user_id, matched, now.isoformat())
         return {
             "schema_version": "career-evaluation.v1",
+            "user_id": user_id,
             "profile_id": matched.get("profile_id"),
             "profile_status": matched.get("profile_status"),
             "recommended_occupations": matched.get("recommended_occupations") or [],
@@ -58,13 +68,19 @@ class CareerService:
             },
         }
 
-    def create_coach_session(self, payload: dict[str, Any], now: datetime) -> dict[str, Any]:
-        evaluation = self.evaluate(payload, now)
+    def create_coach_session(
+        self,
+        payload: dict[str, Any],
+        now: datetime,
+        user_id: str | None = None,
+    ) -> dict[str, Any]:
+        evaluation = self.evaluate(payload, now, user_id=user_id)
         if not evaluation["career_context"]:
             missing = (evaluation.get("profile_status") or {}).get("missing_critical_fields") or []
             raise InvalidRequest("画像尚未满足职业匹配条件：" + "、".join(missing))
         coach_payload = {
-            "client_user_id": payload.get("client_user_id") or evaluation.get("profile_id"),
+            "user_id": user_id,
+            "client_user_id": user_id or payload.get("client_user_id") or evaluation.get("profile_id"),
             "domain": "career",
             "career_context": evaluation["career_context"],
             "preferences": payload.get("preferences") or {},

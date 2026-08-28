@@ -15,11 +15,17 @@
     .status,.hint,small { color:var(--muted); font-size:12px; }
     .grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:14px; margin-top:14px; }
     .panel { padding:15px; min-width:0; }
-    textarea { width:100%; min-height:300px; resize:vertical; padding:10px; border:1px solid var(--line); font:12px/1.5 ui-monospace,monospace; }
+    textarea,input,select { width:100%; padding:9px 10px; border:1px solid var(--line); background:white; }
+    textarea { min-height:300px; resize:vertical; font:12px/1.5 ui-monospace,monospace; }
     button { border:1px solid #b8b09d; background:#faf8f2; padding:8px 12px; cursor:pointer; }
     button.primary { color:white; background:var(--green); border-color:var(--green); }
     button:disabled { opacity:.5; cursor:wait; }
     .actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+    .auth-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+    .auth-card { border:1px solid var(--line); padding:12px; }
+    .fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+    .fields .wide { grid-column:1/-1; }
+    .account { padding:9px 11px; margin-bottom:10px; background:#eef1e9; }
     .recommendations { display:grid; gap:8px; }
     label.card { display:block; border:1px solid var(--line); padding:10px; cursor:pointer; }
     label.card:has(input:checked) { border-color:var(--green); box-shadow:inset 3px 0 var(--green); }
@@ -32,7 +38,7 @@
     .composer { display:flex; gap:8px; margin-top:10px; }
     .composer textarea { min-height:58px; font:inherit; }
     .error { color:#a33; }
-    @media (max-width:760px) { .grid { grid-template-columns:1fr; } }
+    @media (max-width:760px) { .grid,.auth-grid,.fields { grid-template-columns:1fr; } .fields .wide { grid-column:auto; } }
   </style>
 </head>
 <body>
@@ -42,8 +48,50 @@
         <h1>Career Profile → 职业方向 → Quest Coach</h1>
         <div id="status" class="status">正在载入联调画像…</div>
       </div>
-      <button id="reset">清除 Coach 会话</button>
+      <div class="actions">
+        <button id="reset">清除 Coach 会话</button>
+        <button id="logout" disabled>退出登录</button>
+      </div>
     </header>
+
+    <section class="panel" style="margin-top:14px">
+      <h2>0. 注册或登录，取得可信 user_id</h2>
+      <div id="account" class="account">尚未登录。后续画像和 Coach 会话不会接受前端自报的 user_id。</div>
+      <div class="auth-grid">
+        <div class="auth-card">
+          <strong>手机号 / 邮箱验证码注册</strong>
+          <div class="fields" style="margin-top:9px">
+            <select id="register-type"><option value="email">邮箱</option><option value="phone">手机号</option></select>
+            <input id="register-contact" placeholder="邮箱或手机号">
+            <input id="register-code" inputmode="numeric" maxlength="6" placeholder="6 位验证码">
+            <input id="register-username" autocomplete="username" placeholder="用户名（3—24 位）">
+            <input id="register-password" class="wide" type="password" autocomplete="new-password" placeholder="密码（至少 8 位，含字母和数字）">
+          </div>
+          <div class="actions">
+            <button id="register-send-code">发送注册验证码</button>
+            <button id="register-submit" class="primary">验证并注册</button>
+          </div>
+        </div>
+        <div class="auth-card">
+          <strong>登录</strong>
+          <div class="fields" style="margin-top:9px">
+            <input id="login-username" autocomplete="username" placeholder="用户名">
+            <input id="login-password" type="password" autocomplete="current-password" placeholder="密码">
+          </div>
+          <div class="actions"><button id="login-password-submit" class="primary">用户名 + 密码登录</button></div>
+          <div class="fields" style="margin-top:12px">
+            <select id="login-type"><option value="email">邮箱</option><option value="phone">手机号</option></select>
+            <input id="login-contact" placeholder="已注册邮箱或手机号">
+            <input id="login-code" inputmode="numeric" maxlength="6" placeholder="6 位验证码">
+          </div>
+          <div class="actions">
+            <button id="login-send-code">发送登录验证码</button>
+            <button id="login-code-submit" class="primary">验证码登录</button>
+          </div>
+        </div>
+      </div>
+      <p class="hint">本地开发默认将验证码回填到输入框；真实短信/邮件发送需要替换 delivery provider，生产环境必须关闭开发验证码。</p>
+    </section>
 
     <div class="grid">
       <section class="panel">
@@ -84,16 +132,43 @@
     const status = document.querySelector("#status");
     const message = document.querySelector("#message");
     let lastProfile = null;
+    let currentUser = null;
+    let registerChallengeId = null;
+    let loginChallengeId = null;
 
     function setBusy(value) {
       document.querySelectorAll("button").forEach(function (button) {
-        button.disabled = value || (button.id === "start" && !document.querySelector('input[name="occupation"]:checked'));
+        button.disabled = value ||
+          (button.id === "start" && (!currentUser || !document.querySelector('input[name="occupation"]:checked'))) ||
+          (button.id === "logout" && !currentUser);
       });
     }
 
     function fail(error) {
       status.textContent = error.code ? error.code + " · " + error.message : error.message;
       status.classList.add("error");
+    }
+
+    function renderAccount(user) {
+      currentUser = user || null;
+      document.querySelector("#account").textContent = user
+        ? "已登录：" + user.username + " · " + user.masked_contact + " · " + user.user_id
+        : "尚未登录。后续画像和 Coach 会话不会接受前端自报的 user_id。";
+      document.querySelector("#logout").disabled = !currentUser;
+      document.querySelector("#start").disabled = !currentUser || !document.querySelector('input[name="occupation"]:checked');
+    }
+
+    function requireUser() {
+      if (!currentUser) throw new Error("请先注册或登录，再评估画像和创建 Coach 会话。");
+    }
+
+    function applyDevCode(result, inputId) {
+      if (result.dev_code) {
+        document.querySelector(inputId).value = result.dev_code;
+        status.textContent = "本地验证码已回填 · " + result.delivery.masked_contact;
+      } else {
+        status.textContent = "验证码已发送至 " + result.delivery.masked_contact;
+      }
     }
 
     function parseProfile() {
@@ -123,7 +198,7 @@
         const missing = evaluation.profile_status.missing_critical_fields || [];
         recommendations.textContent = "画像尚未就绪：" + missing.join("、");
       }
-      document.querySelector("#start").disabled = !evaluation.recommended_occupations.length;
+      document.querySelector("#start").disabled = !currentUser || !evaluation.recommended_occupations.length;
       document.querySelector("#boundary").textContent = evaluation.boundary.note;
       status.textContent = "职业方向评估完成 · " + evaluation.library.occupation_count + " 个职业参与排序";
     }
@@ -177,6 +252,7 @@
 
     document.querySelector("#evaluate").onclick = function () {
       execute(function () {
+        requireUser();
         lastProfile = parseProfile();
         return client.evaluateCareer(lastProfile);
       }, renderEvaluation);
@@ -187,8 +263,8 @@
       if (!selected) return fail(new Error("请先选择一个职业方向。"));
       execute(
         function () {
+          requireUser();
           return client.startFromCareerProfile(lastProfile, selected.value, {
-            clientUserId: "career-demo-user",
             preferences: { language:"zh-CN", available_minutes:30, communication_style:"clear_and_supportive" }
           });
         },
@@ -202,10 +278,100 @@
       client.clear();
       timeline.innerHTML = '<p class="hint">会话已清除。可以重新评估并启动。</p>';
     };
+    document.querySelector("#register-send-code").onclick = function () {
+      execute(
+        function () {
+          return client.requestAuthCode(
+            "register",
+            document.querySelector("#register-type").value,
+            document.querySelector("#register-contact").value
+          );
+        },
+        function (result) {
+          registerChallengeId = result.challenge_id;
+          applyDevCode(result, "#register-code");
+        }
+      );
+    };
+    document.querySelector("#register-submit").onclick = function () {
+      execute(
+        function () {
+          if (!registerChallengeId) throw new Error("请先发送注册验证码。");
+          return client.register(
+            registerChallengeId,
+            document.querySelector("#register-code").value,
+            document.querySelector("#register-username").value,
+            document.querySelector("#register-password").value
+          );
+        },
+        function (result) {
+          renderAccount(result.user);
+          status.textContent = "注册完成，登录令牌已保存；现在可以评估画像。";
+        }
+      );
+    };
+    document.querySelector("#login-password-submit").onclick = function () {
+      execute(
+        function () {
+          return client.loginWithPassword(
+            document.querySelector("#login-username").value,
+            document.querySelector("#login-password").value
+          );
+        },
+        function (result) {
+          renderAccount(result.user);
+          status.textContent = "用户名 + 密码登录成功。";
+        }
+      );
+    };
+    document.querySelector("#login-send-code").onclick = function () {
+      execute(
+        function () {
+          return client.requestAuthCode(
+            "login",
+            document.querySelector("#login-type").value,
+            document.querySelector("#login-contact").value
+          );
+        },
+        function (result) {
+          loginChallengeId = result.challenge_id;
+          applyDevCode(result, "#login-code");
+        }
+      );
+    };
+    document.querySelector("#login-code-submit").onclick = function () {
+      execute(
+        function () {
+          if (!loginChallengeId) throw new Error("请先发送登录验证码。");
+          return client.loginWithCode(
+            loginChallengeId,
+            document.querySelector("#login-code").value
+          );
+        },
+        function (result) {
+          renderAccount(result.user);
+          status.textContent = "手机号 / 邮箱验证码登录成功。";
+        }
+      );
+    };
+    document.querySelector("#logout").onclick = function () {
+      execute(
+        function () { return client.logout(); },
+        function () {
+          renderAccount(null);
+          timeline.innerHTML = '<p class="hint">已退出并清除本机会话。请重新登录。</p>';
+          status.textContent = "已退出登录";
+        }
+      );
+    };
 
     (async function boot() {
       try {
-        const restored = await client.restore();
+        let account = null;
+        try { account = await client.me(); }
+        catch (error) { if (error.code !== "AUTH_REQUIRED") throw error; }
+        if (account) renderAccount(account.user);
+        const restored = currentUser ? await client.restore() : null;
         if (restored) renderCoach(restored);
         const response = await fetch("fixtures/profile-ready.json");
         profileInput.value = JSON.stringify(await response.json(), null, 2);

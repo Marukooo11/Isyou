@@ -6,6 +6,7 @@
 
 ```http
 POST /api/v1/career/evaluations
+Authorization: Bearer <access_token>
 Content-Type: application/json
 ```
 
@@ -43,6 +44,7 @@ Content-Type: application/json
 
 ```http
 POST /api/v1/career/coach-sessions
+Authorization: Bearer <access_token>
 Content-Type: application/json
 ```
 
@@ -77,7 +79,10 @@ Content-Type: application/json
 
 ```http
 POST /api/v1/coach/sessions/{session_id}/turns
+Authorization: Bearer <access_token>
 ```
+
+`user_id` 只从 Bearer token 解析；请求中的 `client_user_id` 不参与账号归属判断。每次职业评估会将最新完整画像保存到当前用户的 `user_profiles`。
 
 ## 就绪失败
 

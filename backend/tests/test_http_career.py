@@ -4,10 +4,12 @@ import json
 import tempfile
 import threading
 import unittest
+import urllib.error
 import urllib.request
 from http.server import ThreadingHTTPServer
 from pathlib import Path
 
+from auth import AuthService, SQLiteAuthStore
 from career import CareerService
 from coach import CoachService, SQLiteCoachStore
 from server import CoachRequestHandler
@@ -20,9 +22,14 @@ FIXTURE = ROOT / "frontend" / "fixtures" / "profile-ready.json"
 class CareerHttpFlowTest(unittest.TestCase):
     def setUp(self):
         self.tempdir = tempfile.TemporaryDirectory()
-        coach = CoachService(SQLiteCoachStore(Path(self.tempdir.name) / "coach.db"))
+        database = Path(self.tempdir.name) / "coach.db"
+        auth_store = SQLiteAuthStore(database)
+        coach = CoachService(SQLiteCoachStore(database))
+        CoachRequestHandler.auth_service = AuthService(
+            auth_store, expose_dev_codes=True, resend_cooldown_seconds=0
+        )
         CoachRequestHandler.service = coach
-        CoachRequestHandler.career_service = CareerService(coach)
+        CoachRequestHandler.career_service = CareerService(coach, profile_store=auth_store)
         CoachRequestHandler.allowed_origins = set()
         CoachRequestHandler.allow_demo_date = True
         self.server = ThreadingHTTPServer(("127.0.0.1", 0), CoachRequestHandler)
@@ -38,29 +45,77 @@ class CareerHttpFlowTest(unittest.TestCase):
         self.thread.join(timeout=2)
         self.tempdir.cleanup()
 
-    def post(self, path: str, payload: dict) -> tuple[int, dict]:
+    def request(
+        self, method: str, path: str, payload: dict | None = None, token: str | None = None
+    ) -> tuple[int, dict]:
+        headers = {"X-Coach-Date": "2026-08-28"}
+        data = None
+        if payload is not None:
+            headers["Content-Type"] = "application/json"
+            data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
         request = urllib.request.Request(
             self.base_url + path,
-            data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
-            headers={"Content-Type": "application/json", "X-Coach-Date": "2026-08-28"},
-            method="POST",
+            data=data,
+            headers=headers,
+            method=method,
         )
-        with urllib.request.urlopen(request, timeout=5) as response:
-            return response.status, json.loads(response.read().decode("utf-8"))
+        try:
+            with urllib.request.urlopen(request, timeout=5) as response:
+                return response.status, json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as error:
+            return error.code, json.loads(error.read().decode("utf-8"))
+
+    def post(self, path: str, payload: dict, token: str | None = None) -> tuple[int, dict]:
+        return self.request("POST", path, payload, token)
+
+    def register(self, email: str, username: str) -> dict:
+        _, challenge = self.post(
+            "/api/v1/auth/codes",
+            {"purpose": "register", "contact_type": "email", "contact": email},
+        )
+        _, registered = self.post(
+            "/api/v1/auth/register",
+            {
+                "challenge_id": challenge["challenge_id"],
+                "code": challenge["dev_code"],
+                "username": username,
+                "password": "career123",
+            },
+        )
+        return registered
 
     def test_profile_to_recommendation_to_gap_map_over_http(self):
+        registered = self.register("http@example.com", "http_user")
+        token = registered["access_token"]
+        user_id = registered["user"]["user_id"]
         status, started = self.post(
             "/api/v1/career/coach-sessions",
             {
                 "profile": self.profile,
-                "client_user_id": "http-demo-user",
+                "client_user_id": "spoofed-user-id",
                 "preferences": {"available_minutes": 30},
             },
+            token,
         )
         self.assertEqual(status, 201)
         self.assertEqual(len(started["career_evaluation"]["recommended_occupations"]), 5)
         coach = started["coach"]
         self.assertEqual(coach["phase"], "onboarding")
+        self.assertEqual(started["career_evaluation"]["user_id"], user_id)
+        saved_state = CoachRequestHandler.service.store.get_session(coach["session_id"])
+        self.assertEqual(saved_state["user_id"], user_id)
+        self.assertEqual(
+            CoachRequestHandler.auth_service.store.get_profile(user_id)["profile_id"],
+            self.profile["profile_id"],
+        )
+        status, saved_profile = self.request(
+            "GET", "/api/v1/users/me/profile", token=token
+        )
+        self.assertEqual(status, 200)
+        self.assertEqual(saved_profile["user_id"], user_id)
+        self.assertEqual(saved_profile["profile"]["profile_id"], self.profile["profile_id"])
 
         status, gap = self.post(
             f"/api/v1/coach/sessions/{coach['session_id']}/turns",
@@ -69,10 +124,27 @@ class CareerHttpFlowTest(unittest.TestCase):
                 "expected_state_version": coach["state_version"],
                 "event": {"type": "answer_question", "message": "先确认差距"},
             },
+            token,
         )
         self.assertEqual(status, 200)
         self.assertEqual(gap["phase"], "gap_analysis")
         self.assertEqual(gap["ui_blocks"][0]["type"], "gap_map")
+
+        other = self.register("other@example.com", "other_user")
+        status, denied = self.request(
+            "GET",
+            f"/api/v1/coach/sessions/{coach['session_id']}",
+            token=other["access_token"],
+        )
+        self.assertEqual(status, 404)
+        self.assertEqual(denied["error"]["code"], "SESSION_NOT_FOUND")
+
+    def test_career_data_requires_login(self):
+        status, denied = self.post(
+            "/api/v1/career/evaluations", {"profile": self.profile}
+        )
+        self.assertEqual(status, 401)
+        self.assertEqual(denied["error"]["code"], "AUTH_REQUIRED")
 
 
 if __name__ == "__main__":

@@ -559,7 +559,9 @@ class Component extends DCLogic {
       source_meta: job.meta
     };
     sessionStorage.setItem("isyou_career_context", JSON.stringify(context));
-    window.location.href = "./coach.html";
+    window.location.href = localStorage.getItem("isyou_auth_access_token_v1")
+      ? "./coach.html"
+      : "./auth.html?next=coach.html";
   };
 
   renderVals() {

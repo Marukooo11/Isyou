@@ -23,11 +23,15 @@ class CoachService:
         self.store.create_session(state)
         return response
 
-    def get_session(self, session_id: str, now: datetime) -> dict[str, Any]:
-        state = self.store.get_session(session_id)
+    def get_session(
+        self, session_id: str, now: datetime, user_id: str | None = None
+    ) -> dict[str, Any]:
+        state = self.store.get_session(session_id, user_id)
         prepared, response, changed = self.engine.prepare_for_date(state, now.date(), now)
         if changed:
-            self.store.update_state(session_id, state["state_version"], prepared)
+            self.store.update_state(
+                session_id, state["state_version"], prepared, user_id=user_id
+            )
         return response
 
     def handle_turn(
@@ -35,6 +39,7 @@ class CoachService:
         session_id: str,
         payload: dict[str, Any],
         now: datetime,
+        user_id: str | None = None,
     ) -> dict[str, Any]:
         if not isinstance(payload, dict):
             raise InvalidRequest("请求体必须是 JSON 对象。")
@@ -48,11 +53,11 @@ class CoachService:
         if not isinstance(event, dict):
             raise InvalidRequest("缺少有效的 event。")
 
-        replay = self.store.get_turn_response(session_id, request_id)
+        replay = self.store.get_turn_response(session_id, request_id, user_id)
         if replay is not None:
             return replay
 
-        state = self.store.get_session(session_id)
+        state = self.store.get_session(session_id, user_id)
         if state["state_version"] != expected_version:
             from .errors import StateConflict
 
@@ -68,9 +73,10 @@ class CoachService:
                 state=new_state,
                 response=response,
                 created_at=now.isoformat(),
+                user_id=user_id,
             )
         except sqlite3.IntegrityError:
-            replay = self.store.get_turn_response(session_id, request_id)
+            replay = self.store.get_turn_response(session_id, request_id, user_id)
             if replay is not None:
                 return replay
             raise

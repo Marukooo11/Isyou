@@ -15,6 +15,27 @@ class InvalidRequest(CoachError):
     code = "INVALID_REQUEST"
 
 
+class AuthenticationRequired(CoachError):
+    status = 401
+    code = "AUTH_REQUIRED"
+
+
+class InvalidCredentials(CoachError):
+    status = 401
+    code = "INVALID_CREDENTIALS"
+
+
+class AccountConflict(CoachError):
+    status = 409
+    code = "ACCOUNT_CONFLICT"
+
+
+class RateLimited(CoachError):
+    status = 429
+    code = "RATE_LIMITED"
+    retryable = True
+
+
 class SessionNotFound(CoachError):
     status = 404
     code = "SESSION_NOT_FOUND"
@@ -24,4 +45,3 @@ class StateConflict(CoachError):
     status = 409
     code = "STATE_CONFLICT"
     retryable = True
-

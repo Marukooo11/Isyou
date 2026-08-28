@@ -1,5 +1,7 @@
 # Coach API v0.1
 
+> 调用约束：除健康检查和 Auth API 外，所有 Coach 请求必须携带 `Authorization: Bearer <access_token>`；会话归属由 token 对应的 `user_id` 决定。
+
 > 前端只依赖本文件中的接口和响应结构。Coach 的 mock、真实模型或后续领域适配不得改变这些基础字段。
 
 职业画像评估及一键创建会话见 [`career-api.md`](career-api.md)。该接口生成的 `coach` 对象与本文件的 `CoachResponse` 完全一致。

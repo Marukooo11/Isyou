@@ -9,6 +9,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
+from auth import AuthService, DevelopmentCodeDelivery, SQLiteAuthStore
 from career import CareerService
 from coach import CoachService, SQLiteCoachStore
 from coach.errors import CoachError, InvalidRequest
@@ -22,10 +23,11 @@ MAX_BODY_BYTES = 1_000_000
 class CoachRequestHandler(BaseHTTPRequestHandler):
     service: CoachService
     career_service: CareerService
+    auth_service: AuthService
     allowed_origins: set[str] = set()
     allow_demo_date = False
 
-    server_version = "IsyouCoach/0.1"
+    server_version = "IsyouCoach/0.3"
 
     def do_OPTIONS(self) -> None:
         if not self._origin_allowed():
@@ -34,7 +36,9 @@ class CoachRequestHandler(BaseHTTPRequestHandler):
         self.send_response(204)
         self._cors_headers()
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Coach-Date")
+        self.send_header(
+            "Access-Control-Allow-Headers", "Authorization, Content-Type, X-Coach-Date"
+        )
         self.send_header("Access-Control-Max-Age", "600")
         self.end_headers()
 
@@ -49,8 +53,9 @@ class CoachRequestHandler(BaseHTTPRequestHandler):
                     {
                         "status": "ok",
                         "service": "isyou-coach",
-                        "version": "0.2.0",
+                        "version": "0.3.0",
                         "features": {
+                            "auth": True,
                             "quest_coach": True,
                             "career_adapter": True,
                             "occupation_count": self.career_service.matcher.occupation_count,
@@ -58,9 +63,26 @@ class CoachRequestHandler(BaseHTTPRequestHandler):
                     },
                 )
                 return
+            if self.path == "/api/v1/auth/me":
+                user = self._authenticate()
+                self._write_json(200, {"user": user})
+                return
+            if self.path == "/api/v1/users/me/profile":
+                user = self._authenticate()
+                self._write_json(
+                    200,
+                    {
+                        "user_id": user["user_id"],
+                        "profile": self.auth_service.store.get_profile(user["user_id"]),
+                    },
+                )
+                return
             match = SESSION_PATH.match(self.path)
             if match:
-                response = self.service.get_session(match.group(1), self._now())
+                user = self._authenticate()
+                response = self.service.get_session(
+                    match.group(1), self._now(), user_id=user["user_id"]
+                )
                 self._write_json(200, response)
                 return
             self._write_error(404, "NOT_FOUND", "接口不存在。", False)
@@ -75,21 +97,54 @@ class CoachRequestHandler(BaseHTTPRequestHandler):
             return
         try:
             payload = self._read_json()
+            if self.path == "/api/v1/auth/codes":
+                response = self.auth_service.request_code(payload, self._now())
+                self._write_json(201, response)
+                return
+            if self.path == "/api/v1/auth/register":
+                response = self.auth_service.register(payload, self._now())
+                self._write_json(201, response)
+                return
+            if self.path == "/api/v1/auth/login/password":
+                response = self.auth_service.login_with_password(payload, self._now())
+                self._write_json(200, response)
+                return
+            if self.path == "/api/v1/auth/login/code":
+                response = self.auth_service.login_with_code(payload, self._now())
+                self._write_json(200, response)
+                return
+            if self.path == "/api/v1/auth/logout":
+                self._authenticate()
+                self.auth_service.logout(self._bearer_token(), self._now())
+                self._write_json(200, {"status": "logged_out"})
+                return
+            user = self._authenticate()
             if self.path == "/api/v1/career/evaluations":
-                response = self.career_service.evaluate(payload, self._now())
+                response = self.career_service.evaluate(
+                    payload, self._now(), user_id=user["user_id"]
+                )
                 self._write_json(200, response)
                 return
             if self.path == "/api/v1/career/coach-sessions":
-                response = self.career_service.create_coach_session(payload, self._now())
+                response = self.career_service.create_coach_session(
+                    payload, self._now(), user_id=user["user_id"]
+                )
                 self._write_json(201, response)
                 return
             if self.path == "/api/v1/coach/sessions":
-                response = self.service.create_session(payload, self._now())
+                trusted_payload = {
+                    **payload,
+                    "user_id": user["user_id"],
+                    "client_user_id": user["user_id"],
+                }
+                response = self.service.create_session(trusted_payload, self._now())
                 self._write_json(201, response)
                 return
             match = TURN_PATH.match(self.path)
             if match:
-                response = self.service.handle_turn(match.group(1), payload, self._now())
+                response = self.service.handle_turn(
+                    match.group(1), payload, self._now(), user_id=user["user_id"]
+                )
                 self._write_json(200, response)
                 return
             self._write_error(404, "NOT_FOUND", "接口不存在。", False)
@@ -119,6 +174,16 @@ class CoachRequestHandler(BaseHTTPRequestHandler):
     def _origin_allowed(self) -> bool:
         origin = self.headers.get("Origin")
         return not origin or origin in self.allowed_origins
+
+    def _bearer_token(self) -> str | None:
+        authorization = self.headers.get("Authorization", "")
+        scheme, separator, token = authorization.partition(" ")
+        if not separator or scheme.lower() != "bearer" or not token.strip():
+            return None
+        return token.strip()
+
+    def _authenticate(self) -> dict[str, Any]:
+        return self.auth_service.authenticate(self._bearer_token(), self._now())
 
     def _cors_headers(self) -> None:
         origin = self.headers.get("Origin")
@@ -175,8 +240,19 @@ def build_server() -> ThreadingHTTPServer:
         "COACH_ALLOWED_ORIGINS",
         "http://127.0.0.1:8000,http://localhost:8000",
     )
+    auth_store = SQLiteAuthStore(database_path)
+    expose_dev_codes = os.environ.get("AUTH_DEV_SHOW_CODE", "1") == "1"
+    if expose_dev_codes and host not in {"127.0.0.1", "localhost", "::1"}:
+        raise RuntimeError("AUTH_DEV_SHOW_CODE=1 只能绑定本机地址。")
+    CoachRequestHandler.auth_service = AuthService(
+        auth_store,
+        DevelopmentCodeDelivery(),
+        expose_dev_codes=expose_dev_codes,
+    )
     CoachRequestHandler.service = CoachService(SQLiteCoachStore(database_path))
-    CoachRequestHandler.career_service = CareerService(CoachRequestHandler.service)
+    CoachRequestHandler.career_service = CareerService(
+        CoachRequestHandler.service, profile_store=auth_store
+    )
     CoachRequestHandler.allowed_origins = {item.strip() for item in origins.split(",") if item.strip()}
     CoachRequestHandler.allow_demo_date = os.environ.get("COACH_ALLOW_DEMO_DATE", "0") == "1"
     return ThreadingHTTPServer((host, port), CoachRequestHandler)

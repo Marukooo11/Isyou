@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#e4e6dc">
+  <title>登录 Isyou</title>
+  <style>
+    :root { --ink:#29302e; --muted:#74786e; --line:#d9d4c4; --paper:#fffdf8; --accent:#6e8465; --danger:#9b4d4d; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100dvh; display:grid; place-items:center; padding:24px; color:var(--ink); background:radial-gradient(80% 70% at 10% 0%,#fffdf8,transparent 70%),#e4e6dc; font:14px/1.6 system-ui,sans-serif; }
+    main { width:min(820px,100%); }
+    header { margin-bottom:18px; text-align:center; }
+    h1 { margin:0; font:600 28px/1.3 Georgia,"Songti SC",serif; } h2 { margin:0 0 12px; font-size:16px; }
+    header p,.hint { color:var(--muted); }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .card,.account { padding:20px; border:1px solid var(--line); border-radius:12px; background:rgba(255,253,248,.94); box-shadow:0 18px 44px -32px rgba(40,50,38,.55); }
+    .fields { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+    .wide { grid-column:1/-1; }
+    input,select,button { width:100%; min-height:42px; padding:9px 11px; border:1px solid var(--line); border-radius:8px; background:white; font:inherit; }
+    button { cursor:pointer; } button.primary { border-color:var(--accent); background:var(--accent); color:white; } button:disabled { opacity:.55; cursor:wait; }
+    .actions { display:flex; gap:8px; margin-top:10px; }
+    #status { min-height:24px; margin:13px 0 0; text-align:center; color:var(--muted); } #status.error { color:var(--danger); }
+    .account { display:none; text-align:center; } .account.is-visible { display:block; }
+    .account strong { display:block; margin-bottom:5px; font-size:17px; }
+    a { color:#526a4b; }
+    @media (max-width:700px) { .grid,.fields { grid-template-columns:1fr; } .wide { grid-column:auto; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Isyou</h1>
+      <p>登录后，画像、职业方向和 Coach 进度才会绑定到同一个账号。</p>
+    </header>
+    <section id="account" class="account">
+      <strong id="account-name"></strong>
+      <div id="account-meta" class="hint"></div>
+      <div class="actions"><button id="continue" class="primary">继续</button><button id="logout">退出登录</button></div>
+    </section>
+    <div id="forms" class="grid">
+      <section class="card">
+        <h2>注册</h2>
+        <div class="fields">
+          <select id="register-type"><option value="email">邮箱</option><option value="phone">手机号</option></select>
+          <input id="register-contact" autocomplete="email" placeholder="邮箱或手机号">
+          <input id="register-code" inputmode="numeric" maxlength="6" placeholder="6 位验证码">
+          <input id="register-username" autocomplete="username" placeholder="用户名（3—24 位）">
+          <input id="register-password" class="wide" type="password" autocomplete="new-password" placeholder="密码（至少 8 位，含字母和数字）">
+        </div>
+        <div class="actions"><button id="register-code-button">发送验证码</button><button id="register-button" class="primary">注册并登录</button></div>
+      </section>
+      <section class="card">
+        <h2>登录</h2>
+        <div class="fields">
+          <input id="login-username" autocomplete="username" placeholder="用户名">
+          <input id="login-password" type="password" autocomplete="current-password" placeholder="密码">
+        </div>
+        <div class="actions"><button id="password-login" class="primary">用户名 + 密码登录</button></div>
+        <div class="fields" style="margin-top:16px">
+          <select id="login-type"><option value="email">邮箱</option><option value="phone">手机号</option></select>
+          <input id="login-contact" placeholder="已注册邮箱或手机号">
+          <input id="login-code" inputmode="numeric" maxlength="6" placeholder="6 位验证码">
+        </div>
+        <div class="actions"><button id="login-code-button">发送登录验证码</button><button id="code-login" class="primary">验证码登录</button></div>
+      </section>
+    </div>
+    <p id="status">本地开发会自动回填验证码；正式环境由短信或邮件送达。</p>
+    <p class="hint" style="text-align:center"><a href="./coach.html?mode=demo">仅体验离线 Coach Demo</a></p>
+  </main>
+  <script src="./coach-client.js"></script>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const client = new IsyouCoach.CoachClient({ baseUrl: params.get("api") || "http://127.0.0.1:8001" });
+    const status = document.querySelector("#status");
+    let registerChallengeId = null;
+    let loginChallengeId = null;
+
+    function nextUrl() {
+      const value = params.get("next") || "coach.html";
+      return /^[\w.-]+(?:\?[\w%=&.-]*)?$/.test(value) ? "./" + value : "./coach.html";
+    }
+    function setBusy(value) {
+      document.querySelectorAll("button").forEach(function (button) { button.disabled = value; });
+    }
+    function showStatus(text, error) {
+      status.textContent = text;
+      status.classList.toggle("error", Boolean(error));
+    }
+    function showAccount(user) {
+      document.querySelector("#forms").style.display = "none";
+      document.querySelector("#account").classList.add("is-visible");
+      document.querySelector("#account-name").textContent = "已登录为 " + user.username;
+      document.querySelector("#account-meta").textContent = user.masked_contact + " · " + user.user_id;
+      showStatus("账号已就绪，可以继续进入 Coach。", false);
+    }
+    async function run(task, done) {
+      setBusy(true);
+      try { done(await task()); }
+      catch (error) { showStatus((error.code ? error.code + " · " : "") + error.message, true); }
+      finally { setBusy(false); }
+    }
+    function applyCode(result, selector) {
+      if (result.dev_code) {
+        document.querySelector(selector).value = result.dev_code;
+        showStatus("本地验证码已自动回填 · " + result.delivery.masked_contact, false);
+      } else showStatus("验证码已发送至 " + result.delivery.masked_contact, false);
+    }
+
+    document.querySelector("#register-code-button").onclick = function () {
+      run(function () { return client.requestAuthCode("register", document.querySelector("#register-type").value, document.querySelector("#register-contact").value); }, function (result) {
+        registerChallengeId = result.challenge_id; applyCode(result, "#register-code");
+      });
+    };
+    document.querySelector("#register-button").onclick = function () {
+      run(function () {
+        if (!registerChallengeId) throw new Error("请先发送注册验证码。");
+        return client.register(registerChallengeId, document.querySelector("#register-code").value, document.querySelector("#register-username").value, document.querySelector("#register-password").value);
+      }, function (result) { showAccount(result.user); });
+    };
+    document.querySelector("#password-login").onclick = function () {
+      run(function () { return client.loginWithPassword(document.querySelector("#login-username").value, document.querySelector("#login-password").value); }, function (result) { showAccount(result.user); });
+    };
+    document.querySelector("#login-code-button").onclick = function () {
+      run(function () { return client.requestAuthCode("login", document.querySelector("#login-type").value, document.querySelector("#login-contact").value); }, function (result) {
+        loginChallengeId = result.challenge_id; applyCode(result, "#login-code");
+      });
+    };
+    document.querySelector("#code-login").onclick = function () {
+      run(function () {
+        if (!loginChallengeId) throw new Error("请先发送登录验证码。");
+        return client.loginWithCode(loginChallengeId, document.querySelector("#login-code").value);
+      }, function (result) { showAccount(result.user); });
+    };
+    document.querySelector("#continue").onclick = function () { location.href = nextUrl(); };
+    document.querySelector("#logout").onclick = function () {
+      run(function () { return client.logout(); }, function () { location.reload(); });
+    };
+
+    (async function () {
+      try { const account = await client.me(); if (account) showAccount(account.user); }
+      catch (error) { if (error.code !== "AUTH_REQUIRED") showStatus(error.message, true); }
+    })();
+  </script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 # Isyou Coach Backend
 
-结论：这是一个零第三方依赖、可立即用于前端联调的 Coach 后端参考实现。它已经包含 SQLite 持久化、幂等请求、状态版本、完整 mock 状态机、跨天 Review，以及 `output1.v1.0 → 职业方向匹配 → Career Context → Quest Coach` 的串联链路；后续可以在不改变前端 API 的情况下，将确定性 Coach 决策替换为真实模型 provider。
+结论：这是一个零第三方依赖、可立即用于前端联调的后端参考实现。完整链路为“验证码注册/登录 → 可信 user_id → 画像持久化 → 职业方向匹配 → Career Context → Quest Coach”；后续可以在不改变前端 API 的情况下替换短信/邮件 delivery 和真实模型 provider。
 
 ## 运行
 
@@ -35,6 +35,7 @@ python3 -m http.server 8000
 | `COACH_ALLOWED_ORIGINS` | 本地 8000 端口 | 允许的前端 Origin，逗号分隔 |
 | `COACH_ALLOW_DEMO_DATE` | `0` | 设为 `1` 后允许 `X-Coach-Date` 模拟次日 |
 | `COACH_HTTP_LOG` | `1` | 设为 `0` 关闭访问日志 |
+| `AUTH_DEV_SHOW_CODE` | `1` | 仅本地联调：在响应中显示验证码；非回环地址会拒绝启动 |
 
 联调跨天 Review：
 
@@ -65,6 +66,9 @@ PYTHONPATH=backend python3 -m unittest discover -s backend/tests -v
 - SQLite 跨刷新和重启恢复；
 - 请求幂等与状态冲突保护；
 - 统一错误格式与本地 CORS。
+- 手机号/邮箱 6 位验证码、注册和两种登录方式；
+- 密码/验证码/访问令牌哈希存储与 Bearer 鉴权；
+- 服务端签发稳定 `user_id`，画像与 Coach 会话按用户隔离；
 - `output1.v1.0` 画像关键字段与授权校验；
 - 642 个职业的方向匹配、硬约束否决和五条推荐；
 - 职业推荐到稳定 `career_context` 的转换；
@@ -74,6 +78,7 @@ PYTHONPATH=backend python3 -m unittest discover -s backend/tests -v
 尚未实现：
 
 - 真实模型 provider；
+- 真实短信与邮件 delivery provider（本地当前回填 `dev_code`）；
 - Career Skill 的实时数据接入；
 - 问卷逐题施测与自然语言答案抽取（当前从 Skill 生成的 `output1.v1.0` 开始）；
 - 真实招聘信息检索与 JD 层地点、薪资、职级过滤；

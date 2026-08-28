@@ -778,6 +778,7 @@
   }
 
   function readableError(error) {
+    if (error && error.code === "AUTH_REQUIRED") return "请先在 Career 联调页注册或登录，再进入 Coach。";
     if (error && error.code === "STATE_CONFLICT") return "会话刚刚在别处更新，正在重新加载。";
     if (error && error.message) return error.message;
     return "Coach 暂时没有响应，请稍后重试。";
@@ -902,6 +903,12 @@
       retry.type = "button";
       retry.addEventListener("click", function () { window.location.reload(); });
       panel.appendChild(retry);
+      if (error && error.code === "AUTH_REQUIRED") {
+        const login = element("button", "quiet-button", "注册或登录");
+        login.type = "button";
+        login.addEventListener("click", function () { window.location.href = "./auth.html?next=coach.html"; });
+        panel.appendChild(login);
+      }
       ui.timeline.appendChild(panel);
       setHint("可以刷新重试，或移除网址中的 mode=api 自动启用 Demo 兜底。", true);
     }
