@@ -45,6 +45,7 @@ docker run --rm -p 8001:8001 isyou-demo
 
 - `/`：主 Demo；
 - `/auth.html`：注册/登录；
+- `/questionnaire.html`：35 题问卷、草稿与画像生成；
 - `/career-coach-demo.html`：问卷 JSON → 职业方向 → Coach 联调；
 - `/api/v1/health`：后端健康状态。
 
@@ -55,5 +56,5 @@ Hackathon Demo 可运行不等于生产就绪。面向真实用户前至少需�
 - 关闭 `AUTH_DEMO_MODE`，接入真实邮件/短信 delivery；
 - 使用 HTTPS、安全 Cookie、IP/设备限流、密码重置与账号注销；
 - 将 SQLite 迁移到受管数据库或配置可靠备份；
-- 接入真实模型 provider、上游问卷施测/计分代码与真实 JD 数据；
+- 接入真实模型 provider、自由文本语义抽取/动态追问与真实 JD 数据；
 - 增加日志脱敏、监控、数据删除机制和隐私合规审查。

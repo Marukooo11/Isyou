@@ -73,6 +73,16 @@ class SQLiteAuthStore:
                         updated_at TEXT NOT NULL,
                         FOREIGN KEY(user_id) REFERENCES users(user_id)
                     );
+
+                    CREATE TABLE IF NOT EXISTS questionnaire_drafts (
+                        user_id TEXT PRIMARY KEY,
+                        answers_json TEXT NOT NULL,
+                        current_section TEXT,
+                        status TEXT NOT NULL CHECK(status IN ('in_progress', 'completed')),
+                        updated_at TEXT NOT NULL,
+                        completed_at TEXT,
+                        FOREIGN KEY(user_id) REFERENCES users(user_id)
+                    );
                     """
                 )
 
@@ -299,3 +309,42 @@ class SQLiteAuthStore:
                 (user_id,),
             ).fetchone()
         return json.loads(row["profile_json"]) if row else None
+
+    def save_questionnaire_draft(
+        self,
+        user_id: str,
+        answers: dict[str, Any],
+        current_section: str | None,
+        status: str,
+        updated_at: str,
+        completed_at: str | None = None,
+    ) -> None:
+        serialized = json.dumps(answers, ensure_ascii=False)
+        with closing(self._connect()) as connection:
+            with connection:
+                connection.execute(
+                    """
+                    INSERT INTO questionnaire_drafts
+                        (user_id, answers_json, current_section, status, updated_at, completed_at)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(user_id) DO UPDATE SET
+                        answers_json = excluded.answers_json,
+                        current_section = excluded.current_section,
+                        status = excluded.status,
+                        updated_at = excluded.updated_at,
+                        completed_at = excluded.completed_at
+                    """,
+                    (user_id, serialized, current_section, status, updated_at, completed_at),
+                )
+
+    def get_questionnaire_draft(self, user_id: str) -> dict[str, Any] | None:
+        with closing(self._connect()) as connection:
+            row = connection.execute(
+                "SELECT * FROM questionnaire_drafts WHERE user_id = ?",
+                (user_id,),
+            ).fetchone()
+        if not row:
+            return None
+        result = dict(row)
+        result["answers"] = json.loads(result.pop("answers_json"))
+        return result

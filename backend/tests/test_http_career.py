@@ -13,6 +13,9 @@ from auth import AuthService, SQLiteAuthStore
 from career import CareerService
 from coach import CoachService, SQLiteCoachStore
 from server import CoachRequestHandler
+from questionnaire import QuestionnaireService
+
+from questionnaire_fixture import ready_questionnaire_answers
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -30,6 +33,7 @@ class CareerHttpFlowTest(unittest.TestCase):
         )
         CoachRequestHandler.service = coach
         CoachRequestHandler.career_service = CareerService(coach, profile_store=auth_store)
+        CoachRequestHandler.questionnaire_service = QuestionnaireService(auth_store)
         CoachRequestHandler.allowed_origins = set()
         CoachRequestHandler.allow_demo_date = True
         CoachRequestHandler.frontend_dir = ROOT / "frontend"
@@ -168,6 +172,39 @@ class CareerHttpFlowTest(unittest.TestCase):
             payload = json.loads(response.read().decode("utf-8"))
             self.assertEqual(response.status, 200)
             self.assertEqual(payload["status"], "ok")
+
+    def test_questionnaire_draft_to_profile_to_five_directions(self):
+        registered = self.register("questionnaire@example.com", "questionnaire_http")
+        token = registered["access_token"]
+        answers = ready_questionnaire_answers()
+
+        status, schema = self.request("GET", "/api/v1/questionnaire/schema")
+        self.assertEqual(status, 200)
+        self.assertEqual(schema["question_count"], 35)
+
+        status, draft = self.post(
+            "/api/v1/questionnaire/draft",
+            {"answers": answers, "current_section": "job"},
+            token,
+        )
+        self.assertEqual(status, 200)
+        self.assertEqual(draft["status"], "in_progress")
+
+        status, result = self.post(
+            "/api/v1/questionnaire/complete",
+            {"answers": answers},
+            token,
+        )
+        self.assertEqual(status, 200)
+        self.assertEqual(result["profile"]["schema_version"], "output1.v1.0")
+        self.assertTrue(result["profile"]["profile_status"]["job_matching_ready"])
+        self.assertEqual(len(result["career_evaluation"]["recommended_occupations"]), 5)
+        self.assertEqual(
+            CoachRequestHandler.auth_service.store.get_profile(
+                registered["user"]["user_id"]
+            )["profile_id"],
+            result["profile"]["profile_id"],
+        )
 
 
 if __name__ == "__main__":

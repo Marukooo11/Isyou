@@ -25,6 +25,7 @@ COACH_ALLOW_DEMO_DATE=1 python3 backend/server.py
 - `coach.html`、`coach.css`、`coach-page.js`：正式 Coach 交互页，包含对话、状态路径、8 类卡片、恢复会话和两日演示链路。
 - `coach-client.js`：Coach API 客户端。
 - `auth.html`：手机号/邮箱验证码注册，以及密码或验证码登录页。
+- `questionnaire.html`：35 题条件问卷、自动保存/恢复、完成评分与 Career 联动。
 - `career-coach-demo.html`：账号 → 导入问卷 `output1.v1.0` JSON → 五个职业方向 → Coach 的完整开发联调页。
 - `coach-demo.html`：面向开发者的原始 API 数据联调页。
 - `design-notes.html`：产品设计笔记。

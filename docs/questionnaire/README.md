@@ -5,7 +5,8 @@
 ## 联调边界
 
 ```text
-35 题问卷 / 信息收集 Skill（上游，代码待接入）
+35 题结构化问卷（本仓库已实现）
+  → 自动保存/恢复 + 确定性评分
   → 生成完整 output1.v1.0
   → POST /api/v1/career/evaluations（Bearer 鉴权）
   → 按 user_id 保存画像并返回 5 个职业方向
@@ -13,7 +14,7 @@
   → Quest Coach
 ```
 
-问卷施测、答案解析和四轨计分属于上游信息收集模块；本仓库当前不伪造这部分结果。联调时可在 `frontend/career-coach-demo.html` 导入该模块输出的本地 JSON。后端只接收 `schema_version=output1.v1.0` 的完整画像，并按登录令牌绑定稳定 `user_id`。
+本仓库已实现结构化施测、答案草稿、明确格式解析和四轨确定性评分；不使用 AI 猜测自由文本。`frontend/questionnaire.html` 完成后直接生成画像并调用 Career Matcher，也可在 `frontend/career-coach-demo.html` 导入外部 `output1.v1.0` JSON。
 
 ## 已纳入仓库
 

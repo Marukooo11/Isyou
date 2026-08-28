@@ -15,6 +15,7 @@ from auth import AuthService, DevelopmentCodeDelivery, SQLiteAuthStore
 from career import CareerService
 from coach import CoachService, SQLiteCoachStore
 from coach.errors import CoachError, InvalidRequest
+from questionnaire import QuestionnaireService
 
 
 SESSION_PATH = re.compile(r"^/api/v1/coach/sessions/([^/]+)$")
@@ -26,11 +27,12 @@ class CoachRequestHandler(BaseHTTPRequestHandler):
     service: CoachService
     career_service: CareerService
     auth_service: AuthService
+    questionnaire_service: QuestionnaireService
     allowed_origins: set[str] = set()
     allow_demo_date = False
     frontend_dir: Path | None = None
 
-    server_version = "IsyouCoach/0.3"
+    server_version = "IsyouCoach/0.4"
 
     def do_OPTIONS(self) -> None:
         if not self._origin_allowed():
@@ -57,15 +59,19 @@ class CoachRequestHandler(BaseHTTPRequestHandler):
                     {
                         "status": "ok",
                         "service": "isyou-coach",
-                        "version": "0.3.0",
+                        "version": "0.4.0",
                         "features": {
                             "auth": True,
                             "quest_coach": True,
                             "career_adapter": True,
+                            "questionnaire": True,
                             "occupation_count": self.career_service.matcher.occupation_count,
                         },
                     },
                 )
+                return
+            if request_path == "/api/v1/questionnaire/schema":
+                self._write_json(200, self.questionnaire_service.schema())
                 return
             if request_path == "/api/v1/auth/me":
                 user = self._authenticate()
@@ -80,6 +86,10 @@ class CoachRequestHandler(BaseHTTPRequestHandler):
                         "profile": self.auth_service.store.get_profile(user["user_id"]),
                     },
                 )
+                return
+            if request_path == "/api/v1/questionnaire/draft":
+                user = self._authenticate()
+                self._write_json(200, self.questionnaire_service.get_draft(user["user_id"]))
                 return
             match = SESSION_PATH.match(request_path)
             if match:
@@ -126,6 +136,28 @@ class CoachRequestHandler(BaseHTTPRequestHandler):
                 self._write_json(200, {"status": "logged_out"})
                 return
             user = self._authenticate()
+            if request_path == "/api/v1/questionnaire/draft":
+                response = self.questionnaire_service.save_draft(
+                    user["user_id"], payload, self._now()
+                )
+                self._write_json(200, response)
+                return
+            if request_path == "/api/v1/questionnaire/complete":
+                profile = self.questionnaire_service.complete(
+                    user["user_id"], payload, self._now()
+                )
+                evaluation = self.career_service.evaluate(
+                    {"profile": profile}, self._now(), user_id=user["user_id"]
+                )
+                self._write_json(
+                    200,
+                    {
+                        "schema_version": "questionnaire-result.v1",
+                        "profile": self.auth_service.store.get_profile(user["user_id"]),
+                        "career_evaluation": evaluation,
+                    },
+                )
+                return
             if request_path == "/api/v1/career/evaluations":
                 response = self.career_service.evaluate(
                     payload, self._now(), user_id=user["user_id"]
@@ -297,6 +329,7 @@ def build_server() -> ThreadingHTTPServer:
         expose_dev_codes=expose_dev_codes,
     )
     CoachRequestHandler.service = CoachService(SQLiteCoachStore(database_path))
+    CoachRequestHandler.questionnaire_service = QuestionnaireService(auth_store)
     CoachRequestHandler.career_service = CareerService(
         CoachRequestHandler.service, profile_store=auth_store
     )

@@ -77,8 +77,8 @@
     let loginChallengeId = null;
 
     function nextUrl() {
-      const value = params.get("next") || "coach.html";
-      return /^[\w.-]+(?:\?[\w%=&.-]*)?$/.test(value) ? "./" + value : "./coach.html";
+      const value = params.get("next") || "questionnaire.html";
+      return /^[\w.-]+(?:\?[\w%=&.-]*)?$/.test(value) ? "./" + value : "./questionnaire.html";
     }
     function setBusy(value) {
       document.querySelectorAll("button").forEach(function (button) { button.disabled = value; });
@@ -92,7 +92,7 @@
       document.querySelector("#account").classList.add("is-visible");
       document.querySelector("#account-name").textContent = "已登录为 " + user.username;
       document.querySelector("#account-meta").textContent = user.masked_contact + " · " + user.user_id;
-      showStatus("账号已就绪，可以继续进入 Coach。", false);
+      showStatus("账号已就绪，可以继续完成画像。", false);
     }
     async function run(task, done) {
       setBusy(true);

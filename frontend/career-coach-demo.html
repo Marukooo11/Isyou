@@ -399,9 +399,19 @@
         if (account) renderAccount(account.user);
         const restored = currentUser ? await client.restore() : null;
         if (restored) renderCoach(restored);
-        const response = await fetch("fixtures/profile-ready.json");
-        loadProfile(await response.json(), "合成联调 fixture");
-        status.textContent = restored ? status.textContent : "合成画像已载入，可以开始评估";
+        let savedProfile = null;
+        if (currentUser) {
+          const saved = await client.getSavedProfile();
+          savedProfile = saved.profile;
+        }
+        if (savedProfile) {
+          loadProfile(savedProfile, "当前账号已保存的问卷画像");
+          status.textContent = restored ? status.textContent : "已载入当前账号的问卷画像";
+        } else {
+          const response = await fetch("fixtures/profile-ready.json");
+          loadProfile(await response.json(), "合成联调 fixture");
+          status.textContent = restored ? status.textContent : "合成画像已载入，可以开始评估";
+        }
       } catch (error) { fail(error); }
     })();
   </script>

@@ -82,6 +82,27 @@
       return this._request("GET", "/api/v1/users/me/profile");
     }
 
+    async getQuestionnaireSchema() {
+      return this._request("GET", "/api/v1/questionnaire/schema");
+    }
+
+    async getQuestionnaireDraft() {
+      return this._request("GET", "/api/v1/questionnaire/draft");
+    }
+
+    async saveQuestionnaireDraft(answers, currentSection) {
+      return this._request("POST", "/api/v1/questionnaire/draft", {
+        answers: answers,
+        current_section: currentSection,
+      });
+    }
+
+    async completeQuestionnaire(answers) {
+      return this._request("POST", "/api/v1/questionnaire/complete", {
+        answers: answers,
+      });
+    }
+
     async logout() {
       if (this.authToken) await this._request("POST", "/api/v1/auth/logout", {});
       this.clear();

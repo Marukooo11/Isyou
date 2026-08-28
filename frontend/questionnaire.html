@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#e7e7dc">
+  <title>我的一天 · Isyou</title>
+  <style>
+    :root { --ink:#29302e; --muted:#77796f; --line:#d9d4c4; --paper:#fffdf8; --green:#6e8465; --cream:#f2eee3; --red:#a15049; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); background:radial-gradient(100% 75% at 15% 0%,#fdfbf3,transparent 70%),#e4e6dc; font:14px/1.65 system-ui,"PingFang SC",sans-serif; }
+    main { width:min(1040px,calc(100% - 28px)); margin:22px auto 60px; }
+    header { display:flex; justify-content:space-between; align-items:flex-end; gap:18px; margin-bottom:14px; }
+    h1 { margin:0; font:500 28px/1.25 Georgia,"Songti SC",serif; } h2 { margin:0; font-size:17px; } h3 { margin:0 0 5px; font-size:15px; }
+    .muted,.note,#status { color:var(--muted); font-size:12px; }
+    .shell { display:grid; grid-template-columns:220px minmax(0,1fr); min-height:680px; border:1px solid var(--line); background:rgba(255,253,248,.95); box-shadow:0 22px 58px -42px rgba(40,50,38,.65); }
+    nav { padding:20px 14px; border-right:1px solid var(--line); background:#f5f2e8; }
+    nav button { width:100%; padding:10px 11px; border:0; border-left:3px solid transparent; color:var(--muted); background:transparent; text-align:left; cursor:pointer; }
+    nav button.active { border-left-color:var(--green); color:var(--ink); background:#fffdf8; }
+    nav button:disabled { opacity:.45; cursor:not-allowed; }
+    .content { padding:24px min(4vw,42px) 28px; min-width:0; }
+    .section-head { padding-bottom:16px; border-bottom:1px solid var(--line); }
+    #questions { display:grid; gap:12px; margin-top:16px; }
+    .question { padding:17px; border:1px solid var(--line); background:white; }
+    .question.skipped { opacity:.62; background:#f6f3eb; }
+    .qid { display:inline-block; margin-right:7px; color:var(--green); font:600 12px ui-monospace,monospace; }
+    .prompt { margin:8px 0 13px; color:#555a54; }
+    .fields { display:grid; gap:12px; }
+    .field label.title { display:block; margin-bottom:5px; font-size:12px; color:#5e625b; }
+    input,textarea,select { width:100%; padding:9px 10px; border:1px solid #cec8b8; border-radius:4px; background:#fffefa; color:var(--ink); font:inherit; }
+    textarea { min-height:82px; resize:vertical; }
+    .choices { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; }
+    .choice { display:flex; gap:7px; align-items:flex-start; padding:8px 9px; border:1px solid #ded9cb; background:#fffefa; cursor:pointer; }
+    .choice input { width:auto; margin-top:3px; }
+    .scale { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
+    .scale button { min-height:38px; border:1px solid #d4cebe; background:#fffefa; cursor:pointer; }
+    .scale button.selected { border-color:var(--green); background:var(--green); color:white; }
+    .skip { margin-top:12px; border:0; background:transparent; color:var(--muted); text-decoration:underline; cursor:pointer; }
+    .footer { display:flex; justify-content:space-between; gap:10px; margin-top:20px; }
+    button.action { min-height:42px; padding:9px 17px; border:1px solid #bdb6a5; background:#faf8f1; cursor:pointer; }
+    button.primary { border-color:var(--green); background:var(--green); color:white; }
+    button:disabled { opacity:.5; cursor:wait; }
+    #result { display:none; padding:24px; border:1px solid var(--line); background:var(--paper); }
+    #result.visible { display:block; }
+    .result-list { display:grid; gap:7px; margin:14px 0; }
+    .result-item { padding:10px; border-left:3px solid var(--green); background:#f3f4ed; }
+    .warning { padding:10px; color:#7c4c45; background:#f8ece8; }
+    @media (max-width:760px) { .shell { grid-template-columns:1fr; } nav { display:flex; overflow:auto; border-right:0; border-bottom:1px solid var(--line); } nav button { min-width:150px; } .choices { grid-template-columns:1fr; } .content { padding:18px 14px; } header { align-items:flex-start; flex-direction:column; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div><h1>《我的一天》</h1><div class="muted">职业探索问卷 4.0 · 具体经历比自我评价更重要</div></div>
+      <div><div id="account" class="muted"></div><div id="status">正在恢复进度…</div></div>
+    </header>
+    <section id="app" class="shell">
+      <nav id="sections"></nav>
+      <div class="content">
+        <div class="section-head"><h2 id="section-title"></h2><div id="section-description" class="muted"></div></div>
+        <div id="questions"></div>
+        <div class="footer"><button id="previous" class="action">上一部分</button><button id="next" class="action primary">保存并继续</button></div>
+      </div>
+    </section>
+    <section id="result">
+      <h2>画像已经生成</h2>
+      <p id="result-summary"></p>
+      <div id="result-list" class="result-list"></div>
+      <div id="result-warning"></div>
+      <div class="footer"><button id="edit" class="action">返回修改</button><button id="career" class="action primary">进入职业方向与 Coach</button></div>
+    </section>
+  </main>
+  <script src="./coach-client.js"></script>
+  <script>
+    const client = new IsyouCoach.CoachClient({ storageKey:"isyou_career_coach_session_id" });
+    const ui = Object.fromEntries(["account","status","app","sections","section-title","section-description","questions","previous","next","result","result-summary","result-list","result-warning","edit","career"].map(function (id) { return [id, document.getElementById(id)]; }));
+    let schema = null;
+    let answers = {};
+    let sectionIndex = 0;
+    let saveTimer = null;
+    let busy = false;
+
+    function setStatus(text, isError) {
+      ui.status.textContent = text;
+      ui.status.style.color = isError ? "var(--red)" : "var(--muted)";
+    }
+    function setBusy(value) {
+      busy = value;
+      document.querySelectorAll("button").forEach(function (button) { button.disabled = value; });
+      if (!value) renderNavigation();
+    }
+    function record(questionId) {
+      if (!answers[questionId] || typeof answers[questionId] !== "object") answers[questionId] = {};
+      return answers[questionId];
+    }
+    function currentValue(questionId, key) {
+      const item = answers[questionId];
+      return item && !item._skipped ? item[key] : undefined;
+    }
+    function setValue(questionId, key, value) {
+      const item = record(questionId);
+      delete item._skipped;
+      item[key] = value;
+      scheduleSave();
+    }
+    function toggleMulti(questionId, key, value, selected) {
+      const values = Array.isArray(currentValue(questionId, key)) ? [...currentValue(questionId, key)] : [];
+      const next = selected ? [...new Set([...values, value])] : values.filter(function (item) { return item !== value; });
+      setValue(questionId, key, next);
+    }
+    function answerValue(questionId) {
+      return currentValue(questionId, "value");
+    }
+    function isVisible(question) {
+      const condition = question.condition;
+      if (!condition) return true;
+      const value = answerValue(condition.question);
+      if (condition.operator === "in") return condition.value.includes(value);
+      if (condition.operator === "has_experience") return Array.isArray(value) && value.some(function (item) { return ["full_time","internship","part_time","freelance","personal_project"].includes(item); });
+      if (condition.operator === "experience_count_gte") return Array.isArray(value) && value.filter(function (item) { return ["full_time","internship","part_time","freelance","personal_project"].includes(item); }).length >= condition.value;
+      return true;
+    }
+    function visibleQuestions(sectionId) {
+      return schema.questions.filter(function (question) { return question.section === sectionId && isVisible(question); });
+    }
+    function scheduleSave() {
+      clearTimeout(saveTimer);
+      setStatus("有未保存修改…", false);
+      saveTimer = setTimeout(function () { saveDraft(false); }, 650);
+    }
+    async function saveDraft(showMessage) {
+      clearTimeout(saveTimer);
+      try {
+        await client.saveQuestionnaireDraft(answers, schema.sections[sectionIndex].id);
+        if (showMessage) setStatus("进度已保存", false); else setStatus("已自动保存", false);
+      } catch (error) { setStatus(error.message, true); }
+    }
+    function element(tag, className, text) {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text != null) node.textContent = text;
+      return node;
+    }
+    function renderField(question, definition) {
+      const wrapper = element("div", "field");
+      wrapper.appendChild(element("label", "title", definition.label));
+      const value = currentValue(question.id, definition.key);
+      if (definition.type === "scale") {
+        const scale = element("div", "scale");
+        for (let number = definition.min; number <= definition.max; number += 1) {
+          const button = element("button", value === number ? "selected" : "", String(number));
+          button.type = "button";
+          button.onclick = function () { setValue(question.id, definition.key, number); render(); };
+          scale.appendChild(button);
+        }
+        wrapper.appendChild(scale);
+        return wrapper;
+      }
+      if (["single","multi"].includes(definition.type)) {
+        const choices = element("div", "choices");
+        (definition.options || []).forEach(function (choice) {
+          const label = element("label", "choice");
+          const input = document.createElement("input");
+          input.type = definition.type === "multi" ? "checkbox" : "radio";
+          input.name = question.id + "-" + definition.key;
+          input.checked = definition.type === "multi" ? (Array.isArray(value) && value.includes(choice.value)) : value === choice.value;
+          input.onchange = function () {
+            if (definition.type === "multi") toggleMulti(question.id, definition.key, choice.value, input.checked);
+            else setValue(question.id, definition.key, choice.value);
+            render();
+          };
+          label.append(input, element("span", "", choice.label));
+          choices.appendChild(label);
+        });
+        wrapper.appendChild(choices);
+        return wrapper;
+      }
+      if (definition.type === "boolean") {
+        const select = document.createElement("select");
+        [["","未选择"],["true","是"],["false","否"]].forEach(function (item) { const option = document.createElement("option"); option.value = item[0]; option.textContent = item[1]; option.selected = String(value) === item[0]; select.appendChild(option); });
+        select.onchange = function () { setValue(question.id, definition.key, select.value === "" ? null : select.value === "true"); };
+        wrapper.appendChild(select);
+        return wrapper;
+      }
+      const input = definition.type === "textarea" ? document.createElement("textarea") : document.createElement("input");
+      if (definition.type !== "textarea") input.type = definition.type === "number" ? "number" : definition.type;
+      if (definition.min != null) input.min = definition.min;
+      if (definition.max != null) input.max = definition.max;
+      input.placeholder = definition.placeholder || "";
+      input.value = value == null ? "" : value;
+      input.oninput = function () { setValue(question.id, definition.key, definition.type === "number" && input.value !== "" ? Number(input.value) : input.value); };
+      wrapper.appendChild(input);
+      return wrapper;
+    }
+    function renderQuestion(question) {
+      const skipped = Boolean(answers[question.id] && answers[question.id]._skipped);
+      const card = element("article", "question" + (skipped ? " skipped" : ""));
+      const title = element("h3");
+      title.append(element("span", "qid", question.id), document.createTextNode(question.title));
+      card.append(title, element("p", "prompt", question.prompt));
+      if (question.note) card.appendChild(element("p", "note", question.note));
+      const fields = element("div", "fields");
+      question.fields.forEach(function (definition) { fields.appendChild(renderField(question, definition)); });
+      card.appendChild(fields);
+      const skip = element("button", "skip", skipped ? "恢复作答" : "暂时跳过这题");
+      skip.type = "button";
+      skip.onclick = function () { answers[question.id] = skipped ? {} : { _skipped:true }; scheduleSave(); render(); };
+      card.appendChild(skip);
+      return card;
+    }
+    function renderNavigation() {
+      if (!schema) return;
+      ui.sections.innerHTML = "";
+      schema.sections.forEach(function (section, index) {
+        if (section.id === "job" && !["active","soon"].includes(answerValue("B7"))) return;
+        const button = element("button", index === sectionIndex ? "active" : "", (index + 1) + ". " + section.title);
+        button.disabled = busy;
+        button.onclick = async function () { sectionIndex = index; render(); await saveDraft(false); };
+        ui.sections.appendChild(button);
+      });
+    }
+    function render() {
+      const section = schema.sections[sectionIndex];
+      if (section.id === "job" && !["active","soon"].includes(answerValue("B7"))) sectionIndex = schema.sections.findIndex(function (item) { return item.id === "values"; });
+      const active = schema.sections[sectionIndex];
+      ui["section-title"].textContent = active.title;
+      ui["section-description"].textContent = active.description;
+      ui.questions.innerHTML = "";
+      visibleQuestions(active.id).forEach(function (question) { ui.questions.appendChild(renderQuestion(question)); });
+      ui.previous.disabled = sectionIndex === 0 || busy;
+      const isLast = active.id === "job" || (active.id === "values" && !["active","soon"].includes(answerValue("B7")));
+      ui.next.textContent = isLast ? "完成并生成画像" : "保存并继续";
+      ui.next.dataset.complete = String(isLast);
+      renderNavigation();
+    }
+    async function complete() {
+      setBusy(true);
+      setStatus("正在生成画像和职业方向…", false);
+      try {
+        const result = await client.completeQuestionnaire(answers);
+        renderResult(result);
+      } catch (error) { setStatus((error.code ? error.code + " · " : "") + error.message, true); }
+      finally { setBusy(false); }
+    }
+    function renderResult(result) {
+      ui.app.style.display = "none";
+      ui.result.classList.add("visible");
+      const evaluation = result.career_evaluation;
+      const ready = evaluation.profile_status.job_matching_ready;
+      ui["result-summary"].textContent = ready ? "问卷、画像和职业匹配已经完成。你可以选择一个方向进入 Coach。" : "画像已保存，但求职事实还不完整。你可以返回补答，或先保留心理与能力画像。";
+      ui["result-list"].innerHTML = "";
+      evaluation.recommended_occupations.forEach(function (item) { ui["result-list"].appendChild(element("div", "result-item", item.rank + ". " + item.occupation_name + " · " + item.match_score)); });
+      const missing = evaluation.profile_status.missing_critical_fields || [];
+      ui["result-warning"].replaceChildren();
+      if (missing.length) ui["result-warning"].appendChild(element("div", "warning", "还缺：" + missing.join("、")));
+      setStatus("问卷已完成并保存", false);
+    }
+    ui.previous.onclick = async function () { sectionIndex = Math.max(0, sectionIndex - 1); render(); await saveDraft(false); window.scrollTo({top:0,behavior:"smooth"}); };
+    ui.next.onclick = async function () {
+      if (ui.next.dataset.complete === "true") return complete();
+      sectionIndex += 1; render(); await saveDraft(true); window.scrollTo({top:0,behavior:"smooth"});
+    };
+    ui.edit.onclick = function () { ui.result.classList.remove("visible"); ui.app.style.display = "grid"; render(); };
+    ui.career.onclick = function () { location.href = "./career-coach-demo.html"; };
+
+    (async function boot() {
+      try {
+        const account = await client.me();
+        if (!account) return location.replace("./auth.html?next=questionnaire.html");
+        ui.account.textContent = account.user.username + " · " + account.user.masked_contact;
+        [schema] = await Promise.all([client.getQuestionnaireSchema()]);
+        const draft = await client.getQuestionnaireDraft();
+        answers = draft.answers || {};
+        const restored = schema.sections.findIndex(function (item) { return item.id === draft.current_section; });
+        sectionIndex = restored >= 0 ? restored : 0;
+        setStatus(draft.updated_at ? "已恢复上次进度" : "尚未开始", false);
+        render();
+      } catch (error) {
+        if (error.code === "AUTH_REQUIRED") location.replace("./auth.html?next=questionnaire.html");
+        else setStatus(error.message, true);
+      }
+    })();
+  </script>
+</body>
+</html>
