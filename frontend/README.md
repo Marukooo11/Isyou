@@ -9,7 +9,7 @@ cd frontend
 python3 -m http.server 8000
 ```
 
-浏览器打开 `http://localhost:8000`。
+浏览器打开 `http://localhost:8000`。这是前后端分离的开发方式；默认推荐直接运行 `python3 backend/server.py`，然后打开 `http://127.0.0.1:8001/`，由后端同源托管前端。
 
 完整 Coach 联调需要在仓库根目录另开终端：
 
@@ -34,7 +34,7 @@ COACH_ALLOW_DEMO_DATE=1 python3 backend/server.py
 ## Current status
 
 - 已完成：现有“探索 → 图谱 → 岗位匹配 → 岗位详情”与“Coach 对话 → Gap Map → 阶段计划 → Day 1 → 成果反馈 → Day 2 Review → 动态任务”的顺滑连接。
-- Coach 页面优先连接 `http://127.0.0.1:8001` 的真实 API；没有检测到后端时自动使用浏览器内 Demo 引擎，保证黑客松现场仍可完整点击。
+- 同源部署时页面自动连接当前域名的真实 API；使用本地 `python -m http.server 8000` 时自动连接 `http://127.0.0.1:8001`。没有检测到后端时 Coach 页面可使用浏览器内 Demo 引擎。
 - 两种模式使用相同的 `ui_blocks` 响应结构。前端包含 `question`、`gap_map`、`stage_plan`、`daily_task`、`review`、`feedback`、`evidence_update`、`notice` 八类渲染器。
 - 访问令牌、会话 ID 和前端对话记录保存在 `localStorage`；后端画像与 Coach 状态保存在 SQLite，切换目标岗位会自动创建新的 Coach 会话，刷新不会丢进度。
 - URL 参数：`?mode=api` 强制真实 API，`?mode=demo` 强制浏览器 Demo；默认 `auto`。

@@ -32,6 +32,7 @@ class CareerHttpFlowTest(unittest.TestCase):
         CoachRequestHandler.career_service = CareerService(coach, profile_store=auth_store)
         CoachRequestHandler.allowed_origins = set()
         CoachRequestHandler.allow_demo_date = True
+        CoachRequestHandler.frontend_dir = ROOT / "frontend"
         self.server = ThreadingHTTPServer(("127.0.0.1", 0), CoachRequestHandler)
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
         self.thread.start()
@@ -145,6 +146,28 @@ class CareerHttpFlowTest(unittest.TestCase):
         )
         self.assertEqual(status, 401)
         self.assertEqual(denied["error"]["code"], "AUTH_REQUIRED")
+
+    def test_single_service_serves_frontend_and_allows_same_origin(self):
+        request = urllib.request.Request(
+            self.base_url + "/",
+            headers={"Origin": self.base_url},
+            method="GET",
+        )
+        with urllib.request.urlopen(request, timeout=5) as response:
+            body = response.read().decode("utf-8")
+            self.assertEqual(response.status, 200)
+            self.assertIn("text/html", response.headers["Content-Type"])
+            self.assertIn("Isyou", body)
+
+        request = urllib.request.Request(
+            self.base_url + "/api/v1/health",
+            headers={"Origin": self.base_url},
+            method="GET",
+        )
+        with urllib.request.urlopen(request, timeout=5) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+            self.assertEqual(response.status, 200)
+            self.assertEqual(payload["status"], "ok")
 
 
 if __name__ == "__main__":

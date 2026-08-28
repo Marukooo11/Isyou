@@ -125,7 +125,7 @@
   <script>
     const query = new URLSearchParams(location.search);
     const client = new IsyouCoach.CoachClient({
-      baseUrl: query.get("api") || "http://127.0.0.1:8001",
+      baseUrl: query.get("api") || undefined,
       storageKey: "isyou_career_coach_session_id"
     });
     const profileInput = document.querySelector("#profile");

@@ -1,6 +1,6 @@
 # Isyou
 
-> 结论：Isyou 已跑通“注册/登录 → 可信 user_id → 导入问卷 output1.v1.0 → 画像持久化 → 职业方向匹配 → Quest Coach → Gap Map/每日行动”的本地 MVP 链路，可直接用于前后端自助联调。
+> 结论：Isyou 已跑通“注册/登录 → 可信 user_id → 导入问卷 output1.v1.0 → 画像持久化 → 职业方向匹配 → Quest Coach → Gap Map/每日行动”的 MVP 链路；前端和 API 可由一个 Python 进程或 Docker 容器同时提供，可直接用于本地联调和 Hackathon 云端 Demo。
 
 Isyou 帮助用户从真实经历中理解自身能力、探索职业方向，并把目标转化为可持续的行动路径。当前仓库同时包含可交互前端、零第三方依赖的 Python 后端、SQLite 持久化、642 个职业的方向匹配器和确定性 Quest Coach 参考实现。
 
@@ -8,27 +8,27 @@ Isyou 帮助用户从真实经历中理解自身能力、探索职业方向，�
 
 ## 快速开始
 
-无需安装 Python 包。在仓库根目录启动后端：
+无需安装 Python 包。在仓库根目录启动单服务 Demo：
 
 ```bash
 COACH_ALLOW_DEMO_DATE=1 AUTH_DEV_SHOW_CODE=1 python3 backend/server.py
 ```
 
-另开一个终端启动前端：
+打开：
+
+- 产品主链路：`http://127.0.0.1:8001/`；
+- 注册/登录：`http://127.0.0.1:8001/auth.html`；
+- 完整开发联调：`http://127.0.0.1:8001/career-coach-demo.html`；
+- 健康检查：`http://127.0.0.1:8001/api/v1/health`。
+
+Docker 部署：
 
 ```bash
-cd frontend
-python3 -m http.server 8000
+docker build -t isyou-demo .
+docker run --rm -p 8001:8001 -v isyou-data:/data isyou-demo
 ```
 
-推荐入口：
-
-- 产品主链路：`http://127.0.0.1:8000/`，从岗位页点击“让 Coach 为我规划”；
-- 注册/登录：`http://127.0.0.1:8000/auth.html`；
-- 完整开发联调：`http://127.0.0.1:8000/career-coach-demo.html`；
-- Coach 原始响应：`http://127.0.0.1:8000/coach-demo.html`。
-
-本地 `AUTH_DEV_SHOW_CODE=1` 会在接口响应中返回 6 位验证码，前端自动回填。该模式仅允许绑定回环地址，不能用于部署环境。
+Docker 镜像默认启用 `AUTH_DEMO_MODE=1`，验证码会自动回填，只适合不输入真实资料的公开演示。完整云端配置与生产边界见 [`docs/deployment.md`](docs/deployment.md)。
 
 ## 当前完整链路
 
@@ -57,6 +57,7 @@ python3 -m http.server 8000
 - **Career Adapter**：把用户选择的职业方向、画像事实、证据、约束和待确认项转换为稳定 `career_context`；
 - **Quest Coach**：首次对话、Gap Map、阶段计划、Day 1、卡点降级、结果提交、次日 Review 和动态 Day 2；
 - **联调界面**：主产品页、独立注册登录页、Career → Coach 全链路页和原始 API 调试页；
+- **部署入口**：后端同源托管前端、支持云平台 `PORT`、Docker/Procfile 和 SQLite 持久卷；
 - **工程保证**：请求幂等、状态版本冲突保护、本地 CORS、统一错误结构和 HTTP 端到端测试。
 
 ## 核心 API
@@ -74,7 +75,7 @@ python3 -m http.server 8000
 | 读取 Coach 会话 | `GET /api/v1/coach/sessions/{session_id}` | Bearer |
 | 推进 Coach | `POST /api/v1/coach/sessions/{session_id}/turns` | Bearer |
 
-详细契约见 [`docs/questionnaire/README.md`](docs/questionnaire/README.md)、[`docs/auth-api.md`](docs/auth-api.md)、[`docs/career-api.md`](docs/career-api.md) 和 [`docs/coach-api.md`](docs/coach-api.md)。
+详细说明见 [`docs/deployment.md`](docs/deployment.md)、[`docs/questionnaire/README.md`](docs/questionnaire/README.md)、[`docs/auth-api.md`](docs/auth-api.md)、[`docs/career-api.md`](docs/career-api.md) 和 [`docs/coach-api.md`](docs/coach-api.md)。
 
 ## 测试
 
@@ -86,7 +87,7 @@ PYTHONPATH=backend COACH_HTTP_LOG=0 python3 -m unittest discover -s backend/test
 
 ## 当前边界
 
-- 真实短信/邮件尚未接入；部署前必须设置 `AUTH_DEV_SHOW_CODE=0` 并替换 `DevelopmentCodeDelivery`；
+- 真实短信/邮件尚未接入；云端 Hackathon Demo 使用显式 `AUTH_DEMO_MODE=1`，面向真实用户前必须关闭并替换 `DevelopmentCodeDelivery`；
 - 当前前端使用 `localStorage` 保存 Bearer token；生产建议迁移为 HTTPS + Secure/HttpOnly/SameSite Cookie，并补 IP/设备限流、密码重置、联系方式换绑和账号注销；
 - 当前后端从已经生成的 `output1.v1.0` 开始，35 题施测和自然语言答案抽取仍由上游信息收集 Skill 负责；
 - 职业主分来自 Big Five 与多元智能，技能/经历只参与就绪判断和同分排序，结果是职业方向探索，不是真实岗位胜任度；
@@ -111,6 +112,8 @@ frontend/
 docs/               # Auth、Career、Coach API 契约
   questionnaire/    # 问卷 4.0、评分规则、output1 契约与 JS 参考引擎
 assets/previews/    # 团队评审截图
+Dockerfile          # 单容器 Demo
+Procfile            # 通用云平台启动入口
 ```
 
 ## 团队协作

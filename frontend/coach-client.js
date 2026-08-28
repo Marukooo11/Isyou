@@ -1,6 +1,15 @@
 (function (global) {
   "use strict";
 
+  function defaultBaseUrl() {
+    const location = global.location;
+    if (!location || !/^https?:$/.test(location.protocol)) return "http://127.0.0.1:8001";
+    const localStaticServer = ["127.0.0.1", "localhost"].includes(location.hostname)
+      && location.port === "8000";
+    if (localStaticServer) return location.protocol + "//" + location.hostname + ":8001";
+    return location.origin;
+  }
+
   class CoachApiError extends Error {
     constructor(error, status) {
       super(error && error.message ? error.message : "Coach 服务请求失败");
@@ -14,7 +23,7 @@
   class CoachClient {
     constructor(options) {
       const config = options || {};
-      this.baseUrl = (config.baseUrl || "http://127.0.0.1:8001").replace(/\/$/, "");
+      this.baseUrl = (config.baseUrl || global.ISYOU_COACH_API || defaultBaseUrl()).replace(/\/$/, "");
       this.storageKey = config.storageKey || "isyou_coach_session_id";
       this.authStorageKey = config.authStorageKey || "isyou_auth_access_token_v1";
       this.sessionId = global.localStorage.getItem(this.storageKey);

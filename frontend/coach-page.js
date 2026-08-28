@@ -204,7 +204,7 @@
     constructor() {
       const params = new URLSearchParams(window.location.search);
       this.requested = params.get("mode") || "auto"; this.demoDate = dateString();
-      this.api = new window.IsyouCoach.CoachClient({ baseUrl: params.get("api") || window.ISYOU_COACH_API || "http://127.0.0.1:8001", storageKey: KEYS.api, demoDate: this.demoDate });
+      this.api = new window.IsyouCoach.CoachClient({ baseUrl: params.get("api") || undefined, storageKey: KEYS.api, demoDate: this.demoDate });
       this.demo = new DemoCoach(); this.active = null; this.mode = null;
     }
     async connect() {

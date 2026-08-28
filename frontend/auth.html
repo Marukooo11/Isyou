@@ -71,7 +71,7 @@
   <script src="./coach-client.js"></script>
   <script>
     const params = new URLSearchParams(location.search);
-    const client = new IsyouCoach.CoachClient({ baseUrl: params.get("api") || "http://127.0.0.1:8001" });
+    const client = new IsyouCoach.CoachClient({ baseUrl: params.get("api") || undefined });
     const status = document.querySelector("#status");
     let registerChallengeId = null;
     let loginChallengeId = null;
