@@ -36,6 +36,6 @@ COACH_ALLOW_DEMO_DATE=1 python3 backend/server.py
 - 已完成：现有“探索 → 图谱 → 岗位匹配 → 岗位详情”与“Coach 对话 → Gap Map → 阶段计划 → Day 1 → 成果反馈 → Day 2 Review → 动态任务”的顺滑连接。
 - Coach 页面优先连接 `http://127.0.0.1:8001` 的真实 API；没有检测到后端时自动使用浏览器内 Demo 引擎，保证黑客松现场仍可完整点击。
 - 两种模式使用相同的 `ui_blocks` 响应结构。前端包含 `question`、`gap_map`、`stage_plan`、`daily_task`、`review`、`feedback`、`evidence_update`、`notice` 八类渲染器。
-- 会话 ID 和前端对话记录保存在 `localStorage`；切换目标岗位会自动创建新的 Coach 会话，刷新不会丢进度。
+- 访问令牌、会话 ID 和前端对话记录保存在 `localStorage`；后端画像与 Coach 状态保存在 SQLite，切换目标岗位会自动创建新的 Coach 会话，刷新不会丢进度。
 - URL 参数：`?mode=api` 强制真实 API，`?mode=demo` 强制浏览器 Demo；默认 `auto`。
 - 当前边界：本地验证码已可联调，但真实短信/邮件 delivery provider、真实模型 provider、Career Skill 实时数据、文件上传和生产部署待接入。

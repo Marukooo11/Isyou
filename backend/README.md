@@ -51,6 +51,8 @@ COACH_ALLOW_DEMO_DATE=1 python3 backend/server.py
 PYTHONPATH=backend python3 -m unittest discover -s backend/tests -v
 ```
 
+当前共 11 项测试，覆盖认证、用户隔离、职业匹配和 Coach 状态链路。
+
 ## 当前实现边界
 
 已实现：
@@ -65,7 +67,7 @@ PYTHONPATH=backend python3 -m unittest discover -s backend/tests -v
 - 根据“完成 / 部分完成 / 卡住”生成不同 Day 2；
 - SQLite 跨刷新和重启恢复；
 - 请求幂等与状态冲突保护；
-- 统一错误格式与本地 CORS。
+- 统一错误格式与本地 CORS；
 - 手机号/邮箱 6 位验证码、注册和两种登录方式；
 - 密码/验证码/访问令牌哈希存储与 Bearer 鉴权；
 - 服务端签发稳定 `user_id`，画像与 Coach 会话按用户隔离；
@@ -82,7 +84,6 @@ PYTHONPATH=backend python3 -m unittest discover -s backend/tests -v
 - Career Skill 的实时数据接入；
 - 问卷逐题施测与自然语言答案抽取（当前从 Skill 生成的 `output1.v1.0` 开始）；
 - 真实招聘信息检索与 JD 层地点、薪资、职级过滤；
-- 登录与用户账号；
 - 二进制文件上传；
 - 生产部署与监控。
 
