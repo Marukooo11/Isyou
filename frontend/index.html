@@ -337,7 +337,7 @@
             <div style="padding: 18px 20px; background: #FDF6EF; border-left: 2px solid #D89A6C;">
               <div style="font-size: 13px; font-weight: 600; margin-bottom: 8px; color: #A9713F;">这个岗位对你的一个挑战</div>
               <div style="font-size: 13px; line-height: 1.8; color: #4C5148;">每周的 15 分钟视频例会。你在图谱里更适合书面沟通。</div>
-              <span onClick="{{ goTraining }}" style="display: inline-block; margin-top: 12px; font-size: 12px; padding: 8px 15px; border: 1px solid #D89A6C; color: #A9713F; cursor: pointer;">去看「短会议参与」</span>
+              <span onClick="{{ goTraining }}" style="display: inline-block; margin-top: 12px; font-size: 12px; padding: 8px 15px; border: 1px solid #6E8465; color: #526A4B; cursor: pointer;">让 Coach 为我规划</span>
             </div>
             <div style="padding: 18px 20px; background: #FAF8F3; border: 1px solid #E3DED1;">
               <div style="font-size: 13px; font-weight: 600; margin-bottom: 10px;">面试流程（已知）</div>
@@ -538,6 +538,30 @@ class Component extends DCLogic {
 
   go = (screen) => () => this.setState({ screen, helpOpen: false });
 
+  openCoach = (job = JOBS[0]) => (event) => {
+    if (event && event.stopPropagation) event.stopPropagation();
+    const context = {
+      selected_direction: {
+        id: "career-" + job.title.replace(/\s+/g, "-"),
+        title: job.title,
+        source_refs: ["frontend-job-match"]
+      },
+      target_requirements: [
+        { id: "task-structure", text: job.task, source_ref: "frontend-job-match" },
+        { id: "current-gap", text: job.gap, source_ref: "frontend-job-match" }
+      ],
+      user_profile: {
+        facts: AXES.map(a => a.desc),
+        evidence: [],
+        constraints: [job.gap],
+        open_questions: ["当前是否已有能证明相关能力的作品或经历"]
+      },
+      source_meta: job.meta
+    };
+    sessionStorage.setItem("isyou_career_context", JSON.stringify(context));
+    window.location.href = "./coach.html";
+  };
+
   renderVals() {
     const st = this.state;
     const q = QUESTIONS[st.qi];
@@ -552,7 +576,7 @@ class Component extends DCLogic {
       ["portrait", "02", "能力图谱"],
       ["match", "03", "岗位匹配"],
       ["job", "04", "岗位详情"],
-      ["training", "05", "培训"]
+      ["training", "05", "成长 Coach"]
     ];
 
     const pageCount = 14 + st.done.filter(Boolean).length - 2;
@@ -579,7 +603,7 @@ class Component extends DCLogic {
       restart: () => this.setState({ screen: "welcome", qi: 0, answers: {}, helpOpen: false, openAxis: null, openJob: 0, openBlock: 2, done: [true, true, false], custom: {}, submitted: {} }),
 
       steps: screens.map(([id, num, label]) => ({
-        num, label, go: this.go(id),
+        num, label, go: id === "training" ? this.openCoach(JOBS[0]) : this.go(id),
         tabStyle: "flex: 1; cursor: pointer; padding: 13px 16px; display: flex; flex-direction: column; gap: 5px; border-right: 1px solid #EDE9DE; background: " + (st.screen === id ? "#F0F3EC" : "transparent") + "; color: " + (st.screen === id ? "#29302E" : "#8E8E80") + "; box-shadow: " + (st.screen === id ? "inset 0 -2px 0 #8FA882" : "none") + ";"
       })),
 
@@ -672,11 +696,11 @@ class Component extends DCLogic {
         const on = st.openJob === i;
         const anyOpen = st.openJob !== null;
         return {
-          title: j.title, meta: j.meta, score: j.score, task: j.task, gap: j.gap, trainLabel: j.trainLabel,
+          title: j.title, meta: j.meta, score: j.score, task: j.task, gap: j.gap, trainLabel: "让 Coach 为我规划",
           detailed: on,
           open: () => this.setState(s => ({ openJob: s.openJob === i ? null : i })),
           goJob: () => this.setState({ screen: "job" }),
-          goTrain: () => this.setState({ screen: "training" }),
+          goTrain: this.openCoach(j),
           headStyle: "display: flex; min-width: 0; " + (on || !anyOpen
             ? "flex-direction: column; gap: 5px;"
             : "align-items: baseline; gap: 14px;"),
@@ -703,7 +727,7 @@ class Component extends DCLogic {
         }))
       })),
       backToMatch: () => this.setState({ screen: "match" }),
-      goTraining: () => this.setState({ screen: "training" }),
+      goTraining: this.openCoach(JOBS[0]),
 
       pagesTitle: "你的本子，现在有 " + pageCount + " 页",
       pages: Array.from({ length: 17 }, (_, i) => ({

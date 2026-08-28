@@ -19,7 +19,9 @@ cd frontend
 python3 -m http.server 8000
 ```
 
-打开：`http://127.0.0.1:8000/coach-demo.html`
+打开产品 Demo：`http://127.0.0.1:8000/coach.html?mode=api`
+
+开发者查看原始响应：`http://127.0.0.1:8000/coach-demo.html`
 
 ## 环境变量
 
@@ -71,4 +73,3 @@ PYTHONPATH=backend python3 -m unittest discover -s backend/tests -v
 - 生产部署与监控。
 
 `coach/engine.py` 是当前可测试的确定性参考实现。接模型时保留相同输入、状态转移和 `CoachResponse`，不要让前端解析模型原始输出。
-

@@ -53,11 +53,14 @@
       if (!this.sessionId || this.stateVersion == null) {
         throw new Error("Coach 会话尚未创建或恢复");
       }
+      const requestId = global.crypto && typeof global.crypto.randomUUID === "function"
+        ? global.crypto.randomUUID()
+        : "request-" + Date.now() + "-" + Math.random().toString(16).slice(2);
       const response = await this._request(
         "POST",
         "/api/v1/coach/sessions/" + encodeURIComponent(this.sessionId) + "/turns",
         {
-          request_id: global.crypto.randomUUID(),
+          request_id: requestId,
           expected_state_version: this.stateVersion,
           event: event,
           client_time: new Date().toISOString(),
@@ -98,4 +101,3 @@
 
   global.IsyouCoach = { CoachClient: CoachClient, CoachApiError: CoachApiError };
 })(window);
-
