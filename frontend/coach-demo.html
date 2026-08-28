@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Isyou Coach API 联调页</title>
+  <style>
+    body { margin: 0; font: 14px/1.7 system-ui, sans-serif; color: #29302e; background: #f5f2e9; }
+    main { width: min(840px, calc(100% - 32px)); margin: 32px auto; }
+    header, .composer, .message, .block { background: #fffdf8; border: 1px solid #ded8c9; }
+    header { padding: 18px 20px; display: flex; justify-content: space-between; gap: 16px; align-items: center; }
+    h1 { font-size: 18px; margin: 0; }
+    #status { color: #6e7268; font-size: 12px; }
+    #timeline { display: grid; gap: 12px; margin: 16px 0; }
+    .message { padding: 16px 18px; border-left: 3px solid #8fa882; }
+    .block { padding: 14px 16px; }
+    .block small { color: #8e8e80; letter-spacing: .08em; }
+    pre { white-space: pre-wrap; word-break: break-word; margin: 8px 0 0; font: 12px/1.6 ui-monospace, monospace; color: #4c5148; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    button { border: 1px solid #b9b29f; background: #faf8f3; padding: 9px 13px; cursor: pointer; }
+    button.primary { background: #6e8465; color: white; border-color: #6e8465; }
+    button:disabled { opacity: .5; cursor: wait; }
+    .composer { padding: 14px; display: flex; gap: 8px; }
+    textarea { flex: 1; min-height: 56px; resize: vertical; border: 1px solid #d9d4c4; padding: 10px; font: inherit; }
+    .tools { margin-top: 12px; display: flex; gap: 8px; align-items: center; color: #6e7268; font-size: 12px; }
+    .error { color: #a33; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div><h1>Isyou Coach · API 联调</h1><div id="status">尚未连接</div></div>
+      <button id="reset">清除会话</button>
+    </header>
+    <section id="timeline"></section>
+    <section class="composer">
+      <textarea id="message" placeholder="输入回复或结果说明"></textarea>
+      <button id="send" class="primary">发送</button>
+    </section>
+    <div class="tools">
+      <span>演示日期：</span>
+      <input id="demo-date" type="date" value="2026-08-28">
+      <button id="restore">按该日期恢复</button>
+      <span>后端需以 COACH_ALLOW_DEMO_DATE=1 启动</span>
+    </div>
+  </main>
+  <script src="coach-client.js"></script>
+  <script>
+    const client = new IsyouCoach.CoachClient({ demoDate: document.querySelector("#demo-date").value });
+    const timeline = document.querySelector("#timeline");
+    const status = document.querySelector("#status");
+    const message = document.querySelector("#message");
+    const send = document.querySelector("#send");
+
+    const startPayload = {
+      client_user_id: "demo-user",
+      domain: "career",
+      career_context: {
+        selected_direction: { id: "3d", title: "3D 场景相关方向", source_refs: ["source-1"] },
+        target_requirements: [{ id: "portfolio", text: "需要能够展示建模或场景制作能力的作品", source_ref: "source-1" }],
+        user_profile: {
+          facts: ["有建筑学习经历", "学过建模", "有绘画经验"],
+          evidence: [], constraints: [], open_questions: []
+        }
+      },
+      preferences: { language: "zh-CN", available_minutes: 30, communication_style: "clear_and_supportive" }
+    };
+
+    function render(response) {
+      timeline.innerHTML = "";
+      status.textContent = response.phase + " · Day " + response.state_summary.current_day + " · v" + response.state_version;
+      const msg = document.createElement("article");
+      msg.className = "message";
+      msg.textContent = response.coach_message;
+      timeline.appendChild(msg);
+      response.ui_blocks.forEach(function (block) {
+        const el = document.createElement("article");
+        el.className = "block";
+        el.innerHTML = "<small>" + block.type + "</small><pre></pre>";
+        el.querySelector("pre").textContent = JSON.stringify(block.data, null, 2);
+        timeline.appendChild(el);
+      });
+      const actions = document.createElement("div");
+      actions.className = "actions";
+      response.quick_actions.forEach(function (action) {
+        const button = document.createElement("button");
+        button.textContent = action.label;
+        button.onclick = function () {
+          runTurn({
+            type: action.event_type,
+            action_id: action.action_id || action.id,
+            message: message.value,
+            evidence: action.event_type === "submit_result" ? [{ type: "note", value: message.value || "前端联调结果" }] : []
+          });
+        };
+        actions.appendChild(button);
+      });
+      timeline.appendChild(actions);
+    }
+
+    async function busy(task) {
+      document.querySelectorAll("button").forEach(function (button) { button.disabled = true; });
+      status.classList.remove("error");
+      try { render(await task()); }
+      catch (error) { status.textContent = error.code ? error.code + " · " + error.message : error.message; status.classList.add("error"); }
+      finally { document.querySelectorAll("button").forEach(function (button) { button.disabled = false; }); }
+    }
+
+    function runTurn(event) {
+      busy(function () { return client.turn(event); });
+    }
+
+    send.onclick = function () { runTurn({ type: "message", message: message.value, evidence: [] }); };
+    document.querySelector("#reset").onclick = function () { client.clear(); location.reload(); };
+    document.querySelector("#restore").onclick = function () {
+      client.demoDate = document.querySelector("#demo-date").value;
+      busy(function () { return client.restore(); });
+    };
+
+    busy(async function () {
+      const restored = await client.restore();
+      return restored || client.start(startPayload);
+    });
+  </script>
+</body>
+</html>
+
