@@ -12,6 +12,8 @@
 - `evidence_units`；
 - `consent.can_use_for_job_matching`。
 
+正式交接字段以 [`docs/questionnaire/output1-v1-contract.md`](../../docs/questionnaire/output1-v1-contract.md) 为准。`evidence_units` 优先读取 `eu_id` 与 `text`，同时兼容早期联调数据中的 `evidence_unit_id` 与 `claim`。
+
 `CareerMatcher` 返回更新后的完整画像；HTTP API 只返回联调需要的状态、五条推荐和 `career_context`，避免把 642 条全量排序发送给前端。
 
 ## 规则边界

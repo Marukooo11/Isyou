@@ -1,6 +1,6 @@
 # Isyou
 
-> 结论：Isyou 已跑通“注册/登录 → 可信 user_id → 画像持久化 → 职业方向匹配 → Quest Coach → Gap Map/每日行动”的本地 MVP 链路，可直接用于前后端自助联调。
+> 结论：Isyou 已跑通“注册/登录 → 可信 user_id → 导入问卷 output1.v1.0 → 画像持久化 → 职业方向匹配 → Quest Coach → Gap Map/每日行动”的本地 MVP 链路，可直接用于前后端自助联调。
 
 Isyou 帮助用户从真实经历中理解自身能力、探索职业方向，并把目标转化为可持续的行动路径。当前仓库同时包含可交互前端、零第三方依赖的 Python 后端、SQLite 持久化、642 个职业的方向匹配器和确定性 Quest Coach 参考实现。
 
@@ -53,6 +53,7 @@ python3 -m http.server 8000
 - **安全存储**：密码使用 PBKDF2-SHA256，验证码和访问令牌只存哈希；验证码有有效期、错误次数和重发冷却；
 - **用户数据**：账号、登录会话、画像快照、Coach 会话、交互轮次和证据记录统一保存到 SQLite，并按 `user_id` 隔离；
 - **职业方向**：对 `output1.v1.0` 做关键字段/授权检查、职业硬约束过滤和 5 个方向推荐；
+- **问卷交接**：纳入问卷 4.0 正文、评分规则和正式字段契约；联调页可直接导入上游生成的本地 JSON；
 - **Career Adapter**：把用户选择的职业方向、画像事实、证据、约束和待确认项转换为稳定 `career_context`；
 - **Quest Coach**：首次对话、Gap Map、阶段计划、Day 1、卡点降级、结果提交、次日 Review 和动态 Day 2；
 - **联调界面**：主产品页、独立注册登录页、Career → Coach 全链路页和原始 API 调试页；
@@ -73,7 +74,7 @@ python3 -m http.server 8000
 | 读取 Coach 会话 | `GET /api/v1/coach/sessions/{session_id}` | Bearer |
 | 推进 Coach | `POST /api/v1/coach/sessions/{session_id}/turns` | Bearer |
 
-详细契约见 [`docs/auth-api.md`](docs/auth-api.md)、[`docs/career-api.md`](docs/career-api.md) 和 [`docs/coach-api.md`](docs/coach-api.md)。
+详细契约见 [`docs/questionnaire/README.md`](docs/questionnaire/README.md)、[`docs/auth-api.md`](docs/auth-api.md)、[`docs/career-api.md`](docs/career-api.md) 和 [`docs/coach-api.md`](docs/coach-api.md)。
 
 ## 测试
 
@@ -81,7 +82,7 @@ python3 -m http.server 8000
 PYTHONPATH=backend COACH_HTTP_LOG=0 python3 -m unittest discover -s backend/tests -v
 ```
 
-当前共 11 项测试，覆盖邮箱/手机号注册、两种登录、错误/过期验证码、未登录拦截、画像落库、伪造 user_id、跨账号会话隔离，以及 Career → Coach → Gap Map 的 HTTP 链路。
+测试覆盖邮箱/手机号注册、两种登录、错误/过期验证码、未登录拦截、正式 `evidence_units` 字段交接、画像落库、伪造 user_id、跨账号会话隔离，以及 Career → Coach → Gap Map 的 HTTP 链路。
 
 ## 当前边界
 
@@ -108,6 +109,7 @@ frontend/
   coach.html        # 正式 Coach 界面
   career-coach-demo.html
 docs/               # Auth、Career、Coach API 契约
+  questionnaire/    # 问卷 4.0、评分规则、output1 契约与 JS 参考引擎
 assets/previews/    # 团队评审截图
 ```
 

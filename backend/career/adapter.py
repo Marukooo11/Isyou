@@ -132,8 +132,13 @@ class CareerAdapter:
         )
         evidence = [
             {
-                "id": item.get("evidence_unit_id") or item.get("id"),
-                "summary": item.get("claim") or item.get("summary") or item.get("evidence"),
+                "id": item.get("eu_id") or item.get("evidence_unit_id") or item.get("id"),
+                "summary": (
+                    item.get("text")
+                    or item.get("claim")
+                    or item.get("summary")
+                    or item.get("evidence")
+                ),
                 "strength": item.get("strength"),
                 "status": item.get("user_status") or "accepted",
             }

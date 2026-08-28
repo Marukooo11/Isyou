@@ -170,24 +170,33 @@
   "recommended_occupations": [],
   "evidence_units": [
     {
-      "evidence_unit_id": "EU-001",
-      "claim": "在实习中使用 SQL 和 Excel 整理经营数据并检查异常",
+      "eu_id": "EU-001",
+      "source_question_id": "J2",
+      "text": "在实习中使用 SQL 和 Excel 整理经营数据并检查异常",
       "strength": 3,
-      "source_question_ids": ["J1", "J2"],
+      "parsed": {"situation": "数据分析实习", "behavior": "使用 SQL 和 Excel 整理并检查经营数据", "result": "定位异常"},
+      "linked_capabilities": ["detail_detection", "structured_problem_solving"],
+      "linked_intelligences": ["logical_mathematical"],
       "user_status": "accepted"
     },
     {
-      "evidence_unit_id": "EU-002",
-      "claim": "完成过一份课程数据分析报告",
+      "eu_id": "EU-002",
+      "source_question_id": "Q6",
+      "text": "完成过一份课程数据分析报告",
       "strength": 3,
-      "source_question_ids": ["Q6", "J2"],
+      "parsed": {"situation": "课程项目", "behavior": "分析数据并组织报告", "result": "完成分析报告"},
+      "linked_capabilities": ["independent_deep_work", "verbal_expression"],
+      "linked_intelligences": ["logical_mathematical", "linguistic"],
       "user_status": "accepted"
     },
     {
-      "evidence_unit_id": "EU-003",
-      "claim": "能够复盘任务卡点并说明改进方式",
+      "eu_id": "EU-003",
+      "source_question_id": "Q18",
+      "text": "能够复盘任务卡点并说明改进方式",
       "strength": 2,
-      "source_question_ids": ["Q18"],
+      "parsed": {"situation": "任务复盘", "behavior": "梳理卡点并提出改进方式", "result": "形成下一步调整"},
+      "linked_capabilities": ["structured_problem_solving"],
+      "linked_intelligences": ["intrapersonal"],
       "user_status": "accepted"
     }
   ],

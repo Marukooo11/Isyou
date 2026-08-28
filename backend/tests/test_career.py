@@ -45,6 +45,14 @@ class CareerFlowTest(unittest.TestCase):
             response["career_context"]["selected_direction"]["id"],
             response["recommended_occupations"][0]["occupation_id"],
         )
+        self.assertEqual(
+            response["career_context"]["user_profile"]["evidence"][0]["id"],
+            "EU-001",
+        )
+        self.assertIn(
+            "SQL 和 Excel",
+            response["career_context"]["user_profile"]["evidence"][0]["summary"],
+        )
         self.assertTrue(response["career_context"]["target_requirements"])
 
     def test_missing_consent_returns_no_recommendations(self):
