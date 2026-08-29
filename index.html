@@ -24,7 +24,7 @@
 </style>
 </helmet>
 <div style="min-height: 100vh; background: radial-gradient(130% 70% at 50% 0%, #F1F0E6 0%, #DFE1D4 100%); padding: 34px 24px 64px; font-family: 'Noto Serif SC', serif; color: #29302E; position: static">
-<div style="max-width: 1160px; min-width: 940px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; position: relative">
+<div style="max-width: 1160px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; position: relative">
 
   <!-- 顶栏 -->
   <div style="display: flex; justify-content: space-between; align-items: flex-end; padding: 0 4px;">
@@ -133,77 +133,139 @@
     <!-- ════ 1 能力探索 ════ -->
     <sc-if value="{{ isExplore }}" hint-placeholder-val="{{ true }}">
       <div style="display: flex; min-height: 700px;">
-        <div style="width: 208px; flex: none; border-right: 1px dashed #E3DED1; background: #F7F4EC; padding: 24px 20px; display: flex; flex-direction: column; gap: 18px;">
+        <!-- 侧边本子 -->
+        <div style="width: 208px; flex: none; border-right: 1px dashed #E3DED1; background: #F7F4EC; padding: 24px 20px; display: flex; flex-direction: column; gap: 18px; overflow-y: auto;">
           <div style="font-family: 'EB Garamond', serif; font-size: 10px; letter-spacing: .16em; color: #A5A597;">MY NOTEBOOK</div>
           <div style="display: flex; flex-direction: column; gap: 13px;">
-            <sc-for list="{{ notebook }}" as="n" hint-placeholder-count="4">
+            <sc-for list="{{ notebook }}" as="n" hint-placeholder-count="7">
               <div style="display: flex; gap: 9px; align-items: flex-start;">
                 <span style="{{ n.dotStyle }}"></span>
-                <span style="{{ n.textStyle }}">{{ n.text }}</span>
+                <div style="display: flex; flex-direction: column; gap: 2px;">
+                  <span style="{{ n.sectionStyle }}">{{ n.section }}</span>
+                  <span style="{{ n.textStyle }}">{{ n.text }}</span>
+                </div>
               </div>
             </sc-for>
           </div>
-          <div style="margin-top: auto; font-size: 10px; line-height: 1.7; color: #A5A597;">随时可点回去修改<br>或标记「不确定」</div>
+          <div style="margin-top: auto; font-size: 10px; line-height: 1.7; color: #A5A597;">随时可回来修改</div>
         </div>
 
-        <div style="flex: 1; padding: 32px 40px; display: flex; flex-direction: column; gap: 22px;">
+        <!-- 问题区 -->
+        <div style="flex: 1; padding: 32px 40px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto;">
           <div style="display: flex; justify-content: space-between; align-items: baseline;">
             <span style="font-family: 'EB Garamond', serif; font-size: 11px; letter-spacing: .18em; color: #A5A597;">{{ qTag }}</span>
             <span style="font-size: 11px; color: #A5A597;">不显示剩余题数</span>
           </div>
 
-          <div style="display: flex; flex-direction: column; gap: 12px;">
-            <div style="font-size: 13px; line-height: 1.8; color: #6E8465;">{{ qLead }}</div>
-            <div style="font-size: 18px; line-height: 1.85; font-weight: 500; max-width: 520px; text-wrap: pretty;">{{ qText }}</div>
-            <div style="display: flex; gap: 10px; align-items: center; margin-top: 2px;">
-              <span onClick="{{ toggleHelp }}" style="{{ helpBtnStyle }}">这题什么意思？</span>
-              <span style="font-size: 11px; color: #A5A597;">问了不算答题</span>
-            </div>
-          </div>
-
-          <sc-if value="{{ helpOpen }}" hint-placeholder-val="{{ false }}">
-            <div style="padding: 16px 18px; background: #F1F4F7; border-left: 2px solid #A8BCCB; display: flex; flex-direction: column; gap: 8px;">
-              <div style="font-size: 12px; color: #6B8397;">这一题在问什么</div>
-              <div style="font-size: 13px; line-height: 1.9; color: #4C5148;">{{ qHelp }}</div>
-              <div style="font-size: 12px; color: #8E8E80; padding-top: 6px;">没有标准答案。四个选项都不错，选最接近的那个就好。</div>
-            </div>
-          </sc-if>
-
           <div style="display: flex; flex-direction: column; gap: 10px;">
-            <sc-for list="{{ options }}" as="o" hint-placeholder-count="4">
-              <div onClick="{{ o.pick }}" style="{{ o.style }}">
-                <span style="font-size: 14px; line-height: 1.6;">{{ o.text }}</span>
-                <span style="{{ o.markStyle }}">已选</span>
-              </div>
-            </sc-for>
+            <sc-if value="{{ qLead }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size: 13px; line-height: 1.8; color: #6E8465;">{{ qLead }}</div>
+            </sc-if>
+            <sc-if value="{{ qText }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size: 18px; line-height: 1.85; font-weight: 500; max-width: 520px; text-wrap: pretty;">{{ qText }}</div>
+            </sc-if>
           </div>
 
-          <sc-if value="{{ showCustom }}" hint-placeholder-val="{{ false }}">
-            <div style="padding: 15px 17px; background: #FAF8F3; border: 1px solid #D9D4C4; display: flex; flex-direction: column; gap: 10px;">
-              <div style="font-size: 11px; color: #8E8E80;">写下你当时的做法，多短都可以</div>
-              <textarea value="{{ customText }}" onChange="{{ editCustom }}" placeholder="比如：我先把已经做完的那部分存下来，再去问要改哪里" style="width: 100%; box-sizing: border-box; min-height: 78px; resize: vertical; padding: 11px 13px; border: 1px solid #E3DED1; background: #FDFCF8; font-family: 'Noto Serif SC', serif; font-size: 13px; line-height: 1.8; color: #29302E; outline: none;"></textarea>
-              <div style="display: flex; justify-content: space-between; align-items: center; gap: 14px;">
-                <span style="{{ customHintStyle }}">{{ customHint }}</span>
-                <span onClick="{{ submitCustom }}" style="{{ customBtnStyle }}">提交 ✓</span>
-              </div>
-            </div>
-          </sc-if>
-
-          <sc-if value="{{ answered }}" hint-placeholder-val="{{ false }}">
-            <div style="padding: 14px 17px; background: #F4F1E9; border-left: 2px solid #8FA882; display: flex; flex-direction: column; gap: 8px;">
-              <div style="font-size: 11px; color: #8E8E80;">想补一句吗？（选填）</div>
-              <div style="font-size: 13px; line-height: 1.8; color: #4C5148;">{{ noteText }}</div>
-            </div>
-          </sc-if>
-
-          <div style="display: flex; flex-direction: column; gap: 9px;">
-            <div style="font-size: 11px; color: #8E8E80;">如果这题不合适：</div>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-              <sc-for list="{{ exits }}" as="e" hint-placeholder-count="4">
-                <span onClick="{{ e.pick }}" style="{{ e.style }}">{{ e.text }}</span>
+          <!-- ── Choice / Choice_Dynamic ── -->
+          <sc-if value="{{ isChoiceType }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <sc-for list="{{ choiceOptions }}" as="o" hint-placeholder-count="4">
+                <div onClick="{{ o.pick }}" style="{{ o.style }}">
+                  <span style="font-size: 14px; line-height: 1.6;">{{ o.text }}</span>
+                  <span style="{{ o.markStyle }}">已选</span>
+                </div>
               </sc-for>
             </div>
-          </div>
+          </sc-if>
+
+          <!-- ── Scale ── -->
+          <sc-if value="{{ isScaleType }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+              <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+                <sc-for list="{{ scaleButtons }}" as="sb" hint-placeholder-count="7">
+                  <div onClick="{{ sb.pick }}" style="{{ sb.style }}">{{ sb.num }}</div>
+                </sc-for>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 11px; color: #6E7268; line-height: 1.55; gap: 12px;">
+                <span style="max-width: 46%;">{{ scaleLowLabel }}</span>
+                <span style="max-width: 46%; text-align: right;">{{ scaleHighLabel }}</span>
+              </div>
+              <div onClick="{{ pickScaleExit }}" style="{{ scaleExitStyle }}">○　{{ scaleExitLabel }}</div>
+            </div>
+          </sc-if>
+
+          <!-- ── Multiselect ── -->
+          <sc-if value="{{ isMsType }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="font-size: 11px; color: #A5A597;">多选；选完可直接前进</div>
+              <sc-for list="{{ msOptions }}" as="mo" hint-placeholder-count="7">
+                <div onClick="{{ mo.toggle }}" style="{{ mo.style }}">
+                  <span style="{{ mo.boxStyle }}">{{ mo.mark }}</span>
+                  <span style="font-size: 13px; line-height: 1.65; flex: 1;">{{ mo.text }}</span>
+                </div>
+              </sc-for>
+              <sc-if value="{{ showMsExit }}" hint-placeholder-val="{{ false }}">
+                <div onClick="{{ pickMsExit }}" style="{{ msExitStyle }}">○　{{ msExitLabel }}</div>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <!-- ── Dual Multiselect (Q15) ── -->
+          <sc-if value="{{ isDualType }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div>
+                  <div style="font-size: 11px; color: #6E8465; margin-bottom: 8px;">明显给我充电（+++）</div>
+                  <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <sc-for list="{{ chargeItems }}" as="ci" hint-placeholder-count="7">
+                      <div onClick="{{ ci.toggle }}" style="{{ ci.style }}">
+                        <span style="{{ ci.boxStyle }}">{{ ci.mark }}</span>
+                        <span style="font-size: 12px; flex: 1; line-height: 1.55;">{{ ci.text }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+                <div>
+                  <div style="font-size: 11px; color: #C2705A; margin-bottom: 8px;">明显消耗我（−−−）</div>
+                  <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <sc-for list="{{ drainItems }}" as="di" hint-placeholder-count="7">
+                      <div onClick="{{ di.toggle }}" style="{{ di.style }}">
+                        <span style="{{ di.boxStyle }}">{{ di.mark }}</span>
+                        <span style="font-size: 12px; flex: 1; line-height: 1.55;">{{ di.text }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+              </div>
+              <div style="font-size: 11px; color: #A5A597;">两列各自多选，也可都不选；点下一题继续</div>
+            </div>
+          </sc-if>
+
+          <!-- ── Text Form ── -->
+          <sc-if value="{{ isTextFormType }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <div style="font-size: 11px; color: #A5A597;">以下全部为选填，跳过不影响结果</div>
+              <sc-for list="{{ textFields }}" as="tf" hint-placeholder-count="4">
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                  <label style="font-size: 12px; color: #6E7268; line-height: 1.55;">{{ tf.label }}</label>
+                  <textarea value="{{ tf.value }}" onChange="{{ tf.change }}" placeholder="选填" style="width: 100%; box-sizing: border-box; min-height: 54px; resize: vertical; padding: 9px 12px; border: 1px solid #E3DED1; background: #FDFCF8; font-family: 'Noto Serif SC', serif; font-size: 13px; line-height: 1.8; color: #29302E; outline: none;"></textarea>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <!-- ── Followups ── -->
+          <sc-if value="{{ hasFollowups }}" hint-placeholder-val="{{ false }}">
+            <div style="padding: 15px 17px; background: #FAF8F3; border: 1px solid #D9D4C4; display: flex; flex-direction: column; gap: 12px;">
+              <div style="font-size: 11px; color: #A5A597;">追问项（选填，写了会更准）</div>
+              <sc-for list="{{ followupFields }}" as="ff" hint-placeholder-count="2">
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                  <label style="font-size: 12px; color: #6E7268; line-height: 1.55;">{{ ff.label }}</label>
+                  <textarea value="{{ ff.value }}" onChange="{{ ff.change }}" placeholder="选填" style="width: 100%; box-sizing: border-box; min-height: 54px; resize: vertical; padding: 9px 12px; border: 1px solid #E3DED1; background: #FDFCF8; font-family: 'Noto Serif SC', serif; font-size: 13px; line-height: 1.8; color: #29302E; outline: none;"></textarea>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
 
           <div style="margin-top: auto; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #EDE9DE; padding-top: 18px;">
             <span onClick="{{ prevQ }}" style="{{ prevStyle }}">← 上一题</span>
@@ -472,60 +534,245 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{}">
 const QUESTIONS = [
-  {
-    tag: "Q.06　工作方式",
-    lead: "先讲个场景，不着急。",
-    text: "一个任务，你可以自己一个人做完，也可以和两三个人分工。上一次遇到这种情况，你实际上是怎么做的？",
-    help: "问的是你「实际做过」的选择，不是你觉得哪种更好。想不起具体某次也没关系。",
-    options: [
-      "我自己做完了，中途没找人",
-      "我先自己做，卡住才找人",
-      "我们分了工，各做各的那部分",
-      "其他，我自己写"
-    ],
-    note: "一个人做的时候，我不用一直猜别人在想什么。",
-    tip: "一个人做事更顺"
-  },
-  {
-    tag: "Q.07　工作节奏",
-    lead: "这一题有点长，慢慢看。",
-    text: "你已经按原计划做到一半，负责人过来说需求改了，要重头调整。当时你做了什么？",
-    help: "「需求改了」指原本说好的做法或标准，中途被换成另一种。问的是当时你的第一反应。",
-    options: [
-      "我先停下来，问清楚新的步骤再动",
-      "我照原来的做完，之后再改",
-      "我很难继续，需要一段时间才能重新开始",
-      "其他，我自己写"
-    ],
-    note: "改之前如果有人跟我说一声，就没那么难。",
-    tip: "喜欢步骤写清楚"
-  },
-  {
-    tag: "Q.08　工作环境",
-    lead: "最后问一个关于环境的。",
-    text: "上一次你在一个有持续人声的地方做事（开放工位、咖啡馆、教室），过程是什么样的？",
-    help: "「持续人声」指周围一直有人说话，不是偶尔一两句。问的是你当时的实际状态。",
-    options: [
-      "没什么影响，我照常做完了",
-      "我戴上耳机之后就还好",
-      "我很难集中，做得比平时慢很多",
-      "其他，我自己写"
-    ],
-    note: "不是烦，是脑子里会一直跟着别人的话走。",
-    tip: "噪声会让我卡住"
-  }
+  // ── Section 0 基础信息 ──
+  { id:"B1", section:0, type:"choice", tag:"B.01　基础信息",
+    lead:"天还没亮。在开始这一天之前，我们大概了解一下你从哪条路走来——不是为了贴标签，而是让后面的建议不飘在空中。所有问题都可以选「不想说」。",
+    text:"你正走在人生的哪一段",
+    options:["A. 18 岁以下","B. 18–24 岁","C. 25–30 岁","D. 31–40 岁","E. 40 岁以上","F. 不想说"],
+    followups:[] },
+  { id:"B2", section:0, type:"choice", tag:"B.02　基础信息",
+    lead:"", text:"你和上学走到了哪一步",
+    options:["A. 初中及以下","B. 高中/中专/职高","C. 大专","D. 本科","E. 硕士及以上","F. 仍在读","G. 主要靠自学","H. 不想说 / 这一栏代表不了我"],
+    followups:[{key:"B2_major",label:"专业（选填）"},{key:"B2_year",label:"毕业或预计毕业年份（选填）"}] },
+  { id:"B3", section:0, type:"multiselect", tag:"B.03　基础信息",
+    lead:"不是问正式简历，任何一段真实经历都算数。",
+    text:"到目前为止，你有过以下这些经历吗（多选）",
+    options:["A. 全职工作","B. 实习","C. 兼职/零工","D. 自由职业/接单","E. 自己长期折腾过的项目或爱好（没人付钱也算）","F. 以上都没有","G. 不想说"],
+    noExit:true, followups:[] },
+  { id:"B4", section:0, type:"choice_dynamic", tag:"B.04　基础信息",
+    lead:"你选择的这段经历，将影响后续问题的走向。",
+    text:"刚勾选的这些经历中，你最愿意向他人分享哪一段",
+    options:[],
+    skipIf:(ans)=>{ const b3=Array.isArray(ans.B3)?ans.B3:[]; return b3.filter(k=>["A","B","C","D","E"].includes(k)).length<2; },
+    followups:[] },
+  { id:"B5", section:0, type:"choice", tag:"B.05　基础信息",
+    lead:"", text:"你分享的经历主要属于哪一类",
+    options:["A. 文书/数据/资料整理","B. 技术/工程/IT","C. 服务/面向顾客","D. 手工/操作/维修","E. 创作/内容（写作、设计、视频、翻译）","F. 研究/分析","G. 管理/协调/带人","H. 不想说"],
+    skipIf:(ans)=>{ const b3=Array.isArray(ans.B3)?ans.B3:[]; return !b3.some(k=>["A","B","C","D","E"].includes(k)); },
+    followups:[] },
+  { id:"B6", section:0, type:"scale", tag:"B.06　基础信息",
+    lead:"", text:"回头看你分享的这段经历，你的整体感受如何（1–7 分）",
+    lowLabel:"1 分 = 很难受，想到要再做类似的事就想回避",
+    highLabel:"7 分 = 有辛苦的地方，但整体适合我，愿意继续做类似的事",
+    exitLabel:"不愿回顾",
+    skipIf:(ans)=>{ const b3=Array.isArray(ans.B3)?ans.B3:[]; return !b3.some(k=>["A","B","C","D","E"].includes(k)); },
+    followups:[
+      {key:"B6_1",label:"追问①（重要）：处理的工作/项目/爱好内容复杂、难以实现，还是工作/项目/爱好所需要的环境让人无法承受（人际、噪音、被打断、规则不明）？"},
+      {key:"B6_2",label:"追问②：最不排斥、甚至有点喜欢的部分是什么？"},
+      {key:"B6_3",label:"追问③：这段经历持续了多久？"}] },
+  { id:"B7", section:0, type:"choice", tag:"B.07　基础信息",
+    lead:"", text:"你现在的求职状态",
+    options:["A. 正在找工作","B. 近三个月内打算找","C. 暂时不找（跳过第六部分，其余照常；随时可以在画像页补答，补答后自动重算）"],
+    followups:[] },
+  // ── Section 1 清晨·底色 ──
+  { id:"Q1", section:1, type:"scale", tag:"Q.01　清晨 · 底色",
+    lead:"情景：早晨醒来，今天没有任何工作安排。",
+    text:"「我会按惯常的顺序开始这一天（固定顺序洗漱、吃固定的早餐、先做同一件事），而不是根据当天心情随意行动。」",
+    lowLabel:"1 分 = 几乎每天开始顺序都不一样，经常出门前才临时决定第一步",
+    highLabel:"7 分 = 早晨有一套雷打不动的顺序，被打乱会明显不适；我习惯按计划和日程行事",
+    exitLabel:"不了解 / 说不好", followups:[] },
+  { id:"Q3", section:1, type:"scale", tag:"Q.03　清晨 · 底色",
+    lead:"情景：上午，你需要和一个不太熟的人打交道——例如，必须回复的消息，或当面沟通、协作。",
+    text:"我在这种时候比较自在",
+    lowLabel:"1 分 = 一条普通消息能纠结几个小时不敢回，当面更想躲开",
+    highLabel:"7 分 = 线上线下都自在，几分钟处理好，不觉得消耗",
+    exitLabel:"不了解 / 没经历过",
+    followups:[{key:"Q3_followup",label:"追问：在哪种场合（工作/社交/日常生活等）和陌生人沟通最难？哪种相对可接受？"}] },
+  { id:"Q4", section:1, type:"scale", tag:"Q.04　清晨 · 底色",
+    lead:"情景：早上出门前出了小岔子（东西找不到、迟到、计划被打乱）。",
+    text:"「我很容易因此烦躁，半天缓不过来。」",
+    lowLabel:"1 分 = 岔子对我毫无影响，换方案就是",
+    highLabel:"7 分 = 一点小岔子就能毁掉我一上午的心情",
+    exitLabel:"不了解 / 说不好", followups:[] },
+  { id:"Q5", section:1, type:"scale", tag:"Q.05　清晨 · 底色",
+    lead:"情景：遇到一个真正的麻烦（急用的东西突然坏了、筹备好的事儿临时黄了、一睁眼就收到坏消息）。",
+    text:"「大部分时候我心态是放松的，能就事论事处理。」",
+    lowLabel:"1 分 = 一有麻烦我就慌，情绪上头，无法处理",
+    highLabel:"7 分 = 越有麻烦我越冷静，处理完情绪没受影响",
+    exitLabel:"不了解",
+    followups:[{key:"Q5_followup",label:"追问：最近遇到的一次大麻烦是什么？你先做了什么？"}] },
+  // ── Section 2 上午·能力 ──
+  { id:"Q6", section:2, type:"scale", tag:"Q.06　上午 · 兴趣与能力",
+    lead:"情景：上午有整块自由时间，你想做一件自己感兴趣的事（爱好、项目、研究、收集，什么都算）。",
+    text:"「我会进入长时间的专注状态，一抬头几个小时过去了。」",
+    lowLabel:"1 分 = 没有能让我投入几小时的事，总是浅浅接触就放弃",
+    highLabel:"7 分 = 经常一投入就是 3 小时以上，忘记吃饭，甚至被打断会烦躁",
+    exitLabel:"不了解 / 想不起来有这样的事",
+    followups:[
+      {key:"Q6_1",label:"追问①（重要）：让你深度投入的这件事是什么？你做到了什么程度（作品/成果/水平体现）？"},
+      {key:"Q6_2",label:"追问②：你是否向其他人展示过你的成果？在什么场合、对方反应如何（没有也完全没问题）？"}] },
+  { id:"Q7", section:2, type:"scale", tag:"Q.07　上午 · 兴趣与能力",
+    lead:"情景：上午有人带着一个具体问题来问你（修东西、查资料、改文案、出主意都算），正好在你擅长的范围内。",
+    text:"「我愿意为此抽出时间帮助对方，并通常能解决。」",
+    lowLabel:"1 分 = 通常回避这类请求，或答应了经常没解决",
+    highLabel:"7 分 = 这类请求几乎都接，愿意为它调整时间，大多数人反馈「确实解决了」",
+    exitLabel:"不了解 / 没人问过我",
+    followups:[{key:"Q7_followup",label:"追问：最近一次被求助的问题是什么？你怎么解决的？"}] },
+  { id:"Q8", section:2, type:"multiselect", tag:"Q.08　上午 · 兴趣与能力",
+    lead:"情景：回想你刚才写下的那件「让你进入深度专注状态」的事。做这件事的过程中，下面哪几项符合你的实际情况？（多选，每选中一项记 1 条能力线索）",
+    text:"",
+    options:["A. 需要长时间独自工作，不被打扰（编码：独立深度工作）","B. 需要反复核对细节、发现别人没发现的错误（编码：细节校验）","C. 需要自己查资料、看教程，自己摸索出来（编码：自学能力）","D. 需要明确的对/错或成/败标准（编码：规则明确的任务）","E. 需要产出交付给他人的成果（编码：面向他人的交付）","F. 需要按固定流程一步步做（编码：流程执行）","G. 其他（自填，同样计入线索）"],
+    exitLabel:"不了解 / 说不好",
+    followups:[{key:"Q8_other",label:"Q8-G 其他（选填）：请描述"}] },
+  { id:"Q10", section:2, type:"scale", tag:"Q.10　上午 · 兴趣与能力",
+    lead:"情景：早上听/读到一个抽象的新概念。",
+    text:"「我有兴趣把它弄懂。」",
+    lowLabel:"1 分 = 抽象概念让我排斥，我只想知道「所以该怎么做」",
+    highLabel:"7 分 = 我会顺着概念一路查下去，弄不懂不罢休",
+    exitLabel:"不了解",
+    followups:[{key:"Q10_followup",label:"追问：最近弄懂的一件事是什么？"}] },
+  // ── Section 3 中午·环境 ──
+  { id:"Q11", section:3, type:"scale", tag:"Q.11　中午 · 情景与环境",
+    lead:"情景：中午，你独自坐在工位，面前是一份 2000 行的表格，任务是找出其中格式和数字不一致的地方并改正。环境安静，规则清晰，不需要和任何人讨论。",
+    text:"「这种任务对我而言是可承受甚至舒适的。」",
+    lowLabel:"1 分 = 光是想象就坐不住，这类重复核对让我痛苦，做不了一个小时",
+    highLabel:"7 分 = 我必须核对到每个细节，经常发现别人没发现的错；越做越顺，进入状态后甚至感到平静",
+    exitLabel:"不了解 / 没做过类似的事",
+    followups:[{key:"Q11_followup",label:"追问：做过最接近的事是什么？"}] },
+  { id:"Q12", section:3, type:"scale", tag:"Q.12　中午 · 情景与环境",
+    lead:"情景：中午，你接到一个开放问题（例如「为什么这个产品卖不动」），没有人告诉你方法，你需要自己查资料、梳理框架、写成一份能说服别人的分析。",
+    text:"「这种'没有标准答案、要自己整理结构'的任务我能做好。」",
+    lowLabel:"1 分 = 面对开放问题大脑空白，不知道从哪下手，一直拖着不动",
+    highLabel:"7 分 = 我会自然地拆解问题、列提纲、找证据，这种任务让我兴奋",
+    exitLabel:"不了解 / 没经历过", followups:[] },
+  { id:"Q13", section:3, type:"scale", tag:"Q.13　中午 · 情景与环境",
+    lead:"情景：中午，你在操作台前按图纸组装/维修一个实物（或按部署文档配置一套系统），步骤明确，做错能立刻发现并重来。",
+    text:"「这种动手、有实物成果的任务适合我。」",
+    lowLabel:"1 分 = 不擅长也不喜欢动手操作，错误多、挫败感强",
+    highLabel:"7 分 = 我喜欢有形的结果，装好/修好/跑通那一刻很有满足感",
+    exitLabel:"不了解 / 没做过",
+    followups:[{key:"Q13_followup",label:"追问：修好过/做出来过什么东西？"}] },
+  { id:"Q14", section:3, type:"multiselect", tag:"Q.14　中午 · 情景与环境",
+    lead:"在真实工作环境中，哪些是你的「必须项」或「难以忍受项」？（多选，计入岗位匹配）",
+    text:"",
+    options:["A. 必须基本安静 / 可戴耳机（编码：感官环境）","B. 不能频繁被打断、或随时切换任务（编码：任务切换）","C. 希望书面沟通为主，少电话/少临时面谈（编码：沟通方式）","D. 必须明确规则和标准，「看着办」让我焦虑（编码：规则明确度）","E. 需要有明确的支持（导师、流程文档）（编码：支持需求）","F. 不打算在职场披露谱系身份，或只对特定人披露（编码：披露选择）","G. 偏好较短通勤，或远程工作（编码：远程偏好）","H. 其他"],
+    exitLabel:"不了解", followups:[] },
+  { id:"Q15", section:3, type:"dual_multiselect", tag:"Q.15　中午 · 情景与环境",
+    lead:"情景：一天下来，有些事让你回血，有些事把你掏空。请分别勾选（两列各自多选）。",
+    text:"", followups:[] },
+  { id:"Q16", section:3, type:"scale", tag:"Q.16　中午 · 情景与环境",
+    lead:"情景：中午的团体聚餐，一桌人。",
+    text:"「我在这种场合话很多。」",
+    lowLabel:"1 分 = 全程话多，是桌上主要的声音之一",
+    highLabel:"7 分 = 几乎不说话，全程希望赶紧结束",
+    exitLabel:"不了解", followups:[] },
+  // ── Section 4 傍晚·经历 ──
+  { id:"Q18", section:4, type:"scale", tag:"Q.18　傍晚 · 经历淬炼",
+    lead:"情景：回想一段你最愿意讲的经历——可以是一个你感到骄傲的时刻，也可以是一次改变了你做决定方式的重要转折点（重大选择、失败、重启都算）。",
+    text:"「我能清楚说出那件事里我具体做成了什么、或它怎么改变了我。」",
+    lowLabel:"1 分 = 想不起任何能称得上骄傲或转折的时刻",
+    highLabel:"7 分 = 马上能想起来，并且能说清做了什么、难在哪里 / 它怎样塑造了我",
+    exitLabel:"不愿回顾 / 想不起来",
+    followups:[{key:"Q18_followup",label:"追问（全卷最重要的证据栏）：什么事？你具体做了什么？难在哪里（或它改变了你什么）？"}] },
+  { id:"Q19", section:4, type:"scale", tag:"Q.19　傍晚 · 经历淬炼",
+    lead:"情景：傍晚和人争论时气氛变差。",
+    text:"「我可能说出刺伤对方的话。」",
+    lowLabel:"1 分 = 从不这样，再生气也注意措辞",
+    highLabel:"7 分 = 经常脱口而出刺人的话，事后才发现伤到人",
+    exitLabel:"不了解", followups:[] },
+  // ── Section 5 夜晚·价值 ──
+  { id:"Q20", section:5, type:"scale", tag:"Q.20　夜晚 · 认知与价值",
+    lead:"情景：两份工作摆在面前——甲：收入高但要长期应付复杂人际和模糊规则；乙：收入普通但环境安静、任务明确、可以长期做下去。",
+    text:"「我会选乙。」",
+    lowLabel:"1 分 = 选甲，收入和前途值得我忍受环境",
+    highLabel:"7 分 = 毫不犹豫选乙，加钱也不换",
+    exitLabel:"需要更多信息",
+    followups:[{key:"Q20_followup",label:"追问：你做重大选择时，你最看重的条件是什么？"}] },
+  { id:"Q22", section:5, type:"scale", tag:"Q.22　夜晚 · 认知与价值",
+    lead:"情景：深夜家人/朋友情绪低落。",
+    text:"「我能让身边低落的人放松一些。」",
+    lowLabel:"1 分 = 完全不知道该说什么做什么，通常回避",
+    highLabel:"7 分 = 有办法让对方放松，这是他人对我的评价",
+    exitLabel:"不了解", followups:[] },
+  { id:"Q26", section:5, type:"scale", tag:"Q.26　夜晚 · 认知与价值",
+    lead:"情景：睡前独处。",
+    text:"「我会花时间思考、反思各种事情。」",
+    lowLabel:"1 分 = 几乎不主动反思",
+    highLabel:"7 分 = 反思是我的日常，我有长期在琢磨的问题",
+    exitLabel:"不了解",
+    followups:[{key:"Q26_followup",label:"追问：你长期在琢磨的问题是什么？"}] },
+  // ── Section 6 岗位补充（skipIf B7==="C"）──
+  { id:"J1", section:6, type:"text_form", tag:"J.01　岗位匹配补充",
+    lead:"这一页和前面不一样——前面是了解「你是什么样的人」，这一页收集找工作要用的硬信息（城市、薪资、技能、证书）。任何一题都可以跳过。",
+    text:"主经历登记（针对你在 B4 选的那段经历，没选的话写最正式的一段项目/爱好）",
+    fields:[{key:"J1_title",label:"岗位或项目名称"},{key:"J1_org",label:"单位/学校/平台（可模糊到「某电商公司」）"},{key:"J1_period",label:"起止时间（如 2025-06 至 2025-09，进行中写「至今」）"},{key:"J1_invest",label:"投入程度（总共约＿＿个月，每周约＿＿小时，估不准可空）"}],
+    skipIf:(ans)=>ans.B7==="C", followups:[] },
+  { id:"J2", section:6, type:"text_form", tag:"J.02　岗位匹配补充",
+    lead:"", text:"主经历内容描述",
+    fields:[{key:"J2_tasks",label:"主要做了什么（1–3 条，尽量动词开头，如「整理销售数据」「维护经营周报」）"},{key:"J2_tools",label:"用过的工具/软件/设备（如 Excel、SQL）"},{key:"J2_results",label:"做出了什么可验证的结果（作品、数量、成果）"},{key:"J2_other",label:"还有其他工作/实习/项目吗？每段一行（名称＋起止＋一句话）"}],
+    skipIf:(ans)=>ans.B7==="C", followups:[] },
+  { id:"J3", section:6, type:"text_form", tag:"J.03　岗位匹配补充",
+    lead:"", text:"技能清单（最有把握的 2–5 项谋生技能；格式：SQL：3，近期用过；3=能独立完成较复杂任务）",
+    fields:[{key:"J3_skills",label:"技能（选填）"}],
+    skipIf:(ans)=>ans.B7==="C", followups:[] },
+  { id:"J4", section:6, type:"text_form", tag:"J.04　岗位匹配补充",
+    lead:"", text:"语言与证书",
+    fields:[{key:"J4_lang",label:"普通话之外的语言及水平（如「英语 CET-6」，无则空）"},{key:"J4_cert",label:"证书/执照（计算机等级、会计、教资、驾照等，无则空）"}],
+    skipIf:(ans)=>ans.B7==="C", followups:[] },
+  { id:"J5", section:6, type:"text_form", tag:"J.05　岗位匹配补充",
+    lead:"", text:"地点与办公方式",
+    fields:[{key:"J5_city",label:"当前城市"},{key:"J5_pref",label:"优先城市（可多个）"},{key:"J5_commute",label:"单程通勤上限（分钟，如 60）"},{key:"J5_remote",label:"可接受的办公方式（到岗 / 混合 / 远程，可多选）"},{key:"J5_travel",label:"出差接受度（不接受 / 偶尔可以 / 经常也行）"}],
+    skipIf:(ans)=>ans.B7==="C", followups:[] },
+  { id:"J6", section:6, type:"text_form", tag:"J.06　岗位匹配补充",
+    lead:"", text:"求职状态与类型",
+    fields:[{key:"J6_level",label:"目标职级（实习 / 应届-初级 / 有经验者 / 都可以）"},{key:"J6_type",label:"雇佣类型（全职 / 兼职 / 实习 / 自由职业接单）"},{key:"J6_start",label:"最早可入职时间（如 2026-09-15，待定可空）"},{key:"J6_hours",label:"每周可工作小时数"}],
+    skipIf:(ans)=>ans.B7==="C", followups:[] },
+  { id:"J7", section:6, type:"text_form", tag:"J.07　岗位匹配补充",
+    lead:"", text:"薪资期望",
+    fields:[{key:"J7_min",label:"最低可接受月薪（税前，元）"},{key:"J7_target",label:"期望月薪（税前，元）"},{key:"J7_flex",label:"有商量余地吗（可以谈 / 很难让步）"}],
+    skipIf:(ans)=>ans.B7==="C", followups:[] },
+  { id:"J8", section:6, type:"text_form", tag:"J.08　岗位匹配补充",
+    lead:"", text:"行业偏好",
+    fields:[{key:"J8_pref",label:"偏好行业（如 互联网、电商、制造业，可空）"},{key:"J8_ok",label:"可接受行业"},{key:"J8_no",label:"排除行业"},{key:"J8_dispatch",label:"能否接受劳务派遣（能 / 不能）"}],
+    skipIf:(ans)=>ans.B7==="C", followups:[] },
+  { id:"J9", section:6, type:"text_form", tag:"J.09　岗位匹配补充",
+    lead:"", text:"核对与授权（以下信息将用于为你匹配和检索真实岗位）",
+    fields:[{key:"J9_c1",label:"允许使用画像信息进行岗位匹配（是 / 否）"},{key:"J9_c2",label:"允许检索公开招聘信息并为我生成检索词（是 / 否）"},{key:"J9_c3",label:"涉及谱系相关偏好对外使用前必须先经我确认（是 / 否）"},{key:"J9_extra",label:"其他硬限制（身体、时间、家庭方面，如「不能久站」，选填）"}],
+    skipIf:(ans)=>ans.B7==="C", followups:[] }
 ];
 
-const EXITS = ["没有", "不知道", "想不起来", "没经历过"];
+const CHARGE_ITEMS = [
+  {key:"A1",text:"做东西/创作"},
+  {key:"A2",text:"查资料/研究"},
+  {key:"A3",text:"调试纠错找茬"},
+  {key:"A4",text:"整理归类建体系"},
+  {key:"A5",text:"独自执行明确任务"},
+  {key:"A6",text:"教别人/帮别人解决"},
+  {key:"A7",text:"其他"}
+];
+const DRAIN_ITEMS = [
+  {key:"B1",text:"开会集体讨论"},
+  {key:"B2",text:"临时电话/视频通话"},
+  {key:"B3",text:"频繁切换任务"},
+  {key:"B4",text:"面对不明确的需求"},
+  {key:"B5",text:"长时间社交"},
+  {key:"B6",text:"嘈杂环境"},
+  {key:"B7",text:"其他"}
+];
+
+const B4_LABELS = {A:"全职工作",B:"实习",C:"兼职/零工",D:"自由职业/接单",E:"自己长期折腾过的项目或爱好（没人付钱也算）"};
+
+const SECTION_NAMES = ["第零部分　基础信息","第一部分　清晨 · 底色","第二部分　上午 · 能力","第三部分　中午 · 环境","第四部分　傍晚 · 经历","第五部分　夜晚 · 价值","第六部分　岗位补充"];
 
 const LESSONS = ["会前十分钟可以先写下要说的话", "听不清时怎么请对方重复一次", "会议里不发言，是可以的"];
-const STATE_STORAGE_KEY = "isyou-demo-progress-v1";
+const STATE_STORAGE_KEY = "isyou-v2-progress";
 
 class Component extends DCLogic {
   state = {
     screen: "welcome",
     qi: 0,
     answers: {},
+    followups: {},
     helpOpen: false,
     openAxis: null,
     openJob: 0,
@@ -533,8 +780,6 @@ class Component extends DCLogic {
     done: [true, true, false],
     quiet: false,
     bookHover: false,
-    custom: {},
-    submitted: {},
     liveOpen: false,
     liveConsent: false,
     liveCity: "",
@@ -548,6 +793,24 @@ class Component extends DCLogic {
 
   go = (screen) => () => this.setState({ screen, helpOpen: false });
 
+  getNextQi(qi) {
+    let next = qi + 1;
+    while (next < QUESTIONS.length) {
+      if (!QUESTIONS[next].skipIf || !QUESTIONS[next].skipIf(this.state.answers)) return next;
+      next++;
+    }
+    return -1;
+  }
+
+  getPrevQi(qi) {
+    let prev = qi - 1;
+    while (prev >= 0) {
+      if (!QUESTIONS[prev].skipIf || !QUESTIONS[prev].skipIf(this.state.answers)) return prev;
+      prev--;
+    }
+    return -1;
+  }
+
   componentDidMount() {
     try {
       const saved = JSON.parse(localStorage.getItem(STATE_STORAGE_KEY) || "null");
@@ -557,8 +820,7 @@ class Component extends DCLogic {
         screen: screens.has(saved.screen) ? saved.screen : "welcome",
         qi: Math.max(0, Math.min(QUESTIONS.length - 1, Number(saved.qi) || 0)),
         answers: saved.answers && typeof saved.answers === "object" ? saved.answers : {},
-        custom: saved.custom && typeof saved.custom === "object" ? saved.custom : {},
-        submitted: saved.submitted && typeof saved.submitted === "object" ? saved.submitted : {},
+        followups: saved.followups && typeof saved.followups === "object" ? saved.followups : {},
         done: Array.isArray(saved.done) && saved.done.length === LESSONS.length ? saved.done.map(Boolean) : [true, true, false],
         quiet: Boolean(saved.quiet),
         selectedJobId: typeof saved.selectedJobId === "string" ? saved.selectedJobId : null
@@ -574,8 +836,7 @@ class Component extends DCLogic {
       screen: state.screen,
       qi: state.qi,
       answers: state.answers,
-      custom: state.custom,
-      submitted: state.submitted,
+      followups: state.followups,
       done: state.done,
       quiet: state.quiet,
       selectedJobId: state.selectedJobId
@@ -584,14 +845,12 @@ class Component extends DCLogic {
   }
 
   buildLiveProfile() {
-    const assessment = window.IsyouAssessment.assessIsyou({ answers: this.state.answers, custom: this.state.custom });
-    const answerTexts = QUESTIONS.map((question, index) => {
-      const answer = this.state.answers[index];
-      if (typeof answer === "number") {
-        if (answer === question.options.length - 1) return this.state.custom[index] || question.options[answer];
-        return question.options[answer];
-      }
-      return null;
+    const assessment = window.IsyouAssessment.assessIsyou({ answers: this.state.answers, followups: this.state.followups });
+    const answerTexts = QUESTIONS.map((q) => {
+      const ans = this.state.answers[q.id];
+      if (ans === undefined || ans === null) return null;
+      if (Array.isArray(ans)) return q.id + ": " + ans.join(", ");
+      return q.id + ": " + String(ans);
     }).filter(Boolean);
     const city = this.state.liveCity.trim();
     return {
@@ -711,12 +970,27 @@ class Component extends DCLogic {
   renderVals() {
     const st = this.state;
     const q = QUESTIONS[st.qi];
-    const ans = st.answers[st.qi];
-    const assessment = window.IsyouAssessment.assessIsyou({ answers: st.answers, custom: st.custom });
-    const selectedJob = assessment.jobs.find(job => job.id === st.selectedJobId)
-      || assessment.jobs[st.openJob]
-      || assessment.jobs[0];
-    const canAdvance = ans !== undefined && (ans !== q.options.length - 1 || Boolean(st.submitted[st.qi]));
+    const ans = st.answers[q.id];
+    const assessment = (window.IsyouAssessment && window.IsyouAssessment.assessIsyou)
+      ? window.IsyouAssessment.assessIsyou({ answers: st.answers, followups: st.followups })
+      : null;
+    const _jobs = (assessment && Array.isArray(assessment.jobs)) ? assessment.jobs : [];
+    const _axes = (assessment && Array.isArray(assessment.axes)) ? assessment.axes : [];
+    const _radar = (assessment && assessment.radar)
+      ? assessment.radar
+      : { labels: DIMENSION_LABELS, values: [0.5, 0.5, 0.5, 0.5, 0.5, 0.5] };
+    const selectedJob = _jobs.find(job => job.id === st.selectedJobId)
+      || _jobs[st.openJob]
+      || _jobs[0]
+      || { title: "", meta: "", gap: "", trainLabel: "培训「待加载」·", task: "", blocks: [] };
+
+    const qType = q.type;
+    let canAdvance = false;
+    if (qType === "text_form" || qType === "dual_multiselect") canAdvance = true;
+    else if (qType === "scale") canAdvance = ans !== undefined;
+    else if (qType === "choice" || qType === "choice_dynamic") canAdvance = ans !== undefined;
+    else if (qType === "multiselect") canAdvance = Array.isArray(ans) && ans.length > 0;
+
     const quiet = st.quiet;
     const paperBg = quiet
       ? "#FAF8F3"
@@ -753,7 +1027,7 @@ class Component extends DCLogic {
 
       restart: () => {
         localStorage.removeItem(STATE_STORAGE_KEY);
-        this.setState({ screen: "welcome", qi: 0, answers: {}, helpOpen: false, openAxis: null, openJob: 0, openBlock: 2, done: [true, true, false], custom: {}, submitted: {}, liveOpen: false, liveConsent: false, liveCity: "", liveBusy: false, liveBusyCandidate: null, liveMessage: "", liveMessageKind: "info", liveCandidates: [] });
+        this.setState({ screen: "welcome", qi: 0, answers: {}, followups: {}, helpOpen: false, openAxis: null, openJob: 0, openBlock: 2, done: [true, true, false], liveOpen: false, liveConsent: false, liveCity: "", liveBusy: false, liveBusyCandidate: null, liveMessage: "", liveMessageKind: "info", liveCandidates: [] });
       },
 
       steps: screens.map(([id, num, label]) => ({
@@ -791,78 +1065,159 @@ class Component extends DCLogic {
         downloadStyle: "font-size: 11px; padding: 8px 12px; border: 1px solid #D89A6C; color: #A9713F; cursor: " + (st.liveBusyCandidate ? "wait" : "pointer") + "; flex: none;"
       })),
 
-      qTag: q.tag, qLead: q.lead, qText: q.text, qHelp: q.help,
-      helpOpen: st.helpOpen,
-      toggleHelp: () => this.setState(s => ({ helpOpen: !s.helpOpen })),
-      helpBtnStyle: "cursor: pointer; font-size: 11px; padding: 5px 11px; border: 1px solid " + (st.helpOpen ? "#6B8397" : "#A8BCCB") + "; background: " + (st.helpOpen ? "#E9EFF4" : "transparent") + "; color: #4C5148;",
+      qTag: q.tag, qLead: q.lead || "", qText: q.text || "",
 
-      options: q.options.map((text, i) => {
-        const on = ans === i;
+      // ── Choice / Choice_Dynamic ──
+      isChoiceType: qType === "choice" || qType === "choice_dynamic",
+      choiceOptions: (() => {
+        let opts = q.options;
+        if (qType === "choice_dynamic") {
+          const b3 = Array.isArray(st.answers.B3) ? st.answers.B3 : [];
+          opts = b3.filter(k => ["A","B","C","D","E"].includes(k)).map(k => k + ". " + B4_LABELS[k]);
+        }
+        return opts.map((text) => {
+          const on = ans === text.charAt(0);
+          return {
+            text,
+            pick: () => {
+              const key = text.charAt(0);
+              this.setState(s => ({ answers: Object.assign({}, s.answers, { [q.id]: key }) }));
+            },
+            style: "cursor: pointer; padding: 13px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; border: " + (on ? "1.5px solid #8FA882" : "1px solid #D9D4C4") + "; background: " + (on ? "#F2F5EE" : "#FCFBF8") + ";",
+            markStyle: "font-family: 'EB Garamond', serif; font-size: 11px; color: #6E8465; opacity: " + (on ? "1" : "0") + ";"
+          };
+        });
+      })(),
+
+      // ── Scale ──
+      isScaleType: qType === "scale",
+      scaleButtons: [1,2,3,4,5,6,7].map(n => {
+        const on = ans === n;
+        return {
+          num: String(n),
+          pick: () => this.setState(s => ({ answers: Object.assign({}, s.answers, { [q.id]: n }) })),
+          style: "cursor: pointer; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; font-family: 'EB Garamond', serif; font-size: 17px; border: " + (on ? "1.5px solid #8FA882" : "1px solid #D9D4C4") + "; background: " + (on ? "#F2F5EE" : "#FCFBF8") + "; color: " + (on ? "#29302E" : "#6E7268") + ";"
+        };
+      }),
+      scaleLowLabel: q.lowLabel || "",
+      scaleHighLabel: q.highLabel || "",
+      scaleExitLabel: q.exitLabel || "跳过",
+      pickScaleExit: () => this.setState(s => ({ answers: Object.assign({}, s.answers, { [q.id]: "skip" }) })),
+      scaleExitStyle: "cursor: pointer; font-size: 12px; color: " + (ans === "skip" ? "#29302E" : "#8E8E80") + "; border: 1px solid " + (ans === "skip" ? "#8E8E80" : "#D2CCBC") + "; padding: 7px 13px; background: " + (ans === "skip" ? "#EFECE2" : "transparent") + "; display: inline-block;",
+
+      // ── Multiselect ──
+      isMsType: qType === "multiselect",
+      msOptions: (q.options || []).filter(o => !q.exitLabel || o !== q.exitLabel).map(text => {
+        const key = text.charAt(0);
+        const sel = Array.isArray(ans) && ans.includes(key);
         return {
           text,
-          pick: () => this.setState(s => ({ answers: Object.assign({}, s.answers, { [s.qi]: i }) })),
-          style: "cursor: pointer; padding: 13px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; border: " + (on ? "1.5px solid #8FA882" : "1px solid #D9D4C4") + "; background: " + (on ? "#F2F5EE" : "#FCFBF8") + ";",
-          markStyle: "font-family: 'EB Garamond', serif; font-size: 11px; color: #6E8465; opacity: " + (on ? "1" : "0") + ";"
+          mark: sel ? "✓" : "",
+          toggle: () => {
+            this.setState(s => {
+              const prev = Array.isArray(s.answers[q.id]) ? s.answers[q.id] : [];
+              const next = sel ? prev.filter(k => k !== key) : [...prev, key];
+              return { answers: Object.assign({}, s.answers, { [q.id]: next }) };
+            });
+          },
+          style: "cursor: pointer; padding: 11px 14px; display: flex; align-items: flex-start; gap: 10px; border: " + (sel ? "1.5px solid #8FA882" : "1px solid #D9D4C4") + "; background: " + (sel ? "#F2F5EE" : "#FCFBF8") + ";",
+          boxStyle: "width: 14px; height: 14px; flex: none; margin-top: 2px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid " + (sel ? "#6E8465" : "#BEB8A9") + "; background: " + (sel ? "#8FA882" : "#FDFCF8") + "; color: #FFFFFF; font-size: 10px;"
+        };
+      }),
+      showMsExit: Boolean(q.exitLabel) && !q.noExit,
+      msExitLabel: q.exitLabel || "跳过",
+      msExitStyle: "cursor: pointer; font-size: 12px; color: " + (ans === "skip" ? "#29302E" : "#8E8E80") + "; border: 1px solid " + (ans === "skip" ? "#8E8E80" : "#D2CCBC") + "; padding: 7px 13px; background: " + (ans === "skip" ? "#EFECE2" : "transparent") + "; display: inline-block; margin-top: 4px;",
+      pickMsExit: () => this.setState(s => ({ answers: Object.assign({}, s.answers, { [q.id]: "skip" }) })),
+
+      // ── Dual Multiselect (Q15) ──
+      isDualType: qType === "dual_multiselect",
+      chargeItems: CHARGE_ITEMS.map(item => {
+        const sel = Array.isArray(st.answers["Q15_charge"]) && st.answers["Q15_charge"].includes(item.key);
+        return {
+          text: item.text, mark: sel ? "✓" : "",
+          toggle: () => {
+            this.setState(s => {
+              const prev = Array.isArray(s.answers["Q15_charge"]) ? s.answers["Q15_charge"] : [];
+              const next = sel ? prev.filter(k => k !== item.key) : [...prev, item.key];
+              return { answers: Object.assign({}, s.answers, { "Q15_charge": next }) };
+            });
+          },
+          style: "cursor: pointer; padding: 8px 10px; display: flex; align-items: flex-start; gap: 8px; border: " + (sel ? "1.5px solid #6E8465" : "1px solid #D9D4C4") + "; background: " + (sel ? "#F0F4ED" : "#FCFBF8") + "; margin-bottom: 4px;",
+          boxStyle: "width: 13px; height: 13px; flex: none; margin-top: 1px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid " + (sel ? "#6E8465" : "#BEB8A9") + "; background: " + (sel ? "#8FA882" : "#FDFCF8") + "; color: #FFFFFF; font-size: 9px;"
+        };
+      }),
+      drainItems: DRAIN_ITEMS.map(item => {
+        const sel = Array.isArray(st.answers["Q15_drain"]) && st.answers["Q15_drain"].includes(item.key);
+        return {
+          text: item.text, mark: sel ? "✓" : "",
+          toggle: () => {
+            this.setState(s => {
+              const prev = Array.isArray(s.answers["Q15_drain"]) ? s.answers["Q15_drain"] : [];
+              const next = sel ? prev.filter(k => k !== item.key) : [...prev, item.key];
+              return { answers: Object.assign({}, s.answers, { "Q15_drain": next }) };
+            });
+          },
+          style: "cursor: pointer; padding: 8px 10px; display: flex; align-items: flex-start; gap: 8px; border: " + (sel ? "1.5px solid #C2705A" : "1px solid #D9D4C4") + "; background: " + (sel ? "#FDF2EE" : "#FCFBF8") + "; margin-bottom: 4px;",
+          boxStyle: "width: 13px; height: 13px; flex: none; margin-top: 1px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid " + (sel ? "#C2705A" : "#BEB8A9") + "; background: " + (sel ? "#C2705A" : "#FDFCF8") + "; color: #FFFFFF; font-size: 9px;"
         };
       }),
 
-      exits: EXITS.map((text, i) => {
-        const on = ans === "exit" + i;
-        return {
-          text,
-          pick: () => this.setState(s => ({ answers: Object.assign({}, s.answers, { [s.qi]: "exit" + i }) })),
-          style: "cursor: pointer; font-size: 12px; padding: 7px 13px; border: 1px solid " + (on ? "#8E8E80" : "#D2CCBC") + "; background: " + (on ? "#EFECE2" : "transparent") + "; color: #6E7268;"
-        };
-      }),
+      // ── Text Form ──
+      isTextFormType: qType === "text_form",
+      textFields: (q.fields || []).map(f => ({
+        label: f.label,
+        value: st.followups[f.key] || "",
+        change: (ev) => {
+          const v = ev.target.value;
+          this.setState(s => ({ followups: Object.assign({}, s.followups, { [f.key]: v }) }));
+        }
+      })),
 
-      answered: typeof ans === "number" && ans !== q.options.length - 1,
-      noteText: q.note,
+      // ── Followups ──
+      hasFollowups: Array.isArray(q.followups) && q.followups.length > 0 && qType !== "text_form",
+      followupFields: (Array.isArray(q.followups) ? q.followups : []).map(f => ({
+        label: f.label,
+        value: st.followups[f.key] || "",
+        change: (ev) => {
+          const v = ev.target.value;
+          this.setState(s => ({ followups: Object.assign({}, s.followups, { [f.key]: v }) }));
+        }
+      })),
 
-      showCustom: ans === q.options.length - 1,
-      customText: st.custom[st.qi] || "",
-      editCustom: (ev) => {
-        const v = ev.target.value;
-        this.setState(s => ({ custom: Object.assign({}, s.custom, { [s.qi]: v }) }));
+      prevQ: () => {
+        const prev = this.getPrevQi(st.qi);
+        if (prev >= 0) this.setState({ qi: prev, helpOpen: false });
       },
-      submitCustom: () => {
-        const v = (this.state.custom[this.state.qi] || "").trim();
-        if (!v) return;
-        this.setState(s => ({ submitted: Object.assign({}, s.submitted, { [s.qi]: true }) }));
-      },
-      customHint: st.submitted[st.qi]
-        ? "已记下，随时可以改"
-        : ((st.custom[st.qi] || "").trim() ? "写完点提交" : "写下来才能记进本子"),
-      customHintStyle: "font-size: 11px; color: " + (st.submitted[st.qi] ? "#6E8465" : "#A5A597") + ";",
-      customBtnStyle: "cursor: pointer; font-size: 12px; letter-spacing: .04em; padding: 9px 20px; background: " + ((st.custom[st.qi] || "").trim() ? "#B4535E" : "#CDB5B2") + "; color: #FDF7F5;",
-
-      prevQ: () => this.setState(s => ({ qi: Math.max(0, s.qi - 1), helpOpen: false })),
-      prevStyle: "cursor: " + (st.qi === 0 ? "default" : "pointer") + "; font-size: 12px; color: " + (st.qi === 0 ? "#D2CCBC" : "#8E8E80") + ";",
+      prevStyle: "cursor: " + (this.getPrevQi(st.qi) < 0 ? "default" : "pointer") + "; font-size: 12px; color: " + (this.getPrevQi(st.qi) < 0 ? "#D2CCBC" : "#8E8E80") + ";",
       nextQ: () => {
         if (!canAdvance) return;
-        if (st.qi < QUESTIONS.length - 1) this.setState(s => ({ qi: s.qi + 1, helpOpen: false }));
+        const next = this.getNextQi(st.qi);
+        if (next >= 0) this.setState({ qi: next, helpOpen: false });
         else this.setState({ screen: "portrait" });
       },
-      nextLabel: st.qi < QUESTIONS.length - 1 ? "下一题 →" : "看看结果 →",
+      nextLabel: this.getNextQi(st.qi) >= 0 ? "下一题 →" : "看看结果 →",
       nextStyle: "cursor: " + (canAdvance ? "pointer" : "not-allowed") + "; font-size: 13px; letter-spacing: .04em; padding: 11px 26px; background: " + (canAdvance ? "#B4535E" : "#CDB5B2") + "; color: #FDF7F5;",
 
-      notebook: QUESTIONS.map((qq, i) => {
-        const a = st.answers[i];
-        const skipped = typeof a === "string";
-        const isCustom = a === qq.options.length - 1;
-        const filled = a !== undefined && (!isCustom || st.submitted[i]);
+      notebook: SECTION_NAMES.map((name, si) => {
+        const qs = QUESTIONS.filter(qq => qq.section === si && (!qq.skipIf || !qq.skipIf(st.answers)));
+        const answered = qs.filter(qq => {
+          if (qq.type === "dual_multiselect") return !!(st.answers["Q15_charge"] || st.answers["Q15_drain"]);
+          if (qq.type === "text_form") return true;
+          const a = st.answers[qq.id];
+          return a !== undefined && (Array.isArray(a) ? a.length > 0 : true);
+        }).length;
+        const isCurrent = QUESTIONS[st.qi] && QUESTIONS[st.qi].section === si;
         return {
-          text: skipped
-            ? "暂时跳过 · 可回来补"
-            : (isCustom
-              ? (st.submitted[i] ? "你自己写的答案" : "写完提交就记下")
-              : (filled ? qq.tip : "还没答")),
-          dotStyle: "width: 9px; height: 9px; margin-top: 5px; flex: none; background: " + (skipped ? "#D2CCBC" : (filled ? "#8FA882" : "#EDE9DE")) + ";",
-          textStyle: "font-size: 12px; line-height: 1.7; color: " + (filled ? "#6E7268" : "#BFBBAC") + ";"
+          section: name,
+          text: qs.length === 0 ? "已跳过" : (answered + " / " + qs.length + " 题"),
+          dotStyle: "width:9px;height:9px;margin-top:6px;flex:none;background:" + (answered===qs.length&&qs.length>0?"#8FA882":answered>0?"#D89A6C":"#EDE9DE") + ";",
+          sectionStyle: "font-size:10px;color:" + (isCurrent?"#6E8465":"#A5A597") + ";letter-spacing:.04em;",
+          textStyle: "font-size:11px;line-height:1.6;color:" + (isCurrent?"#29302E":"#BFBBAC") + ";"
         };
       }),
 
-      radar: this.buildRadar(assessment.radar),
-      axes: assessment.axes.map((a, i) => ({
+      radar: this.buildRadar(_radar),
+      axes: _axes.map((a, i) => ({
         name: a.name, source: a.source, desc: a.desc, quote: a.quote,
         open2: st.openAxis === i,
         open: () => this.setState(s => ({ openAxis: s.openAxis === i ? null : i })),
@@ -871,7 +1226,7 @@ class Component extends DCLogic {
           : "background: #FAF8F3; border: 1px solid #E3DED1;")
       })),
 
-      jobs: assessment.jobs.map((j, i) => {
+      jobs: _jobs.map((j, i) => {
         const on = st.openJob === i;
         const anyOpen = st.openJob !== null;
         return {
@@ -890,14 +1245,14 @@ class Component extends DCLogic {
         };
       }),
 
-      selectedJobTitle: selectedJob.title,
-      selectedJobMeta: selectedJob.meta,
-      selectedJobGap: selectedJob.gap,
-      selectedJobTraining: selectedJob.trainLabel,
-      trainingTitle: selectedJob.trainLabel.split("·")[0].replace(/^培训「/, "").replace(/」$/, ""),
-      trainingReason: "推荐这门训练，是因为「" + selectedJob.title + "」的岗位要求中需要注意：" + selectedJob.gap,
+      selectedJobTitle: selectedJob.title || "",
+      selectedJobMeta: selectedJob.meta || "",
+      selectedJobGap: selectedJob.gap || "",
+      selectedJobTraining: selectedJob.trainLabel || "",
+      trainingTitle: (selectedJob.trainLabel || "").split("·")[0].replace(/^培训「/, "").replace(/」$/, ""),
+      trainingReason: selectedJob.title ? "推荐这门训练，是因为「" + selectedJob.title + "」的岗位要求中需要注意：" + selectedJob.gap : "",
 
-      jobBlocks: selectedJob.blocks.map((b, i) => ({
+      jobBlocks: (selectedJob.blocks || []).map((b, i) => ({
         num: b[0].split(" · ")[0],
         name: b[0].split("　")[1],
         summary: b[1],

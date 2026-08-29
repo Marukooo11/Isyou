@@ -139,7 +139,7 @@ export function createIsyouServer({ root = defaultRoot, env = process.env } = {}
         response.setHeader("x-ratelimit-remaining", String(limit.remaining));
         if (!limit.allowed) return sendJson(response, 429, { error: { code: "RATE_LIMITED", message: "请求过于频繁，请稍后再试。" } }, { "retry-after": String(limit.retryAfter) });
         request.body = await readBody(request);
-        return apiHandler(request, response);
+        return apiHandler(request, response, { env });
       }
 
       if (!["GET", "HEAD"].includes(request.method)) {

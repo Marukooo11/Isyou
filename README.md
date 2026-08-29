@@ -1,80 +1,80 @@
 # Isyou
 
-Isyou 是一个帮助用户理解自身能力、探索职业可能，并将方向转化为具体行动路径的 Web Demo。
+一句话结论：仓库根目录就是唯一可运行的完整 Demo；克隆后执行 `npm ci && npm start`，不要再从旧子目录启动。
 
-## Frontend
+Isyou 是一个帮助用户理解自身能力、探索职业可能，并把方向转化为真实岗位与训练路径的 Web Demo。
 
-当前可运行的前端实现位于 [`frontend/`](frontend/)，包含主 Demo、产品设计页、运行时脚本和页面素材。
+## 本地运行
 
-## Team Preview
+要求 Node.js 20 或更新版本：
 
-本仓库保持 Private，不使用公开 GitHub Pages。已获得仓库权限的团队成员可直接在本页查看当前界面，或克隆仓库体验完整交互。
-
-本地预览：进入 `frontend/` 后执行 `python3 -m http.server 8000`，然后打开 `http://localhost:8000`。
-
-## Interaction Flow
-
-```text
-打开本子
-  → 回答真实经历问题
-  → 生成可追溯的能力图谱
-  → 按图谱推荐并解释岗位
-  → 查看岗位的任务、环境、感官和沟通条件
-  → 针对岗位差距进入短课训练
-  → 将回答、岗位选择和训练进度继续记入本子
+```bash
+npm ci
+cp .env.example .env.local
+npm start
 ```
 
-1. **欢迎页**：用户可以点开本子开始探索；已有回答的用户可以直接进入能力图谱。
-2. **能力探索**：问题围绕具体经历，而非抽象自评。用户可查看题意说明、选择预设答案或填写自己的做法；“没有 / 不知道 / 想不起来 / 没经历过”均可正常跳过。自定义答案提交后才会记入左侧本子，用户也可以返回修改。
-3. **能力图谱**：回答被整理为规则稳定、独立作业、书面沟通、低感官负荷、细节专注和流程执行六个维度。图谱右侧保留来源题号、解释和用户原话，让结果可追溯，而不只是给出一个分数。
-4. **岗位匹配**：根据任务结构匹配度优先、差距可补程度次之的规则，给出 5 个岗位。展开岗位后同时展示“为什么适合”和“还差什么”，差距可直接连接到对应训练。
-5. **岗位详情**：将招聘信息拆成任务结构、工作环境、感官条件和沟通方式四块，并标出与个人图谱一致、存在挑战或企业尚未提供的信息，帮助用户判断是否收藏或投递。
-6. **针对性训练**：训练不做泛化课程推荐，而是从目标岗位的具体挑战生成短课。用户可以逐项完成练习，当前进度会反映在本子页数和课程状态中，形成“认识自己 → 选择岗位 → 补足差距”的闭环。
+Windows PowerShell：
 
-当前 Demo 已实现页面跳转、问答记录、自定义答案提交、图谱与岗位卡展开、岗位详情折叠和课程勾选；图谱计算、岗位数据、PDF 导出、收藏、投递及跨会话持久化仍为 mock 或待接入能力。
+```powershell
+npm ci
+Copy-Item .env.example .env.local
+npm start
+```
 
-## Demo Goal
+打开 `http://127.0.0.1:3000`；健康检查为 `http://127.0.0.1:3000/health`。
 
-本次 Hackathon 的目标不是完成一个完整产品，而是在有限时间内跑通一条完整、可展示的核心链路。
+## 配置 DeepSeek 联网岗位搜索
 
-**Demo 截止时间：Day 4 24:00**
+只把密钥写入本地 `.env.local`，不要提交到 Git：
 
-优先级：
+```dotenv
+OPENAI_API_KEY=你的DeepSeek密钥
+OPENAI_SEARCH_MODEL=deepseek-v4-flash
+OPENAI_BASE_URL=https://api.deepseek.com
+```
 
-1. 核心链路完整可运行
-2. 关键 AI 能力真实可用
-3. 前端体验清晰、可展示
-4. 非核心能力可以使用 mock 数据
+这里沿用 `OPENAI_*` 变量名是因为 DeepSeek 提供 OpenAI Responses API 兼容接口。密钥只在服务端使用，不会下发到浏览器。未配置密钥时，能力探索、图谱、演示岗位、岗位详情和培训流程仍可运行；只有联网岗位搜索不可用。
 
-## Repository Structure
+如需改用 OpenAI：
 
-* `frontend/`：前端代码、运行时和页面素材
-* `frontend/index.html`：可交互的主 Demo
-* `frontend/design-notes.html`：产品设计笔记
-* `assets/previews/`：供团队快速评审的界面截图
+```dotenv
+OPENAI_API_KEY=你的OpenAI密钥
+OPENAI_SEARCH_MODEL=gpt-5-mini
+OPENAI_BASE_URL=https://api.openai.com/v1
+```
 
-## Current Ownership
+也可配置 Google Custom Search 作为搜索提供商：
 
-| 模块 | 负责人 | 当前状态 |
-| --- | --- | --- |
-| 用户提问逻辑 | [Song Tian Xin](https://github.com/xts5210) | In Progress |
-| 信息收集 Skill | [Inna](https://github.com/Inna9725) | In Progress |
-| 商业化 | [LiXin](https://github.com/lixinkimkin-gif) | In Progress |
-| 前端 / 设计 / 整体整合 | [Marukooo11](https://github.com/Marukooo11) | Demo Ready |
+```dotenv
+GOOGLE_CSE_API_KEY=
+GOOGLE_CSE_ID=
+JOB_SEARCH_PROVIDER=google
+```
 
-后端暂不作为独立模块分配；如 Demo 接入方案需要，再确认最小实现范围与负责人。
+不同服务商的密钥不能混用。
 
-## Collaboration
+## Demo 链路
 
-* `main` 保持为当前可运行版本
-* 多人同时开发时，各自在独立 branch 开发
-* 完成后再合并回 `main`
-* 不要提交 API Key、密码或其他敏感信息
-* API Key 等统一放在本地 `.env`
-* 新增功能前优先确认是否属于 Demo 必要链路，避免 Day 3 之后继续扩范围
+1. 完成能力探索问卷，答案和进度保存在当前浏览器。
+2. 查看可追溯的能力图谱。
+3. 查看 5 个稳定的演示岗位匹配结果。
+4. 明确授权后联网搜索 5 个真实岗位候选。
+5. 选择候选，服务端核验公开招聘页并下载 `jd_selected.md`。
+6. 进入岗位详情和针对性训练，形成完整闭环。
 
-## Demo Principle
+演示岗位与实时岗位在界面中明确区分，不会把 mock 数据冒充为实时招聘。
 
-**先跑通，再做漂亮；先保证完整，再补智能。**
+## 验证
 
-如果某个功能无法在截止时间前稳定实现，优先使用 mock 或固定数据保证 Demo 链路完整。
+```bash
+npm run verify
+```
+
+测试覆盖画像隐私裁剪、联网授权、职业扩展、岗位页面核验、硬约束、候选选择、静态服务、健康检查、环境文件保护、无效 JSON 和速率限制。
+
+## 部署
+
+仓库根目录包含 `Dockerfile` 和 `vercel.json`。公网运行时把密钥配置在部署平台的服务器环境变量中，不要写入源码。Windows 开机启动脚本位于 `deploy/windows/`。
+
+外部联网链路仍依赖服务商密钥与配额、服务器网络连通性，以及第三方招聘页面可访问且岗位仍有效。代码会明确返回外部错误，不会伪造搜索结果。

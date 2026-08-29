@@ -8,7 +8,7 @@ function send(response, status, body) {
   response.end(JSON.stringify(body));
 }
 
-export default async function handler(request, response) {
+export default async function handler(request, response, dependencies = {}) {
   if (request.method !== "POST") {
     response.setHeader("allow", "POST");
     return send(response, 405, { error: { code: "METHOD_NOT_ALLOWED", message: "只支持 POST。" } });
@@ -18,7 +18,7 @@ export default async function handler(request, response) {
     if (JSON.stringify(body || {}).length > 1_000_000) {
       return send(response, 413, { error: { code: "REQUEST_TOO_LARGE", message: "请求不能超过1MB。" } });
     }
-    const result = await runJobSearch(body || {});
+    const result = await runJobSearch(body || {}, dependencies);
     return send(response, 200, result);
   } catch (error) {
     const status = Number(error.status || 500);
