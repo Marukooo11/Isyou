@@ -1,0 +1,21 @@
+{
+  "name": "qiguang-real-job-search",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "node server.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "check": "node --check api/job-search/run.mjs && node --check api/job-search/candidates.mjs && node --check api/job-search/select.mjs && node --check lib/job-search/pipeline.mjs && node --check lib/job-search/selection-pipeline.mjs && node --check server.mjs",
+    "probe:provider": "node scripts/probe-provider.mjs",
+    "smoke:candidates": "node scripts/smoke-candidates.mjs",
+    "smoke:live": "node scripts/smoke-live.mjs"
+  },
+  "dependencies": {
+    "dotenv": "^16.6.1",
+    "undici": "^6.28.0"
+  }
+}

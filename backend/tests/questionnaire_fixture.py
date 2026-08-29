@@ -1,0 +1,42 @@
+from __future__ import annotations
+
+
+def ready_questionnaire_answers() -> dict:
+    answers = {
+        "B1": {"value": "18_24"},
+        "B2": {"value": "bachelor", "major": "统计学", "graduation_year": 2026},
+        "B3": {"value": ["internship", "personal_project"]},
+        "B4": {"value": "internship"},
+        "B5": {"value": "data_admin"},
+        "B6": {"value": 6, "attribution": "environment", "liked": "核对异常", "summary": "三个月数据分析实习"},
+        "B7": {"value": "active"},
+        "Q1": {"value": 6},
+        "Q3": {"value": 3, "detail": "文字沟通还好，临时当面沟通困难"},
+        "Q4": {"value": 4},
+        "Q5": {"value": 6, "detail": "系统报错后先复现并记录错误信息"},
+        "Q6": {"value": 7, "activity": "分析公开数据", "result": "完成一份数据分析报告", "feedback": "老师确认结论可复核"},
+        "Q7": {"value": 5, "situation": "同学不会写 SQL", "behavior": "拆解查询并演示", "result": "对方独立完成作业"},
+        "Q8": {"value": ["independent_deep_work", "detail_detection", "self_learning", "rule_based_tasks"]},
+        "Q10": {"value": 6, "detail": "学习了数据库索引原理"},
+        "Q11": {"value": 7, "detail": "实习中逐行核对经营数据口径"},
+        "Q12": {"value": 6},
+        "Q13": {"value": 4, "detail": "按文档部署过本地分析环境"},
+        "Q14": {"value": ["quiet_env", "no_frequent_switching", "clear_rules"]},
+        "Q15": {"energizing": ["research", "debugging", "organizing"], "draining": ["switching", "ambiguity", "noise"]},
+        "Q16": {"value": 6},
+        "Q18": {"value": 6, "situation": "课程数据质量项目", "behavior": "制定检查规则并定位异常", "result": "完成可复核报告", "reflection": "保留检查表，提前确认口径"},
+        "Q19": {"value": 2},
+        "Q20": {"value": 6, "detail": "环境是否可持续"},
+        "Q22": {"value": 5},
+        "Q26": {"value": 6, "detail": "如何把复杂问题拆成可验证步骤"},
+        "J1": {"type": "internship", "title": "数据分析实习生", "organization": "演示公司", "start_date": "2026-03", "end_date": "2026-06", "duration_months": 3, "hours_per_week": 40},
+        "J2": {"tasks": "整理经营数据\n核对异常口径", "tools": "SQL, Excel", "results": "完成 12 期经营周报\n记录 20 个口径问题"},
+        "J3": {"skills": "SQL：3\nExcel：3\n数据分析：2"},
+        "J4": {"languages": "英语 CET-6", "certifications": "计算机二级"},
+        "J5": {"current_city": "上海", "preferred_cities": "上海", "acceptable_cities": "杭州", "relocation": "conditional", "commute_minutes": 60, "work_modes": ["onsite", "hybrid"], "travel": "occasional"},
+        "J6": {"seniority": ["entry_level"], "employment_types": ["full_time"], "hours_per_week": 40, "freelance_acceptable": False, "variable_workload_acceptable": False},
+        "J7": {"minimum_amount": 10000, "expected_amount": 15000, "negotiable": True},
+        "J8": {"preferred": "互联网, 软件服务", "excluded": "电话销售", "outsourcing_acceptable": False, "labor_dispatch_acceptable": False},
+        "J9": {"can_use_for_job_matching": True, "can_use_for_web_job_search": False, "sensitive_info_requires_confirmation": True},
+    }
+    return answers

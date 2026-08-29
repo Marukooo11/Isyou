@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from contextlib import closing
 from pathlib import Path
 from typing import Any
 
@@ -24,11 +25,13 @@ class SQLiteCoachStore:
         return connection
 
     def _initialize(self) -> None:
-        with self._connect() as connection:
-            connection.executescript(
-                """
+        with closing(self._connect()) as connection:
+            with connection:
+                connection.executescript(
+                    """
                 CREATE TABLE IF NOT EXISTS coach_sessions (
                     session_id TEXT PRIMARY KEY,
+                    user_id TEXT,
                     state_version INTEGER NOT NULL,
                     state_json TEXT NOT NULL,
                     created_at TEXT NOT NULL,
@@ -45,47 +48,75 @@ class SQLiteCoachStore:
                     UNIQUE(session_id, request_id),
                     FOREIGN KEY(session_id) REFERENCES coach_sessions(session_id)
                 );
-                """
-            )
+                    """
+                )
+                columns = {
+                    row["name"]
+                    for row in connection.execute("PRAGMA table_info(coach_sessions)").fetchall()
+                }
+                if "user_id" not in columns:
+                    connection.execute("ALTER TABLE coach_sessions ADD COLUMN user_id TEXT")
+                connection.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_coach_sessions_user ON coach_sessions(user_id, updated_at DESC)"
+                )
 
     def create_session(self, state: dict[str, Any]) -> None:
-        with self._connect() as connection:
-            connection.execute(
-                """
+        with closing(self._connect()) as connection:
+            with connection:
+                connection.execute(
+                    """
                 INSERT INTO coach_sessions
-                    (session_id, state_version, state_json, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?)
-                """,
-                (
-                    state["session_id"],
-                    state["state_version"],
-                    json.dumps(state, ensure_ascii=False),
-                    state["created_at"],
-                    state["updated_at"],
-                ),
-            )
+                    (session_id, user_id, state_version, state_json, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        state["session_id"],
+                        state.get("user_id") or state.get("client_user_id"),
+                        state["state_version"],
+                        json.dumps(state, ensure_ascii=False),
+                        state["created_at"],
+                        state["updated_at"],
+                    ),
+                )
 
-    def get_session(self, session_id: str) -> dict[str, Any]:
-        with self._connect() as connection:
-            row = connection.execute(
-                "SELECT state_json, state_version FROM coach_sessions WHERE session_id = ?",
-                (session_id,),
-            ).fetchone()
+    def get_session(self, session_id: str, user_id: str | None = None) -> dict[str, Any]:
+        with closing(self._connect()) as connection:
+            if user_id:
+                row = connection.execute(
+                    """
+                    SELECT state_json, state_version FROM coach_sessions
+                    WHERE session_id = ? AND user_id = ?
+                    """,
+                    (session_id, user_id),
+                ).fetchone()
+            else:
+                row = connection.execute(
+                    "SELECT state_json, state_version FROM coach_sessions WHERE session_id = ?",
+                    (session_id,),
+                ).fetchone()
         if row is None:
             raise SessionNotFound("没有找到这个 Coach 会话。")
         state = json.loads(row["state_json"])
         state["state_version"] = row["state_version"]
         return state
 
-    def get_turn_response(self, session_id: str, request_id: str) -> dict[str, Any] | None:
-        with self._connect() as connection:
-            row = connection.execute(
-                """
-                SELECT response_json FROM coach_turns
-                WHERE session_id = ? AND request_id = ?
-                """,
-                (session_id, request_id),
-            ).fetchone()
+    def get_turn_response(
+        self,
+        session_id: str,
+        request_id: str,
+        user_id: str | None = None,
+    ) -> dict[str, Any] | None:
+        with closing(self._connect()) as connection:
+            query = """
+                SELECT coach_turns.response_json FROM coach_turns
+                JOIN coach_sessions USING(session_id)
+                WHERE coach_turns.session_id = ? AND coach_turns.request_id = ?
+            """
+            params: tuple[Any, ...] = (session_id, request_id)
+            if user_id:
+                query += " AND coach_sessions.user_id = ?"
+                params = (*params, user_id)
+            row = connection.execute(query, params).fetchone()
         return json.loads(row["response_json"]) if row else None
 
     def update_state(
@@ -93,24 +124,28 @@ class SQLiteCoachStore:
         session_id: str,
         expected_version: int,
         state: dict[str, Any],
+        user_id: str | None = None,
     ) -> None:
-        with self._connect() as connection:
-            cursor = connection.execute(
-                """
+        with closing(self._connect()) as connection:
+            with connection:
+                query = """
                 UPDATE coach_sessions
                 SET state_version = ?, state_json = ?, updated_at = ?
                 WHERE session_id = ? AND state_version = ?
-                """,
-                (
+                """
+                params: tuple[Any, ...] = (
                     state["state_version"],
                     json.dumps(state, ensure_ascii=False),
                     state["updated_at"],
                     session_id,
                     expected_version,
-                ),
-            )
-            if cursor.rowcount != 1:
-                raise StateConflict("会话状态已更新，请重新加载。")
+                )
+                if user_id:
+                    query += " AND user_id = ?"
+                    params = (*params, user_id)
+                cursor = connection.execute(query, params)
+                if cursor.rowcount != 1:
+                    raise StateConflict("会话状态已更新，请重新加载。")
 
     def commit_turn(
         self,
@@ -121,14 +156,17 @@ class SQLiteCoachStore:
         state: dict[str, Any],
         response: dict[str, Any],
         created_at: str,
+        user_id: str | None = None,
     ) -> None:
         connection = self._connect()
         try:
             connection.execute("BEGIN IMMEDIATE")
-            current = connection.execute(
-                "SELECT state_version FROM coach_sessions WHERE session_id = ?",
-                (session_id,),
-            ).fetchone()
+            query = "SELECT state_version FROM coach_sessions WHERE session_id = ?"
+            params: tuple[Any, ...] = (session_id,)
+            if user_id:
+                query += " AND user_id = ?"
+                params = (*params, user_id)
+            current = connection.execute(query, params).fetchone()
             if current is None:
                 raise SessionNotFound("没有找到这个 Coach 会话。")
             if current["state_version"] != expected_version:
@@ -167,4 +205,3 @@ class SQLiteCoachStore:
             raise
         finally:
             connection.close()
-

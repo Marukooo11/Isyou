@@ -1,0 +1,504 @@
+{
+  "schema_version": "output1.v1.0",
+  "profile_id": "PROFILE-DEMO-001",
+  "profile_version": 1,
+  "created_at": "2026-08-28T14:00:00+08:00",
+  "updated_at": "2026-08-28T14:00:00+08:00",
+  "locale": "zh-CN",
+  "profile_status": {
+    "completion_level": "strong",
+    "job_matching_ready": true,
+    "confidence": "high",
+    "missing_critical_fields": [],
+    "warnings": [
+      "薪资期望来自用户自述，需结合目标城市岗位行情核验",
+      "Python 能力目前主要由项目证明，缺少正式工作场景证据"
+    ]
+  },
+  "consent": {
+    "can_use_for_job_matching": true,
+    "can_use_for_web_job_search": true,
+    "can_generate_external_materials": false,
+    "can_share_sensitive_information_externally": false,
+    "behavior_inference_enabled": false,
+    "sensitive_info_requires_confirmation": true
+  },
+  "basic_info": {
+    "age_band": {
+      "value": "B",
+      "label": "18-24",
+      "source_question_ids": ["B1"],
+      "evidence_unit_ids": [],
+      "confidence": "self_report",
+      "user_status": "accepted"
+    },
+    "education_level": {
+      "value": "bachelor",
+      "label": "本科",
+      "source_question_ids": ["B2", "JOB-EDU-01"],
+      "evidence_unit_ids": ["EU-EDU-001"],
+      "confidence": "evidence",
+      "user_status": "accepted"
+    },
+    "experience_types": {
+      "value": ["internship", "course_project", "personal_project"],
+      "source_question_ids": ["B3", "JOB-EXP-01"],
+      "evidence_unit_ids": ["EU-EXP-001", "EU-EXP-002"],
+      "confidence": "evidence",
+      "user_status": "accepted"
+    },
+    "primary_experience": {
+      "value": "internship",
+      "label": "实习",
+      "source_question_ids": ["B4"],
+      "evidence_unit_ids": ["EU-EXP-001"],
+      "confidence": "evidence",
+      "user_status": "accepted"
+    },
+    "experience_domain": {
+      "value": "data_analysis",
+      "label": "数据分析",
+      "source_question_ids": ["B5", "JOB-EXP-01"],
+      "evidence_unit_ids": ["EU-EXP-001", "EU-EXP-002"],
+      "confidence": "evidence",
+      "user_status": "accepted"
+    },
+    "zero_experience": {
+      "value": false,
+      "source_question_ids": ["B3"],
+      "evidence_unit_ids": ["EU-EXP-001"],
+      "confidence": "evidence",
+      "user_status": "accepted"
+    }
+  },
+  "user_work_profile": {
+    "capabilities": [
+      {
+        "capability_id": "independent_deep_work",
+        "label": "独立深度工作",
+        "value": "high",
+        "source_question_ids": ["Q6", "Q8"],
+        "evidence_unit_ids": ["EU-CAP-001"],
+        "confidence": "evidence",
+        "user_status": "accepted"
+      },
+      {
+        "capability_id": "detail_detection",
+        "label": "细节校验",
+        "value": "high",
+        "source_question_ids": ["Q8", "Q11", "Q18"],
+        "evidence_unit_ids": ["EU-CAP-002"],
+        "confidence": "evidence",
+        "user_status": "accepted"
+      },
+      {
+        "capability_id": "self_learning",
+        "label": "自学能力",
+        "value": "medium_high",
+        "source_question_ids": ["Q6", "Q8", "Q10"],
+        "evidence_unit_ids": ["EU-CAP-003"],
+        "confidence": "evidence",
+        "user_status": "accepted"
+      },
+      {
+        "capability_id": "structured_problem_solving",
+        "label": "结构化问题解决",
+        "value": "high",
+        "source_question_ids": ["Q12", "Q18"],
+        "evidence_unit_ids": ["EU-CAP-004"],
+        "confidence": "evidence",
+        "user_status": "accepted"
+      },
+      {
+        "capability_id": "verbal_expression",
+        "label": "语言表达",
+        "value": "medium",
+        "source_question_ids": ["Q6", "Q12"],
+        "evidence_unit_ids": [],
+        "confidence": "self_report",
+        "user_status": "accepted"
+      }
+    ],
+    "task_preference": {
+      "creation": {"value": "medium", "source_question_ids": ["Q15-A1"], "evidence_unit_ids": [], "confidence": "self_report", "user_status": "accepted"},
+      "analysis": {"value": "high", "source_question_ids": ["Q12"], "evidence_unit_ids": ["EU-CAP-004"], "confidence": "evidence", "user_status": "accepted"},
+      "repetitive_precision": {"value": "medium_high", "source_question_ids": ["Q11"], "evidence_unit_ids": ["EU-CAP-002"], "confidence": "evidence", "user_status": "accepted"},
+      "hands_on_build": {"value": "low_medium", "source_question_ids": ["Q13"], "evidence_unit_ids": [], "confidence": "self_report", "user_status": "accepted"},
+      "client_negotiation": {"value": "low", "source_question_ids": ["Q3", "Q16"], "evidence_unit_ids": [], "confidence": "self_report", "user_status": "accepted"}
+    },
+    "cognitive_style": {
+      "deep_focus": {"value": "high", "source_question_ids": ["Q6"], "evidence_unit_ids": ["EU-CAP-001"], "confidence": "evidence", "user_status": "accepted"},
+      "context_switching_tolerance": {"value": "low", "source_question_ids": ["Q14-B", "Q15-B3"], "evidence_unit_ids": [], "confidence": "self_report", "user_status": "accepted"},
+      "ambiguity_tolerance": {"value": "medium", "source_question_ids": ["Q12", "Q14-D", "Q15-B4"], "evidence_unit_ids": [], "confidence": "self_report", "user_status": "accepted"},
+      "need_for_clear_requirements": {"value": "high", "source_question_ids": ["Q8-D", "Q14-D"], "evidence_unit_ids": [], "confidence": "self_report", "user_status": "accepted"},
+      "planning_orderliness": {"value": "medium_high", "source_question_ids": ["Q1", "Q2", "Q9"], "evidence_unit_ids": [], "confidence": "self_report", "user_status": "accepted"}
+    },
+    "communication": {
+      "async_text": {"value": "comfortable", "source_question_ids": ["Q3", "Q14-C"], "evidence_unit_ids": [], "confidence": "self_report", "user_status": "accepted"},
+      "small_team": {"value": "comfortable", "source_question_ids": ["Q7", "Q22"], "evidence_unit_ids": [], "confidence": "self_report", "user_status": "accepted"},
+      "frequent_meetings": {"value": "avoid", "source_question_ids": ["Q15-B1"], "evidence_unit_ids": [], "confidence": "self_report", "user_status": "accepted"},
+      "client_facing": {"value": "avoid", "source_question_ids": ["Q3", "Q16"], "evidence_unit_ids": [], "confidence": "self_report", "user_status": "accepted"},
+      "online_initiative": {"value": "medium", "source_question_ids": ["Q25"], "evidence_unit_ids": [], "confidence": "self_report", "user_status": "accepted"}
+    },
+    "environment": {
+      "noise_sensitivity": {"value": "medium_high", "source_question_ids": ["Q14-A", "Q15-B6"], "evidence_unit_ids": [], "confidence": "self_report", "user_status": "accepted"},
+      "remote_preference": {"value": "medium_high", "source_question_ids": ["Q14-G"], "evidence_unit_ids": [], "confidence": "self_report", "user_status": "accepted"},
+      "predictable_workspace": {"value": "high", "source_question_ids": ["Q14-B", "Q14-D"], "evidence_unit_ids": [], "confidence": "self_report", "user_status": "accepted"},
+      "onboarding_support_needed": {"value": "medium", "source_question_ids": ["Q14-E"], "evidence_unit_ids": [], "confidence": "self_report", "user_status": "accepted"},
+      "disclosure_choice": {"value": "none", "source_question_ids": ["Q14-F"], "evidence_unit_ids": [], "confidence": "self_report", "user_status": "accepted"}
+    },
+    "energy": {
+      "creation": {"value": "+", "source_question_ids": ["Q15-A1"], "evidence_unit_ids": [], "confidence": "self_report", "user_status": "accepted"},
+      "research": {"value": "++", "source_question_ids": ["Q10", "Q15-A2"], "evidence_unit_ids": ["EU-CAP-003"], "confidence": "evidence", "user_status": "accepted"},
+      "debugging": {"value": "++", "source_question_ids": ["Q11", "Q15-A3"], "evidence_unit_ids": ["EU-CAP-002"], "confidence": "evidence", "user_status": "accepted"},
+      "organizing": {"value": "++", "source_question_ids": ["Q15-A4"], "evidence_unit_ids": [], "confidence": "self_report", "user_status": "accepted"},
+      "solo_execution": {"value": "++", "source_question_ids": ["Q15-A5"], "evidence_unit_ids": ["EU-CAP-001"], "confidence": "evidence", "user_status": "accepted"},
+      "helping": {"value": "+", "source_question_ids": ["Q7", "Q15-A6"], "evidence_unit_ids": [], "confidence": "self_report", "user_status": "accepted"},
+      "meetings": {"value": "--", "source_question_ids": ["Q15-B1"], "evidence_unit_ids": [], "confidence": "self_report", "user_status": "accepted"},
+      "unplanned_calls": {"value": "---", "source_question_ids": ["Q15-B2"], "evidence_unit_ids": [], "confidence": "self_report", "user_status": "accepted"},
+      "task_switching": {"value": "--", "source_question_ids": ["Q15-B3"], "evidence_unit_ids": [], "confidence": "self_report", "user_status": "accepted"},
+      "ambiguity": {"value": "-", "source_question_ids": ["Q15-B4"], "evidence_unit_ids": [], "confidence": "self_report", "user_status": "accepted"},
+      "socializing": {"value": "-", "source_question_ids": ["Q15-B5"], "evidence_unit_ids": [], "confidence": "self_report", "user_status": "accepted"},
+      "noisy_env": {"value": "--", "source_question_ids": ["Q15-B6"], "evidence_unit_ids": [], "confidence": "self_report", "user_status": "accepted"}
+    },
+    "values": {
+      "environment_over_income": {"value": "medium_high", "source_question_ids": ["Q20"], "evidence_unit_ids": [], "confidence": "self_report", "user_status": "accepted"},
+      "autonomy": {"value": "high", "source_question_ids": ["Q8-A", "Q14-G"], "evidence_unit_ids": ["EU-CAP-001"], "confidence": "evidence", "user_status": "accepted"},
+      "mastery": {"value": "high", "source_question_ids": ["Q10", "Q26"], "evidence_unit_ids": ["EU-CAP-003"], "confidence": "evidence", "user_status": "accepted"},
+      "meaning_making": {"value": "medium", "source_question_ids": ["Q21"], "evidence_unit_ids": [], "confidence": "self_report", "user_status": "accepted"},
+      "stability": {"value": "high", "source_question_ids": ["Q1", "Q20"], "evidence_unit_ids": [], "confidence": "self_report", "user_status": "accepted"},
+      "top_criterion": {"value": "工作内容清晰且能够持续成长", "source_question_ids": ["Q20.f1"], "evidence_unit_ids": [], "confidence": "self_report", "user_status": "accepted"}
+    },
+    "constraints": [
+      {
+        "constraint_id": "CON-001",
+        "label": "不接受长期高频出差",
+        "scope": "travel",
+        "constraint_level": "hard",
+        "negotiability": "non_negotiable",
+        "source_question_ids": ["Q14-H", "JOB-CON-01"],
+        "evidence_unit_ids": [],
+        "confidence": "self_report",
+        "user_status": "accepted"
+      },
+      {
+        "constraint_id": "CON-002",
+        "label": "优先远程或混合办公",
+        "scope": "work_mode",
+        "constraint_level": "preference",
+        "negotiability": "negotiable",
+        "source_question_ids": ["Q14-G", "JOB-LOC-01"],
+        "evidence_unit_ids": [],
+        "confidence": "self_report",
+        "user_status": "accepted"
+      },
+      {
+        "constraint_id": "CON-003",
+        "label": "尽量避免以电话销售为核心的岗位",
+        "scope": "job_content",
+        "constraint_level": "soft",
+        "negotiability": "negotiable",
+        "source_question_ids": ["Q3", "Q16", "JOB-CON-02"],
+        "evidence_unit_ids": [],
+        "confidence": "self_report",
+        "user_status": "accepted"
+      }
+    ]
+  },
+  "big5_scores": {
+    "E": {"raw": 10, "norm": 0.39, "items": ["Q3", "Q16r", "Q25"], "reliability": "ok", "source_question_ids": ["Q3", "Q16", "Q25"]},
+    "A": {"raw": 15, "norm": 0.67, "items": ["Q7", "Q19r", "Q22"], "reliability": "ok", "source_question_ids": ["Q7", "Q19", "Q22"]},
+    "C": {"raw": 22, "norm": 0.75, "items": ["Q1", "Q2", "Q9r", "Q11"], "reliability": "ok", "source_question_ids": ["Q1", "Q2", "Q9", "Q11"]},
+    "N": {"raw": 13, "norm": 0.56, "items": ["Q4r", "Q5", "Q24r"], "reliability": "ok", "source_question_ids": ["Q4", "Q5", "Q24"]},
+    "O": {"raw": 17, "norm": 0.78, "items": ["Q10", "Q23", "Q26"], "reliability": "no_reverse_check", "source_question_ids": ["Q10", "Q23", "Q26"]}
+  },
+  "intelligence_profile": {
+    "linguistic": {"verdict": "potential", "D_q": 4.8, "D_e": 1, "source_question_ids": ["Q6", "Q12"], "evidence_unit_ids": []},
+    "logical_mathematical": {"verdict": "strength", "D_q": 6.1, "D_e": 3, "source_question_ids": ["Q10", "Q11", "Q12"], "evidence_unit_ids": ["EU-CAP-002", "EU-CAP-004"]},
+    "spatial": {"verdict": "not_prominent", "D_q": 3.1, "D_e": 0, "source_question_ids": ["Q13"], "evidence_unit_ids": []},
+    "bodily_kinesthetic": {"verdict": "undeterminable", "D_q": null, "D_e": 0, "source_question_ids": ["Q13"], "evidence_unit_ids": []},
+    "musical": {"verdict": "undeterminable", "D_q": null, "D_e": 0, "source_question_ids": [], "evidence_unit_ids": []},
+    "interpersonal": {"verdict": "potential", "D_q": 4.5, "D_e": 1, "source_question_ids": ["Q3", "Q7", "Q19", "Q22", "Q25"], "evidence_unit_ids": []},
+    "intrapersonal": {"verdict": "strength", "D_q": 5.9, "D_e": 2, "source_question_ids": ["Q17", "Q18", "Q20", "Q21", "Q26"], "evidence_unit_ids": ["EU-CAP-001"]},
+    "naturalistic": {"verdict": "undeterminable", "D_q": null, "D_e": 0, "source_question_ids": [], "evidence_unit_ids": []},
+    "top_list": ["logical_mathematical", "intrapersonal", "linguistic"]
+  },
+  "direction_scores": [
+    {"direction_id": "data_qa_doc", "label": "数据/质检/文档", "scenario_score": 12, "evidence_score": 5, "background_adjustment": 3, "total": 20, "verdict": "recommend", "basis": ["Q11=6", "有数据清洗项目证据", "有细节校验证据"], "source_question_ids": ["Q11", "B5", "B6"], "evidence_unit_ids": ["EU-CAP-002", "EU-EXP-002"], "confidence": "evidence", "user_status": "accepted"},
+    {"direction_id": "research_analysis", "label": "研究/分析/写作", "scenario_score": 11, "evidence_score": 4, "background_adjustment": 2, "total": 17, "verdict": "recommend", "basis": ["Q12=6", "有经营分析报告证据"], "source_question_ids": ["Q12", "B5", "B6"], "evidence_unit_ids": ["EU-CAP-004", "EU-EXP-001"], "confidence": "evidence", "user_status": "accepted"},
+    {"direction_id": "hands_on_tech", "label": "手工/技术/实操", "scenario_score": 6, "evidence_score": 1, "background_adjustment": 0, "total": 7, "verdict": "hold", "basis": ["Q13=3", "缺少实操类证据"], "source_question_ids": ["Q13", "B5", "B6"], "evidence_unit_ids": [], "confidence": "self_report", "user_status": "accepted"}
+  ],
+  "job_search_profile": {
+    "education": {
+      "highest_level": "bachelor",
+      "major": "统计学",
+      "major_category": "statistics",
+      "status": "graduated",
+      "graduation_year": 2026,
+      "is_fresh_graduate": true,
+      "degree_obtained": true,
+      "school_name": null,
+      "source": "user_reported",
+      "confidence": "high",
+      "user_status": "accepted"
+    },
+    "experience_summary": {
+      "formal_work_months": 0,
+      "internship_months": 3,
+      "relevant_experience_months": 6,
+      "project_count": 2,
+      "source": "calculated_from_experiences",
+      "confidence": "high",
+      "user_status": "accepted"
+    },
+    "experiences": [
+      {
+        "experience_id": "EXP-001",
+        "type": "internship",
+        "title": "数据分析实习生",
+        "organization": "某电商公司",
+        "domain": "电子商务",
+        "start_date": "2025-06",
+        "end_date": "2025-09",
+        "duration_months": 3,
+        "tasks": ["整理销售数据", "维护经营周报", "检查异常数据"],
+        "tools": ["Excel", "SQL"],
+        "results": ["完成12期经营周报", "发现并反馈3类数据口径问题"],
+        "independence": "partly_independent",
+        "evidence_unit_ids": ["EU-EXP-001"],
+        "source": "user_reported",
+        "confidence": "high",
+        "user_status": "accepted"
+      },
+      {
+        "experience_id": "EXP-002",
+        "type": "course_project",
+        "title": "电商销售数据分析项目",
+        "organization": "大学课程项目",
+        "domain": "数据分析",
+        "start_date": "2025-10",
+        "end_date": "2025-12",
+        "duration_months": 2,
+        "tasks": ["清洗CSV数据", "设计分析指标", "制作可视化报告"],
+        "tools": ["Python", "Pandas", "Excel"],
+        "results": ["完成一份包含5个核心指标的分析报告"],
+        "independence": "independent",
+        "evidence_unit_ids": ["EU-EXP-002"],
+        "source": "project",
+        "confidence": "high",
+        "user_status": "accepted"
+      }
+    ],
+    "skills": [
+      {"skill_id": "SKILL-SQL", "name": "SQL", "normalized_name": "SQL", "category": "technical", "level": "working", "last_used_at": "2026-06", "evidence": ["实习中使用SQL查询和聚合经营数据"], "evidence_unit_ids": ["EU-EXP-001"], "source": "internship", "confidence": "high", "user_status": "accepted"},
+      {"skill_id": "SKILL-EXCEL", "name": "Excel", "normalized_name": "Microsoft Excel", "category": "tool", "level": "working", "last_used_at": "2026-07", "evidence": ["制作经营周报，使用数据透视表和常用函数"], "evidence_unit_ids": ["EU-EXP-001"], "source": "internship", "confidence": "high", "user_status": "accepted"},
+      {"skill_id": "SKILL-PYTHON", "name": "Python", "normalized_name": "Python", "category": "technical", "level": "basic", "last_used_at": "2025-12", "evidence": ["使用Pandas完成课程项目数据清洗"], "evidence_unit_ids": ["EU-EXP-002"], "source": "project", "confidence": "medium", "user_status": "accepted"},
+      {"skill_id": "SKILL-PANDAS", "name": "Pandas", "normalized_name": "pandas", "category": "tool", "level": "basic", "last_used_at": "2025-12", "evidence": ["完成缺失值处理、字段转换和数据聚合"], "evidence_unit_ids": ["EU-EXP-002"], "source": "project", "confidence": "medium", "user_status": "accepted"},
+      {"skill_id": "SKILL-DATA-ANALYSIS", "name": "数据分析", "normalized_name": "Data Analysis", "category": "domain", "level": "basic", "last_used_at": "2026-06", "evidence": ["实习周报及课程分析项目"], "evidence_unit_ids": ["EU-EXP-001", "EU-EXP-002"], "source": "mixed", "confidence": "medium", "user_status": "accepted"}
+    ],
+    "portfolio": [
+      {
+        "portfolio_id": "PORT-001",
+        "title": "电商销售数据分析报告",
+        "type": "course_project",
+        "description": "使用Python和Pandas清洗销售数据并制作指标分析报告",
+        "skills": ["Python", "Pandas", "Excel", "数据分析"],
+        "artifact_url": null,
+        "shareable": true,
+        "result": "形成一份包含5个核心指标和3项业务发现的报告",
+        "evidence_unit_ids": ["EU-EXP-002"],
+        "source": "project",
+        "confidence": "high",
+        "user_status": "accepted"
+      }
+    ],
+    "languages": [
+      {"language": "普通话", "listening": "native", "speaking": "native", "reading": "native", "writing": "native", "certification": null, "work_usable": true, "source": "user_reported", "confidence": "high", "user_status": "accepted"},
+      {"language": "英语", "listening": "basic", "speaking": "basic", "reading": "working", "writing": "basic", "certification": "CET-6", "work_usable": true, "source": "certificate_and_self_report", "confidence": "medium", "user_status": "accepted"}
+    ],
+    "location_preferences": {
+      "current_country_or_region": "中国大陆",
+      "current_city": "上海",
+      "preferred_cities": ["上海", "杭州"],
+      "acceptable_cities": ["苏州", "南京"],
+      "relocation": "maybe",
+      "acceptable_work_modes": ["onsite", "hybrid", "remote"],
+      "maximum_one_way_commute_minutes": 60,
+      "travel_acceptance": "occasional",
+      "source": "user_reported",
+      "confidence": "high",
+      "user_status": "accepted"
+    },
+    "employment_preferences": {
+      "career_stage": "fresh_graduate",
+      "target_seniority": ["intern", "entry_level"],
+      "employment_types": ["full_time", "campus_recruitment"],
+      "available_from": "2026-09-15",
+      "weekly_availability_hours": 40,
+      "freelance_acceptable": false,
+      "unstable_workload_acceptable": false,
+      "source": "user_reported",
+      "confidence": "high",
+      "user_status": "accepted"
+    },
+    "compensation": {
+      "minimum_amount": 10000,
+      "expected_amount": 15000,
+      "period": "monthly",
+      "currency": "CNY",
+      "before_tax": true,
+      "negotiable": true,
+      "source": "user_reported",
+      "confidence": "medium",
+      "user_status": "accepted"
+    },
+    "eligibility": {
+      "certifications": ["CET-6", "全国计算机等级考试二级"],
+      "licenses": [],
+      "work_authorization": "authorized_in_mainland_china",
+      "visa_sponsorship_required": false,
+      "other_eligibility_constraints": [],
+      "source": "user_reported",
+      "confidence": "high",
+      "user_status": "accepted"
+    },
+    "industry_preferences": {
+      "preferred": ["互联网", "电子商务", "企业服务"],
+      "acceptable": ["制造业", "咨询", "零售"],
+      "excluded": ["博彩"],
+      "outsourcing_acceptable": true,
+      "labor_dispatch_acceptable": false,
+      "source": "user_reported",
+      "confidence": "high",
+      "user_status": "accepted"
+    }
+  },
+  "occupation_match": [
+    {"occupation_id": "OCC-0101", "name": "数据分析师", "match_score": 0.84, "verdict": "recommend", "big5_match": 0.76, "intelligence_match_norm": 0.92, "matched_dimensions": {"C": "high", "O": "high"}, "conflict_dimensions": {}, "skipped_dimensions": [{"dim": "N", "reason": "user_neutral"}], "matched_intelligences": ["logical_mathematical", "intrapersonal"], "confidence": "both_tracks", "basis": ["高尽责性匹配", "逻辑数学智能匹配", "分析任务偏好匹配"], "user_status": "accepted"},
+    {"occupation_id": "OCC-0102", "name": "数据质量专员", "match_score": 0.82, "verdict": "recommend", "big5_match": 0.8, "intelligence_match_norm": 0.84, "matched_dimensions": {"C": "high", "E": "low"}, "conflict_dimensions": {}, "skipped_dimensions": [], "matched_intelligences": ["logical_mathematical"], "confidence": "both_tracks", "basis": ["细节校验能力匹配", "规则明确任务偏好匹配"], "user_status": "accepted"},
+    {"occupation_id": "OCC-0103", "name": "商业分析助理", "match_score": 0.78, "verdict": "recommend", "big5_match": 0.72, "intelligence_match_norm": 0.84, "matched_dimensions": {"C": "high", "O": "high"}, "conflict_dimensions": {}, "skipped_dimensions": [{"dim": "E", "reason": "occupation_both"}], "matched_intelligences": ["logical_mathematical", "linguistic"], "confidence": "both_tracks", "basis": ["研究分析方向匹配", "书面表达具备潜力"], "user_status": "accepted"},
+    {"occupation_id": "OCC-0104", "name": "软件测试工程师", "match_score": 0.76, "verdict": "recommend", "big5_match": 0.79, "intelligence_match_norm": 0.73, "matched_dimensions": {"C": "high", "E": "low"}, "conflict_dimensions": {}, "skipped_dimensions": [], "matched_intelligences": ["logical_mathematical"], "confidence": "both_tracks", "basis": ["排错和细节校验倾向匹配", "当前缺少测试工具证据"], "user_status": "accepted"},
+    {"occupation_id": "OCC-0105", "name": "运营分析专员", "match_score": 0.73, "verdict": "recommend", "big5_match": 0.68, "intelligence_match_norm": 0.78, "matched_dimensions": {"C": "high"}, "conflict_dimensions": {"E": "low"}, "skipped_dimensions": [], "matched_intelligences": ["logical_mathematical", "linguistic"], "confidence": "both_tracks", "basis": ["数据分析与报告任务匹配", "需核验跨部门沟通频率"], "user_status": "accepted"}
+  ],
+  "recommended_occupations": [
+    {
+      "rank": 1,
+      "occupation_id": "OCC-0101",
+      "occupation_name": "数据分析师",
+      "recommendation_type": "career_fit_direction",
+      "match_score": 0.84,
+      "confidence": "both_tracks",
+      "user_status": "accepted",
+      "reason": ["统计学学历与方向相关", "SQL和Excel有实习证据", "逻辑分析和细节校验能力匹配"],
+      "search_titles": ["数据分析师", "初级数据分析师", "业务数据分析师", "数据分析助理"],
+      "search_keywords": ["SQL", "Excel", "Python", "数据分析", "应届"],
+      "negative_keywords": ["销售", "数据采集销售"],
+      "current_readiness": "partially_ready",
+      "matched_readiness_information": ["本科统计学", "SQL基础", "Excel实习应用", "数据分析项目"],
+      "missing_readiness_information": ["部分岗位可能要求1年以上正式工作经验", "Python熟练度仍需通过作品验证"]
+    },
+    {
+      "rank": 2,
+      "occupation_id": "OCC-0102",
+      "occupation_name": "数据质量专员",
+      "recommendation_type": "career_fit_direction",
+      "match_score": 0.82,
+      "confidence": "both_tracks",
+      "user_status": "accepted",
+      "reason": ["细节校验能力有证据", "有异常数据检查经历", "偏好规则清晰的任务"],
+      "search_titles": ["数据质量专员", "数据质检专员", "数据治理助理", "数据审核专员"],
+      "search_keywords": ["数据质量", "数据校验", "Excel", "SQL", "异常数据"],
+      "negative_keywords": ["电话销售", "纯内容审核"],
+      "current_readiness": "partially_ready",
+      "matched_readiness_information": ["数据校验经验", "SQL和Excel基础", "细节校验能力"],
+      "missing_readiness_information": ["未确认数据治理平台经验", "未确认主数据管理知识"]
+    },
+    {
+      "rank": 3,
+      "occupation_id": "OCC-0103",
+      "occupation_name": "商业分析助理",
+      "recommendation_type": "career_fit_direction",
+      "match_score": 0.78,
+      "confidence": "both_tracks",
+      "user_status": "accepted",
+      "reason": ["分析和报告任务偏好匹配", "具备统计学背景", "有经营周报经历"],
+      "search_titles": ["商业分析助理", "业务分析助理", "经营分析助理", "商业数据分析实习生"],
+      "search_keywords": ["经营分析", "商业分析", "Excel", "SQL", "应届"],
+      "negative_keywords": ["投资银行", "高级咨询顾问"],
+      "current_readiness": "partially_ready",
+      "matched_readiness_information": ["统计学背景", "经营周报经验", "数据分析项目"],
+      "missing_readiness_information": ["商业案例分析能力需要进一步验证", "部分岗位要求较强的汇报沟通能力"]
+    },
+    {
+      "rank": 4,
+      "occupation_id": "OCC-0104",
+      "occupation_name": "软件测试工程师",
+      "recommendation_type": "career_fit_direction",
+      "match_score": 0.76,
+      "confidence": "both_tracks",
+      "user_status": "accepted",
+      "reason": ["排错和细节识别能力匹配", "喜欢规则明确和可验证结果的任务"],
+      "search_titles": ["初级软件测试工程师", "功能测试工程师", "测试助理", "QA工程师"],
+      "search_keywords": ["功能测试", "测试用例", "缺陷管理", "应届"],
+      "negative_keywords": ["硬件试验", "高级自动化测试", "测试开发专家"],
+      "current_readiness": "exploration_only",
+      "matched_readiness_information": ["排错能力", "细节校验能力", "基础Python"],
+      "missing_readiness_information": ["没有软件测试项目证据", "未确认测试用例与缺陷工具技能"]
+    },
+    {
+      "rank": 5,
+      "occupation_id": "OCC-0105",
+      "occupation_name": "运营分析专员",
+      "recommendation_type": "career_fit_direction",
+      "match_score": 0.73,
+      "confidence": "both_tracks",
+      "user_status": "accepted",
+      "reason": ["具备经营数据整理经历", "分析与流程执行能力匹配"],
+      "search_titles": ["运营分析专员", "数据运营专员", "业务运营分析", "运营数据分析助理"],
+      "search_keywords": ["运营分析", "数据运营", "Excel", "SQL", "经营报表"],
+      "negative_keywords": ["用户增长销售", "电话推广", "地推"],
+      "current_readiness": "partially_ready",
+      "matched_readiness_information": ["经营周报经验", "Excel和SQL基础", "数据整理能力"],
+      "missing_readiness_information": ["需核验岗位是否包含高频跨部门沟通", "缺少独立运营项目证据"]
+    }
+  ],
+  "evidence_units": [
+    {"eu_id": "EU-EDU-001", "source_question_id": "JOB-EDU-01", "text": "用户确认已于2026年取得统计学本科学位。", "strength": 3, "parsed": {"situation": "教育背景确认", "behavior": "完成统计学本科课程", "result": "取得本科学位"}, "linked_capabilities": [], "linked_intelligences": ["logical_mathematical"], "user_status": "accepted"},
+    {"eu_id": "EU-EXP-001", "source_question_id": "JOB-EXP-01", "text": "在电商公司实习三个月，使用Excel和SQL整理销售数据，制作12期经营周报，并发现3类数据口径问题。", "strength": 3, "parsed": {"situation": "电商数据分析实习", "behavior": "整理数据、制作周报、检查异常", "result": "完成12期周报并发现3类口径问题"}, "linked_capabilities": ["detail_detection", "process_execution", "structured_problem_solving"], "linked_intelligences": ["logical_mathematical"], "user_status": "accepted"},
+    {"eu_id": "EU-EXP-002", "source_question_id": "JOB-PROJECT-01", "text": "独立使用Python和Pandas完成电商销售数据清洗和分析，输出包含5个指标和3项发现的报告。", "strength": 3, "parsed": {"situation": "课程数据分析项目", "behavior": "清洗数据、设计指标、分析结果", "result": "完成分析报告"}, "linked_capabilities": ["independent_deep_work", "structured_problem_solving", "detail_detection"], "linked_intelligences": ["logical_mathematical", "intrapersonal"], "user_status": "accepted"},
+    {"eu_id": "EU-CAP-001", "source_question_id": "Q6", "text": "用户在独立完成数据项目时能够持续专注两到三小时。", "strength": 2, "parsed": {"situation": "独立数据项目", "behavior": "连续专注完成分析任务", "result": "完成项目阶段目标"}, "linked_capabilities": ["independent_deep_work"], "linked_intelligences": ["intrapersonal"], "user_status": "accepted"},
+    {"eu_id": "EU-CAP-002", "source_question_id": "Q18", "text": "用户在实习周报中发现不同报表使用了不一致的数据口径，并整理后反馈。", "strength": 3, "parsed": {"situation": "经营周报制作", "behavior": "比对口径并定位不一致", "result": "反馈3类口径问题"}, "linked_capabilities": ["detail_detection", "structured_problem_solving"], "linked_intelligences": ["logical_mathematical"], "user_status": "accepted"},
+    {"eu_id": "EU-CAP-003", "source_question_id": "Q10", "text": "用户通过课程资料和在线文档自学Pandas，并将其用于课程项目。", "strength": 2, "parsed": {"situation": "课程项目需要数据清洗", "behavior": "自学Pandas并实际使用", "result": "完成数据清洗"}, "linked_capabilities": ["self_learning"], "linked_intelligences": ["logical_mathematical", "intrapersonal"], "user_status": "accepted"},
+    {"eu_id": "EU-CAP-004", "source_question_id": "Q12", "text": "面对开放分析题时，用户会先拆分指标、检查数据质量，再形成结论。", "strength": 2, "parsed": {"situation": "开放分析任务", "behavior": "拆分问题并按步骤分析", "result": "形成结构化结论"}, "linked_capabilities": ["structured_problem_solving"], "linked_intelligences": ["logical_mathematical"], "user_status": "accepted"}
+  ],
+  "unverified_clues": [
+    {"clue": "可能具备基础数据可视化能力", "reason": "用户提到做过图表，但未说明使用工具、复杂度和独立完成程度", "source_question_ids": ["JOB-PROJECT-01"]}
+  ],
+  "handoff": {
+    "consumer": "real_job_matching_module",
+    "allowed_uses": ["生成检索词", "检索公开招聘信息", "执行硬条件过滤", "计算岗位匹配", "生成能力差距说明"],
+    "required_processing_rules": [
+      "先检查 consent.can_use_for_web_job_search",
+      "未知信息不能按满足处理",
+      "硬约束冲突时淘汰岗位",
+      "职业方向匹配分不能替代真实JD资格核验",
+      "所有真实岗位必须保留原始URL和检索时间"
+    ]
+  },
+  "meta": {
+    "answered": 42,
+    "total_shown": 42,
+    "exit_ratio": 0.0,
+    "low_confidence_overall": false,
+    "trauma_guard_triggered": 0,
+    "first_clue_delivered": true,
+    "recompute_trigger": "job_search_profile_completed",
+    "generator": "intelligent-questionnaire-3.0",
+    "data_quality_checks": {
+      "valid_json": true,
+      "five_occupations_present": true,
+      "critical_job_search_fields_complete": true,
+      "user_confirmation_complete": true
+    }
+  }
+}

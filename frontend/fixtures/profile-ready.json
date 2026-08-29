@@ -1,0 +1,219 @@
+{
+  "schema_version": "output1.v1.0",
+  "profile_id": "PROFILE-DEMO-001",
+  "profile_version": 1,
+  "created_at": "2026-08-28T09:00:00+08:00",
+  "updated_at": "2026-08-28T09:00:00+08:00",
+  "locale": "zh-CN",
+  "profile_status": {
+    "completion_level": "strong",
+    "job_matching_ready": false,
+    "confidence": "high",
+    "missing_critical_fields": [],
+    "warnings": []
+  },
+  "consent": {
+    "can_use_for_job_matching": true,
+    "can_use_for_web_job_search": false,
+    "can_generate_external_materials": false,
+    "can_share_sensitive_information_externally": false,
+    "behavior_inference_enabled": false,
+    "sensitive_info_requires_confirmation": true
+  },
+  "basic_info": {
+    "education_level": "bachelor",
+    "experience_types": ["internship", "course_project"],
+    "zero_experience": false
+  },
+  "user_work_profile": {
+    "constraints": [
+      {
+        "constraint_id": "no_client_facing",
+        "label": "希望避免以销售或客户开发为核心的岗位",
+        "scope": "occupation_and_job",
+        "constraint_level": "hard",
+        "negotiability": "non_negotiable"
+      },
+      {
+        "constraint_id": "quiet_env",
+        "label": "偏好相对安静的工作环境",
+        "scope": "job",
+        "constraint_level": "preference",
+        "negotiability": "negotiable"
+      }
+    ]
+  },
+  "big5_scores": {
+    "E": {"norm": 0.34, "reliability": "ok", "source_question_ids": ["Q3", "Q16"]},
+    "A": {"norm": 0.66, "reliability": "ok", "source_question_ids": ["Q7", "Q19", "Q22"]},
+    "C": {"norm": 0.78, "reliability": "no_reverse_check", "source_question_ids": ["Q1", "Q11"]},
+    "N": {"norm": 0.42, "reliability": "ok", "source_question_ids": ["Q4", "Q5"]},
+    "O": {"norm": 0.72, "reliability": "no_reverse_check", "source_question_ids": ["Q10", "Q26"]}
+  },
+  "intelligence_profile": {
+    "linguistic": {"verdict": "potential", "evidence_unit_ids": ["EU-002"]},
+    "logical_mathematical": {"verdict": "strength", "evidence_unit_ids": ["EU-001", "EU-002"]},
+    "spatial": {"verdict": "not_prominent", "evidence_unit_ids": []},
+    "bodily_kinesthetic": {"verdict": "undeterminable", "evidence_unit_ids": []},
+    "musical": {"verdict": "undeterminable", "evidence_unit_ids": []},
+    "interpersonal": {"verdict": "potential", "evidence_unit_ids": []},
+    "intrapersonal": {"verdict": "strength", "evidence_unit_ids": ["EU-003"]},
+    "naturalistic": {"verdict": "undeterminable", "evidence_unit_ids": []},
+    "top_list": ["logical_mathematical", "intrapersonal", "linguistic"]
+  },
+  "direction_scores": [],
+  "job_search_profile": {
+    "education": {
+      "highest_level": "bachelor",
+      "major": "统计学",
+      "status": "graduated",
+      "graduation_year": 2026,
+      "is_fresh_graduate": true,
+      "source": "user_reported",
+      "confidence": "high",
+      "user_status": "accepted"
+    },
+    "experience_summary": {
+      "formal_work_months": 0,
+      "internship_months": 3,
+      "relevant_experience_months": 6,
+      "project_count": 1
+    },
+    "experiences": [
+      {
+        "experience_id": "EXP-001",
+        "type": "internship",
+        "title": "数据分析实习生",
+        "organization": "演示公司",
+        "domain": "数据分析",
+        "duration_months": 3,
+        "tasks": ["整理经营数据", "检查异常口径"],
+        "tools": ["SQL", "Excel"],
+        "results": ["完成经营周报并记录数据口径问题"],
+        "source": "user_reported",
+        "confidence": "high",
+        "user_status": "accepted"
+      }
+    ],
+    "skills": [
+      {
+        "skill_id": "SKILL-SQL",
+        "name": "SQL",
+        "normalized_name": "SQL",
+        "category": "technical",
+        "level": "working",
+        "evidence_unit_ids": ["EU-001"],
+        "source": "internship",
+        "confidence": "high",
+        "user_status": "accepted"
+      },
+      {
+        "skill_id": "SKILL-EXCEL",
+        "name": "Excel",
+        "normalized_name": "Microsoft Excel",
+        "category": "tool",
+        "level": "working",
+        "evidence_unit_ids": ["EU-001"],
+        "source": "internship",
+        "confidence": "high",
+        "user_status": "accepted"
+      },
+      {
+        "skill_id": "SKILL-DATA",
+        "name": "数据分析",
+        "normalized_name": "数据分析",
+        "category": "domain",
+        "level": "basic",
+        "evidence_unit_ids": ["EU-002"],
+        "source": "project",
+        "confidence": "medium",
+        "user_status": "accepted"
+      }
+    ],
+    "portfolio": [],
+    "languages": [],
+    "location_preferences": {
+      "current_country_or_region": "中国大陆",
+      "current_city": "上海",
+      "preferred_cities": ["上海"],
+      "acceptable_cities": ["杭州"],
+      "acceptable_work_modes": ["onsite", "hybrid"]
+    },
+    "employment_preferences": {
+      "career_stage": "entry_level",
+      "target_seniority": ["entry_level"],
+      "employment_types": ["full_time"]
+    },
+    "compensation": {
+      "minimum_amount": 10000,
+      "expected_amount": 15000,
+      "period": "monthly",
+      "currency": "CNY",
+      "before_tax": true,
+      "negotiable": true
+    },
+    "eligibility": {
+      "certifications": [],
+      "licenses": [],
+      "work_authorization": "中国大陆可合法工作",
+      "visa_sponsorship_required": false
+    },
+    "industry_preferences": {
+      "preferred": ["互联网", "软件服务"],
+      "acceptable": [],
+      "excluded": ["电话销售"],
+      "outsourcing_acceptable": false,
+      "labor_dispatch_acceptable": false
+    }
+  },
+  "occupation_match": [],
+  "recommended_occupations": [],
+  "evidence_units": [
+    {
+      "eu_id": "EU-001",
+      "source_question_id": "J2",
+      "text": "在实习中使用 SQL 和 Excel 整理经营数据并检查异常",
+      "strength": 3,
+      "parsed": {"situation": "数据分析实习", "behavior": "使用 SQL 和 Excel 整理并检查经营数据", "result": "定位异常"},
+      "linked_capabilities": ["detail_detection", "structured_problem_solving"],
+      "linked_intelligences": ["logical_mathematical"],
+      "user_status": "accepted"
+    },
+    {
+      "eu_id": "EU-002",
+      "source_question_id": "Q6",
+      "text": "完成过一份课程数据分析报告",
+      "strength": 3,
+      "parsed": {"situation": "课程项目", "behavior": "分析数据并组织报告", "result": "完成分析报告"},
+      "linked_capabilities": ["independent_deep_work", "verbal_expression"],
+      "linked_intelligences": ["logical_mathematical", "linguistic"],
+      "user_status": "accepted"
+    },
+    {
+      "eu_id": "EU-003",
+      "source_question_id": "Q18",
+      "text": "能够复盘任务卡点并说明改进方式",
+      "strength": 2,
+      "parsed": {"situation": "任务复盘", "behavior": "梳理卡点并提出改进方式", "result": "形成下一步调整"},
+      "linked_capabilities": ["structured_problem_solving"],
+      "linked_intelligences": ["intrapersonal"],
+      "user_status": "accepted"
+    }
+  ],
+  "unverified_clues": [],
+  "handoff": {
+    "consumer": "real_job_matching_module",
+    "allowed_uses": ["生成检索词", "执行硬条件过滤", "生成能力差距说明"],
+    "required_processing_rules": [
+      "未知信息不能按满足处理",
+      "职业方向匹配分不能替代真实 JD 资格核验"
+    ]
+  },
+  "meta": {
+    "generator": "intelligent-questionnaire-4.0",
+    "data_quality_checks": {
+      "valid_json": true,
+      "user_confirmation_complete": true
+    }
+  }
+}
