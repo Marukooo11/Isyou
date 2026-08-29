@@ -568,6 +568,7 @@ const JOB_BLOCKS = [
 ];
 
 const LESSONS = ["会前十分钟可以先写下要说的话", "听不清时怎么请对方重复一次", "会议里不发言，是可以的"];
+const STATE_STORAGE_KEY = "isyou-demo-progress-v1";
 
 class Component extends DCLogic {
   state = {
@@ -594,6 +595,39 @@ class Component extends DCLogic {
   };
 
   go = (screen) => () => this.setState({ screen, helpOpen: false });
+
+  componentDidMount() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STATE_STORAGE_KEY) || "null");
+      if (!saved || typeof saved !== "object") return;
+      const screens = new Set(["welcome", "explore", "portrait", "match", "job", "training"]);
+      this.setState({
+        screen: screens.has(saved.screen) ? saved.screen : "welcome",
+        qi: Math.max(0, Math.min(QUESTIONS.length - 1, Number(saved.qi) || 0)),
+        answers: saved.answers && typeof saved.answers === "object" ? saved.answers : {},
+        custom: saved.custom && typeof saved.custom === "object" ? saved.custom : {},
+        submitted: saved.submitted && typeof saved.submitted === "object" ? saved.submitted : {},
+        done: Array.isArray(saved.done) && saved.done.length === LESSONS.length ? saved.done.map(Boolean) : [true, true, false],
+        quiet: Boolean(saved.quiet)
+      });
+    } catch {
+      localStorage.removeItem(STATE_STORAGE_KEY);
+    }
+  }
+
+  componentDidUpdate() {
+    const state = this.state;
+    const current = JSON.stringify({
+      screen: state.screen,
+      qi: state.qi,
+      answers: state.answers,
+      custom: state.custom,
+      submitted: state.submitted,
+      done: state.done,
+      quiet: state.quiet
+    });
+    localStorage.setItem(STATE_STORAGE_KEY, current);
+  }
 
   buildLiveProfile() {
     const answerTexts = QUESTIONS.map((question, index) => {
@@ -742,6 +776,7 @@ class Component extends DCLogic {
     const st = this.state;
     const q = QUESTIONS[st.qi];
     const ans = st.answers[st.qi];
+    const canAdvance = ans !== undefined && (ans !== q.options.length - 1 || Boolean(st.submitted[st.qi]));
     const quiet = st.quiet;
     const paperBg = quiet
       ? "#FAF8F3"
@@ -776,7 +811,10 @@ class Component extends DCLogic {
       skipToPortrait: () => this.setState({ screen: "portrait" }),
       stepBarStyle: "display: flex; gap: 0; border: 1px solid #D9D4C4; background: #FAF8F3; visibility: " + (st.screen === "welcome" ? "hidden" : "visible") + ";",
 
-      restart: () => this.setState({ screen: "welcome", qi: 0, answers: {}, helpOpen: false, openAxis: null, openJob: 0, openBlock: 2, done: [true, true, false], custom: {}, submitted: {}, liveOpen: false, liveConsent: false, liveCity: "", liveBusy: false, liveBusyCandidate: null, liveMessage: "", liveMessageKind: "info", liveCandidates: [] }),
+      restart: () => {
+        localStorage.removeItem(STATE_STORAGE_KEY);
+        this.setState({ screen: "welcome", qi: 0, answers: {}, helpOpen: false, openAxis: null, openJob: 0, openBlock: 2, done: [true, true, false], custom: {}, submitted: {}, liveOpen: false, liveConsent: false, liveCity: "", liveBusy: false, liveBusyCandidate: null, liveMessage: "", liveMessageKind: "info", liveCandidates: [] });
+      },
 
       steps: screens.map(([id, num, label]) => ({
         num, label, go: this.go(id),
@@ -860,11 +898,12 @@ class Component extends DCLogic {
       prevQ: () => this.setState(s => ({ qi: Math.max(0, s.qi - 1), helpOpen: false })),
       prevStyle: "cursor: " + (st.qi === 0 ? "default" : "pointer") + "; font-size: 12px; color: " + (st.qi === 0 ? "#D2CCBC" : "#8E8E80") + ";",
       nextQ: () => {
+        if (!canAdvance) return;
         if (st.qi < QUESTIONS.length - 1) this.setState(s => ({ qi: s.qi + 1, helpOpen: false }));
         else this.setState({ screen: "portrait" });
       },
       nextLabel: st.qi < QUESTIONS.length - 1 ? "下一题 →" : "看看结果 →",
-      nextStyle: "cursor: pointer; font-size: 13px; letter-spacing: .04em; padding: 11px 26px; background: " + (ans === undefined ? "#CDB5B2" : "#B4535E") + "; color: #FDF7F5;",
+      nextStyle: "cursor: " + (canAdvance ? "pointer" : "not-allowed") + "; font-size: 13px; letter-spacing: .04em; padding: 11px 26px; background: " + (canAdvance ? "#B4535E" : "#CDB5B2") + "; color: #FDF7F5;",
 
       notebook: QUESTIONS.map((qq, i) => {
         const a = st.answers[i];
