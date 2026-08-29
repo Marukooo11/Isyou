@@ -22,8 +22,15 @@ test("统一服务提供前端、健康检查并隐藏环境文件", async () =>
   await withServer({ API_RATE_LIMIT_MAX: "20", API_RATE_LIMIT_WINDOW_MS: "60000" }, async baseUrl => {
     const home = await fetch(`${baseUrl}/`);
     assert.equal(home.status, 200);
-    assert.match(await home.text(), /Isyou/);
+    const homeHtml = await home.text();
+    assert.match(homeHtml, /Isyou/);
+    assert.ok(homeHtml.indexOf("assessment.js") < homeHtml.indexOf("support.js"));
     assert.equal(home.headers.get("x-content-type-options"), "nosniff");
+
+    const assessment = await fetch(`${baseUrl}/assessment.js`);
+    assert.equal(assessment.status, 200);
+    assert.match(assessment.headers.get("content-type"), /^text\/javascript/);
+    assert.match(await assessment.text(), /window\.IsyouAssessment/);
 
     const health = await fetch(`${baseUrl}/health`);
     assert.equal(health.status, 200);

@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Isyou：从能力探索到真实岗位检索的职业支持 Demo">
 <title>Isyou</title>
+<script src="./assessment.js"></script>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -347,8 +348,8 @@
         <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #EDE9DE; padding-bottom: 20px;">
           <div style="display: flex; flex-direction: column; gap: 8px;">
             <span onClick="{{ backToMatch }}" style="font-size: 11px; color: #A5A597; cursor: pointer;">← 回到匹配列表</span>
-            <span style="font-size: 22px; font-weight: 600;">数据标注专员</span>
-            <span style="font-size: 13px; color: #8E8E80;">远程 · 全职 · 某科技公司 · 8–11k</span>
+            <span style="font-size: 22px; font-weight: 600;">{{ selectedJobTitle }}</span>
+            <span style="font-size: 13px; color: #8E8E80;">{{ selectedJobMeta }}</span>
           </div>
           <div style="display: flex; gap: 8px;">
             <span style="font-size: 12px; padding: 9px 15px; border: 1px solid #D2CCBC; color: #6E7268; cursor: pointer;">存进本子</span>
@@ -385,11 +386,11 @@
           <div style="width: 288px; flex: none; display: flex; flex-direction: column; gap: 14px;">
             <div style="padding: 18px 20px; background: #FDF6EF; border-left: 2px solid #D89A6C;">
               <div style="font-size: 13px; font-weight: 600; margin-bottom: 8px; color: #A9713F;">这个岗位对你的一个挑战</div>
-              <div style="font-size: 13px; line-height: 1.8; color: #4C5148;">每周的 15 分钟视频例会。你在图谱里更适合书面沟通。</div>
-              <span onClick="{{ goTraining }}" style="display: inline-block; margin-top: 12px; font-size: 12px; padding: 8px 15px; border: 1px solid #D89A6C; color: #A9713F; cursor: pointer;">去看「短会议参与」</span>
+              <div style="font-size: 13px; line-height: 1.8; color: #4C5148;">{{ selectedJobGap }}</div>
+              <span onClick="{{ goTraining }}" style="display: inline-block; margin-top: 12px; font-size: 12px; padding: 8px 15px; border: 1px solid #D89A6C; color: #A9713F; cursor: pointer;">{{ selectedJobTraining }}</span>
             </div>
             <div style="padding: 18px 20px; background: #FAF8F3; border: 1px solid #E3DED1;">
-              <div style="font-size: 13px; font-weight: 600; margin-bottom: 10px;">面试流程（已知）</div>
+              <div style="font-size: 13px; font-weight: 600; margin-bottom: 10px;">面试流程（演示信息，需向企业核验）</div>
               <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12px; line-height: 1.75; color: #4C5148;">
                 <div>1. 线上标注小测，限时 40 分钟</div>
                 <div>2. 一轮视频面，1 人，约 30 分钟</div>
@@ -423,8 +424,8 @@
               <span style="font-size: 12px; color: #A9713F;">正在进行 · 职业化</span>
               <span style="font-family: 'EB Garamond', serif; font-size: 12px; color: #A9713F;">{{ lessonCount }}</span>
             </div>
-            <div style="font-size: 19px; font-weight: 600;">短会议参与</div>
-            <div style="font-size: 13px; line-height: 1.85; color: #4C5148;">给你这门，是因为「数据标注专员」每周有一次 15 分钟视频例会，而你更适合书面沟通。</div>
+            <div style="font-size: 19px; font-weight: 600;">{{ trainingTitle }}</div>
+            <div style="font-size: 13px; line-height: 1.85; color: #4C5148;">{{ trainingReason }}</div>
             <div style="display: flex; flex-direction: column; gap: 11px; padding-top: 14px; border-top: 1px dotted #E6CBAF;">
               <sc-for list="{{ lessons }}" as="l" hint-placeholder-count="3">
                 <div onClick="{{ l.toggle }}" style="display: flex; gap: 12px; align-items: center; font-size: 13px; cursor: pointer;">
@@ -517,56 +518,6 @@ const QUESTIONS = [
 
 const EXITS = ["没有", "不知道", "想不起来", "没经历过"];
 
-const AXES = [
-  { name: "规则稳定", source: "来源 · Q7 / Q12", desc: "你在规则清楚、不中途变更的任务里最稳。需求突然变动时，你需要一次明确的口头或书面通知。", quote: "「改之前如果有人跟我说一声，就没那么难。」" },
-  { name: "低感官负荷", source: "来源 · Q3 / Q8", desc: "持续人声与开放工位会明显影响你的专注。", quote: "「不是烦，是脑子里会一直跟着别人的话走。」" },
-  { name: "独立作业", source: "来源 · Q6 / Q11", desc: "任务边界清楚时你不需要频繁对齐，能自己走完全程。", quote: "「一个人做的时候，我不用一直猜别人在想什么。」" }
-];
-
-const JOBS = [
-  { title: "数据标注专员", meta: "远程 · 全职 · 某科技公司", score: "86%", top: true,
-    task: "标注规范文档化，季度更新一次。日常不接需求变更，改动由组长统一下发。",
-    gap: "需要每周一次 15 分钟视频例会。", trainLabel: "培训「短会议参与」· 3 课时" },
-  { title: "图书馆编目助理", meta: "现场 · 固定工位 · 市属图书馆", score: "81%",
-    task: "分类规则固定，流程年内不变。工位固定，靠窗，左右各一人。",
-    gap: "读者问询约每小时 2 次。", trainLabel: "培训「简短问答应对」· 3 课时" },
-  { title: "质检记录员", meta: "现场 · 有噪声 · 制造企业", score: "74%",
-    task: "检查项固定成表，逐项打勾，不需临场判断。",
-    gap: "车间有持续机器声，需长时间佩戴防护耳罩。", trainLabel: "培训「高噪声环境适应」· 2 课时" },
-  { title: "代码测试执行", meta: "远程 · 弹性时间", score: "70%",
-    task: "用例由开发写好，按步骤执行并记录结果。",
-    gap: "缺陷需在群里同步描述，偶有追问。", trainLabel: "培训「书面同步问题」· 2 课时" },
-  { title: "档案数字化助理", meta: "现场 · 独立工位 · 某档案馆", score: "68%",
-    task: "扫描与命名规则固定，按批次领取任务。",
-    gap: "需要与保管员当面交接，每天一次。", trainLabel: "培训「固定场景对话」· 2 课时" }
-];
-
-const JOB_BLOCKS = [
-  { tag: "01 · TASK　任务结构", summary: "规则文档化，不接临时变更", lines: [
-    ["ok", "标注规范为文档，季度更新一次"],
-    ["ok", "日常任务由系统派发，不需自行协调"],
-    ["ok", "需求变更由组长统一下发，提前一天"],
-    ["ok", "日产量有明确指标，可自行安排时段"]
-  ]},
-  { tag: "02 · PLACE　工作环境", summary: "完全远程，无打卡", lines: [
-    ["info", "完全远程，无需到岗"],
-    ["info", "无打卡，需在当日内完成量"],
-    ["info", "设备由公司提供"],
-    ["unknown", "是否需入职培训到场：企业未提供"]
-  ]},
-  { tag: "03 · SENSORY　感官条件", summary: "无持续人声，可戴耳机", lines: [
-    ["info", "无持续人声，可全程戴耳机"],
-    ["info", "屏幕为主，无强光无异味"],
-    ["info", "可自行控制休息间隔"],
-    ["match", "与你图谱的「低感官负荷」一致"]
-  ]},
-  { tag: "04 · TALK　沟通方式", summary: "文字为主，每周一次视频", lines: [
-    ["info", "日常以文字为主，固定一位对接组长"],
-    ["warn", "每周一次 15 分钟视频例会，可不发言"],
-    ["info", "无客户接触，无电话"]
-  ]}
-];
-
 const LESSONS = ["会前十分钟可以先写下要说的话", "听不清时怎么请对方重复一次", "会议里不发言，是可以的"];
 const STATE_STORAGE_KEY = "isyou-demo-progress-v1";
 
@@ -591,7 +542,8 @@ class Component extends DCLogic {
     liveBusyCandidate: null,
     liveMessage: "",
     liveMessageKind: "info",
-    liveCandidates: []
+    liveCandidates: [],
+    selectedJobId: null
   };
 
   go = (screen) => () => this.setState({ screen, helpOpen: false });
@@ -608,7 +560,8 @@ class Component extends DCLogic {
         custom: saved.custom && typeof saved.custom === "object" ? saved.custom : {},
         submitted: saved.submitted && typeof saved.submitted === "object" ? saved.submitted : {},
         done: Array.isArray(saved.done) && saved.done.length === LESSONS.length ? saved.done.map(Boolean) : [true, true, false],
-        quiet: Boolean(saved.quiet)
+        quiet: Boolean(saved.quiet),
+        selectedJobId: typeof saved.selectedJobId === "string" ? saved.selectedJobId : null
       });
     } catch {
       localStorage.removeItem(STATE_STORAGE_KEY);
@@ -624,12 +577,14 @@ class Component extends DCLogic {
       custom: state.custom,
       submitted: state.submitted,
       done: state.done,
-      quiet: state.quiet
+      quiet: state.quiet,
+      selectedJobId: state.selectedJobId
     });
     localStorage.setItem(STATE_STORAGE_KEY, current);
   }
 
   buildLiveProfile() {
+    const assessment = window.IsyouAssessment.assessIsyou({ answers: this.state.answers, custom: this.state.custom });
     const answerTexts = QUESTIONS.map((question, index) => {
       const answer = this.state.answers[index];
       if (typeof answer === "number") {
@@ -649,35 +604,15 @@ class Component extends DCLogic {
         can_generate_external_materials: false,
         can_share_sensitive_information_externally: false
       },
-      recommended_occupations: [
-        {
-          occupation_id: "ISYOU-DATA-ANNOTATION",
-          occupation_name: "数据标注专员",
-          search_titles: ["数据标注专员", "数据审核专员", "AI 数据标注"],
-          search_keywords: ["数据标注", "数据校验", "质量检查"],
-          reason: ["规则清楚", "适合独立执行", "重视细节"],
-          current_readiness: "explore",
-          user_status: "accepted"
-        },
-        {
-          occupation_id: "ISYOU-SOFTWARE-QA",
-          occupation_name: "软件测试执行",
-          search_titles: ["初级软件测试工程师", "功能测试专员", "测试助理"],
-          search_keywords: ["测试执行", "缺陷复现", "测试用例"],
-          reason: ["步骤明确", "需要细节识别", "以记录为主"],
-          current_readiness: "explore",
-          user_status: "accepted"
-        },
-        {
-          occupation_id: "ISYOU-DATA-QUALITY",
-          occupation_name: "数据质检专员",
-          search_titles: ["数据质检专员", "数据质量专员", "数据审核员"],
-          search_keywords: ["数据校验", "异常定位", "质量规则维护"],
-          reason: ["任务结构稳定", "适合持续专注"],
-          current_readiness: "explore",
-          user_status: "accepted"
-        }
-      ],
+      recommended_occupations: assessment.jobs.slice(0, 3).map(job => ({
+        occupation_id: job.occupationId,
+        occupation_name: job.title,
+        search_titles: job.searchTitles,
+        search_keywords: job.searchKeywords,
+        reason: job.matchReasons,
+        current_readiness: "explore",
+        user_status: "accepted"
+      })),
       job_search_profile: {
         experiences: answerTexts.map((text, index) => ({
           experience_id: "ISYOU-ANSWER-" + (index + 1),
@@ -700,9 +635,10 @@ class Component extends DCLogic {
       },
       user_work_profile: {
         constraints: [
-          { constraint_id: "ISYOU-C-1", label: "任务规则清楚，变化提前通知", scope: "task_structure", constraint_level: "preference", negotiability: "negotiable", user_status: "accepted" },
-          { constraint_id: "ISYOU-C-2", label: "低噪音或可远程工作", scope: "environment", constraint_level: "preference", negotiability: "negotiable", user_status: "accepted" }
-        ]
+          assessment.dimensions[0] >= 0.72 ? { constraint_id: "ISYOU-C-1", label: "任务规则清楚，变化提前通知", scope: "task_structure", constraint_level: assessment.dimensions[0] >= 0.9 ? "hard" : "preference", negotiability: assessment.dimensions[0] >= 0.9 ? "non_negotiable" : "negotiable", user_status: "accepted" } : null,
+          assessment.dimensions[3] >= 0.62 ? { constraint_id: "ISYOU-C-2", label: "低噪音或可调节声音的工作环境", scope: "environment", constraint_level: assessment.dimensions[3] >= 0.88 ? "hard" : "preference", negotiability: assessment.dimensions[3] >= 0.88 ? "non_negotiable" : "negotiable", user_status: "accepted" } : null,
+          assessment.dimensions[1] >= 0.78 ? { constraint_id: "ISYOU-C-3", label: "允许独立推进并减少频繁同步", scope: "collaboration", constraint_level: "preference", negotiability: "negotiable", user_status: "accepted" } : null
+        ].filter(Boolean)
       }
     };
   }
@@ -776,6 +712,10 @@ class Component extends DCLogic {
     const st = this.state;
     const q = QUESTIONS[st.qi];
     const ans = st.answers[st.qi];
+    const assessment = window.IsyouAssessment.assessIsyou({ answers: st.answers, custom: st.custom });
+    const selectedJob = assessment.jobs.find(job => job.id === st.selectedJobId)
+      || assessment.jobs[st.openJob]
+      || assessment.jobs[0];
     const canAdvance = ans !== undefined && (ans !== q.options.length - 1 || Boolean(st.submitted[st.qi]));
     const quiet = st.quiet;
     const paperBg = quiet
@@ -921,8 +861,8 @@ class Component extends DCLogic {
         };
       }),
 
-      radar: this.buildRadar(),
-      axes: AXES.map((a, i) => ({
+      radar: this.buildRadar(assessment.radar),
+      axes: assessment.axes.map((a, i) => ({
         name: a.name, source: a.source, desc: a.desc, quote: a.quote,
         open2: st.openAxis === i,
         open: () => this.setState(s => ({ openAxis: s.openAxis === i ? null : i })),
@@ -931,15 +871,15 @@ class Component extends DCLogic {
           : "background: #FAF8F3; border: 1px solid #E3DED1;")
       })),
 
-      jobs: JOBS.map((j, i) => {
+      jobs: assessment.jobs.map((j, i) => {
         const on = st.openJob === i;
         const anyOpen = st.openJob !== null;
         return {
-          title: j.title, meta: j.meta, score: j.score, task: j.task, gap: j.gap, trainLabel: j.trainLabel,
+          title: j.title, meta: j.meta, score: j.scoreNumber + "%", task: j.task, gap: j.gap, trainLabel: j.trainLabel,
           detailed: on,
           open: () => this.setState(s => ({ openJob: s.openJob === i ? null : i })),
-          goJob: () => this.setState({ screen: "job" }),
-          goTrain: () => this.setState({ screen: "training" }),
+          goJob: () => this.setState({ screen: "job", selectedJobId: j.id }),
+          goTrain: () => this.setState({ screen: "training", selectedJobId: j.id }),
           headStyle: "display: flex; min-width: 0; " + (on || !anyOpen
             ? "flex-direction: column; gap: 5px;"
             : "align-items: baseline; gap: 14px;"),
@@ -950,16 +890,23 @@ class Component extends DCLogic {
         };
       }),
 
-      jobBlocks: JOB_BLOCKS.map((b, i) => ({
-        num: b.tag.split(" · ")[0],
-        name: b.tag.split("　")[1],
-        summary: b.summary,
+      selectedJobTitle: selectedJob.title,
+      selectedJobMeta: selectedJob.meta,
+      selectedJobGap: selectedJob.gap,
+      selectedJobTraining: selectedJob.trainLabel,
+      trainingTitle: selectedJob.trainLabel.split("·")[0].replace(/^培训「/, "").replace(/」$/, ""),
+      trainingReason: "推荐这门训练，是因为「" + selectedJob.title + "」的岗位要求中需要注意：" + selectedJob.gap,
+
+      jobBlocks: selectedJob.blocks.map((b, i) => ({
+        num: b[0].split(" · ")[0],
+        name: b[0].split("　")[1],
+        summary: b[1],
         summaryStyle: "font-size: 12px; color: #A5A597; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;",
         open: st.openBlock === i,
         toggle: () => this.setState(s => ({ openBlock: s.openBlock === i ? null : i })),
         toggleLabel: st.openBlock === i ? "收起" : "展开",
         style: "cursor: pointer; padding: 14px 20px; background: #FAF8F3; border: " + (st.openBlock === i ? "1.5px solid #8FA882" : "1px solid #E3DED1") + ";",
-        lines: b.lines.map(([kind, body]) => ({
+        lines: b[2].map(([kind, body]) => ({
           body,
           dot: "color: " + ({ ok: "#8FA882", info: "#A8BCCB", warn: "#D89A6C", match: "#8FA882", unknown: "#C4C0AE" }[kind]) + "; flex: none;",
           text: "color: " + (kind === "unknown" ? "#A5A597" : (kind === "match" ? "#6E8465" : "#29302E")) + ";"
@@ -1001,11 +948,11 @@ class Component extends DCLogic {
     };
   }
 
-  buildRadar() {
+  buildRadar(radar) {
     const e = React.createElement;
     const cx = 178, cy = 176, R = 140;
-    const labels = ["规则稳定", "独立作业", "书面沟通", "低感官负荷", "细节专注", "流程执行"];
-    const vals = [0.94, 0.78, 0.86, 0.92, 0.88, 0.72];
+    const labels = radar.labels;
+    const vals = radar.values;
     const pt = (i, r) => {
       const ang = -Math.PI / 2 + i * Math.PI / 3;
       return [cx + Math.cos(ang) * R * r, cy + Math.sin(ang) * R * r];
