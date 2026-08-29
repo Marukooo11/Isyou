@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Isyou 用问卷、真实岗位与 Coach 帮你把职业方向变成可执行的学习路径。">
+<title>Isyou · 职业探索手帐</title>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -12,16 +14,51 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600&amp;family=EB+Garamond:ital,wght@0,400;0,500;1,400&amp;display=swap" rel="stylesheet">
 <script src="./image-slot.js"></script>
+<script src="./questionnaire-v4.js"></script>
 <style>
   body { margin: 0; background: #E7E7DC; }
   a { color: #6E8465; text-decoration: none; }
   a:hover { color: #29302E; }
   ::selection { background: #E9E3D2; }
   @keyframes isyouFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .q-option, .q-scale, .q-chip, .q-action { font: inherit; }
+  .q-option:focus-visible, .q-scale:focus-visible, .q-chip:focus-visible, .q-action:focus-visible,
+  .q-field:focus-visible { outline: 2px solid #6E8465; outline-offset: 2px; }
+  .q-field::placeholder { color: #B4B0A4; }
+  .q-option:hover, .q-chip:hover { border-color: #8FA882 !important; background: #F5F7F1 !important; }
+  .q-option:active, .q-chip:active, .q-action:active { transform: translateY(1px); }
+  .step-mobile { display: none; }
+  @keyframes isyouPulse { 0%, 100% { opacity: .35; } 50% { opacity: .8; } }
+  @media (max-width: 760px) {
+    .step-bar { display: none !important; }
+    .step-mobile { display: flex !important; }
+    .jd-grid, .coach-grid, .portrait-grid { display: block !important; }
+    .jd-side, .coach-side, .portrait-side { width: auto !important; margin-top: 14px; }
+    .week-grid { grid-template-columns: repeat(4, 1fr) !important; }
+    .app-root { padding: 18px 10px 42px !important; overflow-x: hidden; }
+    .app-frame { min-width: 0 !important; width: 100% !important; gap: 12px !important; }
+    .step-bar { overflow-x: auto; }
+    .step-bar > div { min-width: 96px; padding: 10px 11px !important; }
+    .question-shell { display: block !important; }
+    .notebook-rail { width: auto !important; border-right: 0 !important; border-bottom: 1px dashed #E3DED1; padding: 16px 18px !important; }
+    .question-main { padding: 24px 18px !important; }
+  }
 </style>
 </helmet>
-<div style="min-height: 100vh; background: radial-gradient(130% 70% at 50% 0%, #F1F0E6 0%, #DFE1D4 100%); padding: 34px 24px 64px; font-family: 'Noto Serif SC', serif; color: #29302E; position: static">
-<div style="max-width: 1160px; min-width: 940px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; position: relative">
+<div class="app-root" style="min-height: 100vh; background: radial-gradient(130% 70% at 50% 0%, #F1F0E6 0%, #DFE1D4 100%); padding: 34px 24px 64px; font-family: 'Noto Serif SC', serif; color: #29302E; position: static">
+<div class="app-frame" style="max-width: 1160px; min-width: 940px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; position: relative">
+
+  <!-- 服务连接提示条 -->
+  <div style="{{ connBarStyle }}" role="status" aria-live="polite">
+    <span style="display: flex; align-items: center; gap: 9px; min-width: 0;">
+      <span style="{{ connDotStyle }}"></span>
+      <span style="font-size: 11px; line-height: 1.6;">{{ connText }}</span>
+    </span>
+    <span style="display: flex; gap: 8px; align-items: center; flex: none;">
+      <span style="font-family: 'EB Garamond', serif; font-size: 10px; letter-spacing: .12em; color: #A5A597;">{{ connBase }}</span>
+      <span onClick="{{ toggleMock }}" style="{{ connBtnStyle }}">{{ connBtnLabel }}</span>
+    </span>
+  </div>
 
   <!-- 顶栏 -->
   <div style="display: flex; justify-content: space-between; align-items: flex-end; padding: 0 4px;">
@@ -29,21 +66,23 @@
       <span style="font-family: 'EB Garamond', serif; font-size: 26px; letter-spacing: .01em;">Isyou</span>
     </div>
     <div style="display: flex; gap: 8px; align-items: center;">
-      <a href="./questionnaire.html" style="font-size: 11px; padding: 7px 13px; border: 1px solid #AEB9A5; color: #526A4B;">真实问卷</a>
-      <a href="./job-search.html" style="font-size: 11px; padding: 7px 13px; border: 1px solid #AEB9A5; color: #526A4B;">真实岗位</a>
       <span onClick="{{ toggleQuiet }}" style="{{ quietBtnStyle }}">{{ quietLabel }}</span>
       <span onClick="{{ restart }}" style="cursor: pointer; font-size: 11px; padding: 7px 13px; border: 1px solid #D2CCBC; color: #6E7268;">重新开始</span>
     </div>
   </div>
 
   <!-- 步骤条 -->
-  <div style="{{ stepBarStyle }}">
+  <div class="step-bar" style="{{ stepBarStyle }}">
     <sc-for list="{{ steps }}" as="s" hint-placeholder-count="5">
       <div onClick="{{ s.go }}" style="{{ s.tabStyle }}">
         <span style="font-family: 'EB Garamond', serif; font-size: 10px; letter-spacing: .16em; opacity: .6;">{{ s.num }}</span>
         <span style="font-size: 13px;">{{ s.label }}</span>
       </div>
     </sc-for>
+  </div>
+  <div class="step-mobile" style="{{ stepMobileStyle }}">
+    <span style="font-size: 12px; color: #29302E;">{{ stepMobileLabel }}</span>
+    <span style="font-size: 11px; color: #A5A597;">{{ stepMobileNext }}</span>
   </div>
 
   <!-- 主画面 -->
@@ -119,7 +158,7 @@
         <!-- 标题：书的正上方 -->
         <div style="position: absolute; left: 50%; top: 68px; transform: translateX(-50%); text-align: center; pointer-events: none;">
           
-          <div style="margin-top: 22px; font-size: 13px; line-height: 2.1; letter-spacing: .16em; color: #85846F;">探索人与自己的关系　·　探索人与社会的关系</div><div style="font-family: EB Garamond; font-style: normal; font-weight: 400; font-size: 116px; line-height: .92; color: transparent; -webkit-text-stroke: 0.8px #6E7A63; letter-spacing: 0.2em; padding-left: .1em">Isyou</div>
+          <div style="margin-top: 22px; font-size: 13px; line-height: 2.1; letter-spacing: .16em; color: #85846F;">用一天的片段　·　慢慢拼出适合你的工作</div><div style="font-family: EB Garamond; font-style: normal; font-weight: 400; font-size: 116px; line-height: .92; color: transparent; -webkit-text-stroke: 0.8px #6E7A63; letter-spacing: 0.2em; padding-left: .1em">Isyou</div>
         </div>
 
         <div style="position: absolute; left: 50%; transform: translateX(-50%); bottom: 34px;">
@@ -129,10 +168,107 @@
       </div>
     </sc-if>
 
+    <!-- ════ 1 注册 / 登录 ════ -->
+    <sc-if value="{{ isAuth }}" hint-placeholder-val="{{ false }}">
+      <div class="question-shell" style="display: flex; min-height: 700px;">
+        <div class="notebook-rail" style="width: 300px; flex: none; border-right: 1px dashed #E3DED1; background: #F7F4EC; padding: 30px 26px; display: flex; flex-direction: column; gap: 20px;">
+          <div style="font-family: 'EB Garamond', serif; font-size: 10px; letter-spacing: .16em; color: #A5A597;">FIRST PAGE · 01</div>
+          <div style="font-size: 17px; line-height: 1.7; font-weight: 500;">先在本子上写下名字</div>
+          <div style="font-size: 12px; line-height: 1.95; color: #6E7268;">账号归属只来自访问令牌。浏览器不持有搜索服务的密钥，也不自报身份。</div>
+          <div style="display: flex; flex-direction: column; gap: 11px; padding-top: 6px; border-top: 1px dotted #E3DED1;">
+            <sc-for list="{{ authNotes }}" as="n" hint-placeholder-count="3">
+              <div style="display: flex; gap: 9px; align-items: flex-start;">
+                <span style="width: 5px; height: 5px; margin-top: 7px; flex: none; background: #8FA882;"></span>
+                <span style="font-size: 12px; line-height: 1.75; color: #6E7268;">{{ n.text }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="margin-top: auto; font-size: 10px; line-height: 1.8; color: #A5A597;">登录成功后默认继续到问卷；<br>若从岗位页被拦截，会回到岗位页。</div>
+        </div>
+
+        <div class="question-main" style="flex: 1; padding: 32px 40px; display: flex; flex-direction: column; gap: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline;">
+            <span style="font-family: 'EB Garamond', serif; font-size: 11px; letter-spacing: .18em; color: #A5A597;">AUTH · /auth.html</span>
+            <span style="font-size: 11px; color: #A5A597;">{{ authStateLabel }}</span>
+          </div>
+
+          <sc-if value="{{ signedIn }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 18px; max-width: 460px;">
+              <div style="padding: 20px 22px; background: #F1F4EC; border-left: 3px solid #8FA882; display: flex; flex-direction: column; gap: 8px;">
+                <span style="font-size: 12px; color: #6E8465;">已登录</span>
+                <span style="font-size: 18px; font-weight: 600;">{{ authUsername }}</span>
+                <span style="font-size: 12px; color: #6E7268;">{{ authMaskedContact }}</span>
+              </div>
+              <span onClick="{{ authContinue }}" style="align-self: flex-start; cursor: pointer; font-size: 13px; letter-spacing: .04em; padding: 12px 26px; background: #B4535E; color: #FDF7F5;">继续 →</span>
+              <span onClick="{{ signOut }}" style="align-self: flex-start; cursor: pointer; font-size: 11px; color: #8E8E80; border-bottom: 1px solid rgba(138,132,116,.35);">退出这个账号</span>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ signedOut }}" hint-placeholder-val="{{ true }}">
+            <div style="display: flex; flex-direction: column; gap: 16px; max-width: 470px;">
+              <label style="display: flex; flex-direction: column; gap: 7px;">
+                <span style="font-size: 11px; color: #6E7268;">邮箱 / 手机号</span>
+                <input class="q-field" value="{{ authContact }}" onChange="{{ editContact }}" placeholder="name@example.com 或 13800000000" style="box-sizing: border-box; width: 100%; padding: 11px 13px; border: 1px solid #D9D4C4; background: #FDFCF8; font-family: 'Noto Serif SC', serif; font-size: 13px; color: #29302E;">
+              </label>
+
+              <div style="display: flex; gap: 10px; align-items: flex-end;">
+                <label style="flex: 1; display: flex; flex-direction: column; gap: 7px;">
+                  <span style="font-size: 11px; color: #6E7268;">六位验证码</span>
+                  <input class="q-field" value="{{ authCode }}" onChange="{{ editCode }}" placeholder="000000" style="box-sizing: border-box; width: 100%; padding: 11px 13px; border: 1px solid #D9D4C4; background: #FDFCF8; font-family: 'EB Garamond', serif; font-size: 15px; letter-spacing: .3em; color: #29302E;">
+                </label>
+                <span onClick="{{ sendCode }}" style="{{ sendCodeStyle }}">{{ sendCodeLabel }}</span>
+              </div>
+
+              <sc-if value="{{ demoCodeShown }}" hint-placeholder-val="{{ false }}">
+                <div style="padding: 13px 16px; background: #FDF6EF; border-left: 2px solid #D89A6C; display: flex; flex-direction: column; gap: 5px;">
+                  <span style="font-size: 12px; color: #A9713F;">Demo 验证码：{{ demoCode }}</span>
+                  <span style="font-size: 11px; line-height: 1.7; color: #6E7268;">Demo 验证码模式会把验证码返回浏览器；只适合无真实数据演示。</span>
+                </div>
+              </sc-if>
+
+              <div style="display: flex; gap: 14px;">
+                <label style="flex: 1; display: flex; flex-direction: column; gap: 7px;">
+                  <span style="font-size: 11px; color: #6E7268;">用户名</span>
+                  <input class="q-field" value="{{ authUsernameInput }}" onChange="{{ editUsername }}" placeholder="本子上的名字" style="box-sizing: border-box; width: 100%; padding: 11px 13px; border: 1px solid #D9D4C4; background: #FDFCF8; font-family: 'Noto Serif SC', serif; font-size: 13px; color: #29302E;">
+                </label>
+                <label style="flex: 1; display: flex; flex-direction: column; gap: 7px;">
+                  <span style="font-size: 11px; color: #6E7268;">密码</span>
+                  <input class="q-field" type="password" value="{{ authPassword }}" onChange="{{ editPassword }}" placeholder="至少 8 位" style="box-sizing: border-box; width: 100%; padding: 11px 13px; border: 1px solid #D9D4C4; background: #FDFCF8; font-family: 'Noto Serif SC', serif; font-size: 13px; color: #29302E;">
+                </label>
+              </div>
+
+              <sc-if value="{{ authError }}" hint-placeholder-val="{{ false }}">
+                <div style="padding: 13px 16px; background: #FBF0F0; border-left: 2px solid #B4535E; display: flex; flex-direction: column; gap: 5px;" role="alert">
+                  <span style="font-size: 12px; line-height: 1.75; color: #8E3F4A;">{{ authErrorMessage }}</span>
+                  <span style="font-family: 'EB Garamond', serif; font-size: 10px; letter-spacing: .1em; color: #B08A8A;">{{ authErrorCode }}</span>
+                </div>
+              </sc-if>
+
+              <div style="display: flex; gap: 14px; align-items: center; margin-top: 2px;">
+                <span onClick="{{ submitAuth }}" style="{{ submitAuthStyle }}">{{ submitAuthLabel }}</span>
+                <span style="font-size: 11px; color: #A5A597;">已填内容不会因为报错被清空</span>
+              </div>
+              <a href="./auth.html?next=index.html" style="align-self: flex-start; font-size: 11px; color: #6E8465; border-bottom: 1px solid rgba(110,132,101,.35);">已有账号？前往登录</a>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </sc-if>
+
     <!-- ════ 1 能力探索 ════ -->
-    <sc-if value="{{ isExplore }}" hint-placeholder-val="{{ true }}">
-      <div style="display: flex; min-height: 700px;">
-        <div style="width: 208px; flex: none; border-right: 1px dashed #E3DED1; background: #F7F4EC; padding: 24px 20px; display: flex; flex-direction: column; gap: 18px;">
+    <sc-if value="{{ isRestoring }}" hint-placeholder-val="{{ false }}">
+      <div style="min-height: 700px; padding: 40px; display: flex; flex-direction: column; gap: 22px;" role="status" aria-live="polite">
+        <div style="font-size: 13px; color: #6E7268;">正在恢复进度…</div>
+        <sc-for list="{{ skeletonRows }}" as="r" hint-placeholder-count="6">
+          <span style="{{ r.style }}"></span>
+        </sc-for>
+        <div style="margin-top: auto; font-size: 11px; color: #A5A597;">草稿保存在本机浏览器，恢复完成后才会显示题目。</div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isExploreReady }}" hint-placeholder-val="{{ true }}">
+      <div class="question-shell" style="display: flex; min-height: 700px;">
+        <div class="notebook-rail" style="width: 208px; flex: none; border-right: 1px dashed #E3DED1; background: #F7F4EC; padding: 24px 20px; display: flex; flex-direction: column; gap: 18px;">
           <div style="font-family: 'EB Garamond', serif; font-size: 10px; letter-spacing: .16em; color: #A5A597;">MY NOTEBOOK</div>
           <div style="display: flex; flex-direction: column; gap: 13px;">
             <sc-for list="{{ notebook }}" as="n" hint-placeholder-count="4">
@@ -142,14 +278,26 @@
               </div>
             </sc-for>
           </div>
-          <div style="margin-top: auto; font-size: 10px; line-height: 1.7; color: #A5A597;">随时可点回去修改<br>或标记「不确定」</div>
+          <div style="margin-top: auto; font-size: 10px; line-height: 1.7; color: #A5A597;">作答会自动保存<br>未知信息不会被猜测</div>
         </div>
 
-        <div style="flex: 1; padding: 32px 40px; display: flex; flex-direction: column; gap: 22px;">
+        <div class="question-main" style="flex: 1; padding: 32px 40px; display: flex; flex-direction: column; gap: 22px;">
           <div style="display: flex; justify-content: space-between; align-items: baseline;">
             <span style="font-family: 'EB Garamond', serif; font-size: 11px; letter-spacing: .18em; color: #A5A597;">{{ qTag }}</span>
-            <span style="font-size: 11px; color: #A5A597;">不显示剩余题数</span>
+            <span style="font-size: 11px; color: #A5A597;">{{ progressLabel }}</span>
           </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 14px;">
+            <span style="{{ saveStateStyle }}" role="status" aria-live="polite">{{ saveStateLabel }}</span>
+            <span style="font-size: 11px; color: #A5A597;">{{ consentLabel }}</span>
+          </div>
+
+          <sc-if value="{{ saveFailed }}" hint-placeholder-val="{{ false }}">
+            <div style="padding: 13px 16px; background: #FBF0F0; border-left: 2px solid #B4535E; display: flex; justify-content: space-between; gap: 14px; align-items: center;" role="alert">
+              <span style="font-size: 12px; line-height: 1.7; color: #8E3F4A;">草稿没能保存到服务端。答案还在页面上，继续编辑会自动重试。</span>
+              <span onClick="{{ retrySave }}" style="flex: none; cursor: pointer; font-size: 11px; padding: 8px 14px; border: 1px solid #B4535E; color: #8E3F4A;">立即重试</span>
+            </div>
+          </sc-if>
 
           <div style="display: flex; flex-direction: column; gap: 12px;">
             <div style="font-size: 13px; line-height: 1.8; color: #6E8465;">{{ qLead }}</div>
@@ -164,45 +312,12 @@
             <div style="padding: 16px 18px; background: #F1F4F7; border-left: 2px solid #A8BCCB; display: flex; flex-direction: column; gap: 8px;">
               <div style="font-size: 12px; color: #6B8397;">这一题在问什么</div>
               <div style="font-size: 13px; line-height: 1.9; color: #4C5148;">{{ qHelp }}</div>
-              <div style="font-size: 12px; color: #8E8E80; padding-top: 6px;">没有标准答案。四个选项都不错，选最接近的那个就好。</div>
+              <div style="font-size: 12px; color: #8E8E80; padding-top: 6px;">没有标准答案。如果你对题目本身有疑问，可以写在下面；这不算作答。</div>
+              <input class="q-field" value="{{ questionNote }}" onChange="{{ editQuestionNote }}" placeholder="我想问这一题…" style="box-sizing: border-box; width: 100%; padding: 10px 12px; border: 1px solid #CFD9E1; background: #FBFCFD; font-family: 'Noto Serif SC', serif; font-size: 12px; color: #29302E;">
             </div>
           </sc-if>
 
-          <div style="display: flex; flex-direction: column; gap: 10px;">
-            <sc-for list="{{ options }}" as="o" hint-placeholder-count="4">
-              <div onClick="{{ o.pick }}" style="{{ o.style }}">
-                <span style="font-size: 14px; line-height: 1.6;">{{ o.text }}</span>
-                <span style="{{ o.markStyle }}">已选</span>
-              </div>
-            </sc-for>
-          </div>
-
-          <sc-if value="{{ showCustom }}" hint-placeholder-val="{{ false }}">
-            <div style="padding: 15px 17px; background: #FAF8F3; border: 1px solid #D9D4C4; display: flex; flex-direction: column; gap: 10px;">
-              <div style="font-size: 11px; color: #8E8E80;">写下你当时的做法，多短都可以</div>
-              <textarea value="{{ customText }}" onChange="{{ editCustom }}" placeholder="比如：我先把已经做完的那部分存下来，再去问要改哪里" style="width: 100%; box-sizing: border-box; min-height: 78px; resize: vertical; padding: 11px 13px; border: 1px solid #E3DED1; background: #FDFCF8; font-family: 'Noto Serif SC', serif; font-size: 13px; line-height: 1.8; color: #29302E; outline: none;"></textarea>
-              <div style="display: flex; justify-content: space-between; align-items: center; gap: 14px;">
-                <span style="{{ customHintStyle }}">{{ customHint }}</span>
-                <span onClick="{{ submitCustom }}" style="{{ customBtnStyle }}">提交 ✓</span>
-              </div>
-            </div>
-          </sc-if>
-
-          <sc-if value="{{ answered }}" hint-placeholder-val="{{ false }}">
-            <div style="padding: 14px 17px; background: #F4F1E9; border-left: 2px solid #8FA882; display: flex; flex-direction: column; gap: 8px;">
-              <div style="font-size: 11px; color: #8E8E80;">想补一句吗？（选填）</div>
-              <div style="font-size: 13px; line-height: 1.8; color: #4C5148;">{{ noteText }}</div>
-            </div>
-          </sc-if>
-
-          <div style="display: flex; flex-direction: column; gap: 9px;">
-            <div style="font-size: 11px; color: #8E8E80;">如果这题不合适：</div>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-              <sc-for list="{{ exits }}" as="e" hint-placeholder-count="4">
-                <span onClick="{{ e.pick }}" style="{{ e.style }}">{{ e.text }}</span>
-              </sc-for>
-            </div>
-          </div>
+          {{ questionBody }}
 
           <div style="margin-top: auto; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #EDE9DE; padding-top: 18px;">
             <span onClick="{{ prevQ }}" style="{{ prevStyle }}">← 上一题</span>
@@ -220,7 +335,7 @@
             <div style="font-family: 'EB Garamond', serif; font-size: 11px; letter-spacing: .2em; color: #A5A597;">YOUR MAP · 2026.08</div>
             <div style="font-size: 22px; font-weight: 500;">你在这些条件下，状态最好</div>
           </div>
-          <span style="font-size: 11px; padding: 9px 15px; border: 1px solid #29302E; color: #29302E; cursor: pointer;">导出一页 PDF</span>
+          <span onClick="{{ exportProfile }}" style="font-size: 11px; padding: 9px 15px; border: 1px solid #29302E; color: #29302E; cursor: pointer;">导出画像 JSON</span>
         </div>
 
         <div style="display: flex; gap: 40px; align-items: flex-start;">
@@ -245,6 +360,71 @@
             <div style="font-size: 11px; color: #A5A597; line-height: 1.75;">任何一条你都可以标记「这不像我」，画像会重算。</div>
           </div>
         </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px; padding-top: 24px; border-top: 1px solid #EDE9DE;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 20px;">
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <span style="font-size: 17px; font-weight: 600;">五个职业方向</span>
+              <span style="font-size: 12px; line-height: 1.75; color: #8E8E80;">职业方向不是具体 JD。搜索只在你保留的方向上进行。</span>
+            </div>
+            <span style="font-family: 'EB Garamond', serif; font-size: 11px; color: #A5A597;">{{ acceptedCountLabel }}</span>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 9px;">
+            <sc-for list="{{ directions }}" as="d" hint-placeholder-count="5">
+              <div style="{{ d.style }}">
+                <div style="display: flex; flex-direction: column; gap: 5px; min-width: 0;">
+                  <span style="{{ d.titleStyle }}">{{ d.label }}</span>
+                  <span style="font-size: 12px; line-height: 1.7; color: #8E8E80;">{{ d.note }}</span>
+                </div>
+                <div style="display: flex; gap: 8px; flex: none;">
+                  <span onClick="{{ d.accept }}" style="{{ d.acceptStyle }}">保留</span>
+                  <span onClick="{{ d.exclude }}" style="{{ d.excludeStyle }}">排除</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+
+          <sc-if value="{{ consentMissing }}" hint-placeholder-val="{{ false }}">
+            <div style="padding: 15px 18px; background: #F7F3EA; border-left: 3px solid #D89A6C; display: flex; justify-content: space-between; gap: 16px; align-items: center;">
+              <span style="font-size: 12px; line-height: 1.75; color: #A9713F;">尚未授权联网岗位搜索。J9 的「允许检索公开招聘信息」需要你主动选择。</span>
+              <span onClick="{{ goConsent }}" style="flex: none; cursor: pointer; font-size: 12px; padding: 9px 16px; border: 1px solid #D89A6C; color: #A9713F;">去 J9 授权 →</span>
+            </div>
+          </sc-if>
+
+          <div style="display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-top: 4px;">
+            <span onClick="{{ startSearch }}" style="{{ searchBtnStyle }}">搜索真实岗位 →</span>
+            <span style="font-size: 11px; line-height: 1.7; color: #A5A597;">{{ searchBtnHint }}</span>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ════ 4 岗位搜索（服务端流程） ════ -->
+    <sc-if value="{{ isSearching }}" hint-placeholder-val="{{ false }}">
+      <div style="min-height: 700px; padding: 60px 40px; display: flex; flex-direction: column; gap: 40px; align-items: center; justify-content: center; box-sizing: border-box;">
+        <div style="display: flex; flex-direction: column; gap: 10px; align-items: center; text-align: center;">
+          <span style="font-family: 'EB Garamond', serif; font-size: 11px; letter-spacing: .2em; color: #A5A597;">JOB SEARCH · SERVER SIDE</span>
+          <span style="font-size: 19px; font-weight: 500;">{{ searchHeadline }}</span>
+          <span style="font-size: 12px; line-height: 1.9; color: #8E8E80; max-width: 420px;">这些是服务端在做的事。页面不会替你判断结果，也不会把超时写成「没有合适岗位」。</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 4px; width: 100%; max-width: 460px;" role="status" aria-live="polite">
+          <sc-for list="{{ searchStages }}" as="g" hint-placeholder-count="3">
+            <div style="{{ g.rowStyle }}">
+              <span style="{{ g.dotStyle }}"></span>
+              <span style="{{ g.textStyle }}">{{ g.text }}</span>
+              <span style="{{ g.markStyle }}">{{ g.mark }}</span>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 12px; align-items: center;">
+          <span style="font-size: 11px; color: #A5A597;">{{ searchFootnote }}</span>
+          <sc-if value="{{ searchDone }}" hint-placeholder-val="{{ false }}">
+            <span onClick="{{ openSelected }}" style="cursor: pointer; font-size: 13px; letter-spacing: .04em; padding: 12px 26px; background: #B4535E; color: #FDF7F5;">看这个岗位 →</span>
+          </sc-if>
+        </div>
       </div>
     </sc-if>
 
@@ -253,12 +433,31 @@
       <div style="padding: 32px 40px 40px; display: flex; flex-direction: column; gap: 22px; min-height: 700px; box-sizing: border-box;">
         <div style="display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid #EDE9DE; padding-bottom: 18px;">
           <div style="display: flex; flex-direction: column; gap: 7px;">
-            <div style="font-size: 19px; font-weight: 500;">按你的图谱，这 5 个岗位对得上</div>
-            <div style="font-size: 12px; color: #8E8E80;">排序规则：任务结构匹配度优先，其次差距可补程度。每次进来顺序一致。</div>
+            <div style="font-size: 19px; font-weight: 500;">{{ matchTitle }}</div>
+            <div style="font-size: 12px; color: #8E8E80;">{{ matchSubtitle }}</div>
           </div>
-          <span style="font-family: 'EB Garamond', serif; font-size: 11px; color: #A5A597;">5 / 5</span>
+          <span style="font-family: 'EB Garamond', serif; font-size: 11px; color: #A5A597;">{{ matchCount }}</span>
         </div>
 
+        <sc-if value="{{ matchBlocked }}" hint-placeholder-val="{{ false }}">
+          <div style="padding: 18px 20px; background: #F7F3EA; border-left: 3px solid #D89A6C; display: flex; flex-direction: column; gap: 10px;">
+            <div style="font-size: 12px; color: #A9713F;">还需要补齐</div>
+            <sc-for list="{{ missingFields }}" as="m" hint-placeholder-count="3">
+              <div style="font-size: 13px; color: #4C5148; line-height: 1.7;">· {{ m.label }}</div>
+            </sc-for>
+            <span onClick="{{ backToQuestionnaire }}" style="align-self: flex-start; margin-top: 4px; cursor: pointer; font-size: 12px; padding: 9px 16px; background: #B4535E; color: #FDF7F5;">回去补充 →</span>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ matchReady }}" hint-placeholder-val="{{ true }}">
+        <div style="padding: 22px 24px; background: #F1F4EC; border-left: 3px solid #8FA882; display: flex; justify-content: space-between; gap: 24px; align-items: center;">
+          <div style="display: flex; flex-direction: column; gap: 7px;">
+            <div style="font-size: 14px; font-weight: 600;">前端信息已齐</div>
+            <div style="font-size: 12px; line-height: 1.8; color: #6E7268; max-width: 600px;">可将 output1.v1.0 画像交给正式匹配引擎。引擎返回 5 个 recommended_occupations 前，本页不会用演示岗位冒充真实推荐。</div>
+          </div>
+          <span onClick="{{ exportProfile }}" style="flex: none; cursor: pointer; font-size: 12px; padding: 10px 17px; background: #B4535E; color: #FDF7F5;">导出交接 JSON →</span>
+        </div>
+        <sc-if value="{{ showDemoJobs }}" hint-placeholder-val="{{ false }}">
         <div style="display: flex; flex-direction: column; gap: 10px;">
           <sc-for list="{{ jobs }}" as="j" hint-placeholder-count="5">
             <div onClick="{{ j.open }}" style="{{ j.style }}">
@@ -291,6 +490,8 @@
             </div>
           </sc-for>
         </div>
+        </sc-if>
+        </sc-if>
       </div>
     </sc-if>
 
@@ -299,17 +500,21 @@
       <div style="padding: 34px 40px 40px; display: flex; flex-direction: column; gap: 24px; min-height: 700px; box-sizing: border-box;">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #EDE9DE; padding-bottom: 20px;">
           <div style="display: flex; flex-direction: column; gap: 8px;">
-            <span onClick="{{ backToMatch }}" style="font-size: 11px; color: #A5A597; cursor: pointer;">← 回到匹配列表</span>
-            <span style="font-size: 22px; font-weight: 600;">数据标注专员</span>
-            <span style="font-size: 13px; color: #8E8E80;">远程 · 全职 · 某科技公司 · 8–11k</span>
+            <span onClick="{{ backToMatch }}" style="font-size: 11px; color: #A5A597; cursor: pointer;">← 回到画像与方向</span>
+            <span style="font-size: 22px; font-weight: 600;">{{ jdTitle }}</span>
+            <span style="font-size: 13px; color: #8E8E80;">{{ jdMeta }}</span>
+            <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px;">
+              <span style="font-size: 11px; padding: 5px 10px; background: #F1F4EC; color: #6E8465; border: 1px solid #C9D6BF;">{{ jdVerifiedTag }}</span>
+              <span style="font-size: 11px; color: #A5A597;">核验时间 {{ jdVerifiedAt }}</span>
+            </div>
           </div>
-          <div style="display: flex; gap: 8px;">
-            <span style="font-size: 12px; padding: 9px 15px; border: 1px solid #D2CCBC; color: #6E7268; cursor: pointer;">存进本子</span>
-            <span style="font-size: 12px; letter-spacing: .04em; padding: 9px 20px; background: #B4535E; color: #FDF7F5; cursor: pointer;">我想投 ✓</span>
+          <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end;">
+            <a href="{{ jdSourceUrl }}" target="_blank" rel="noopener noreferrer" style="font-size: 12px; padding: 9px 15px; border: 1px solid #D2CCBC; color: #6E7268;">来源页面 ↗</a>
+            <span style="font-family: 'EB Garamond', serif; font-size: 10px; letter-spacing: .1em; color: #A5A597;">{{ jdSelectionId }}</span>
           </div>
         </div>
 
-        <div style="display: flex; gap: 20px; align-items: flex-start;">
+        <div class="jd-grid" style="display: flex; gap: 20px; align-items: flex-start;">
           <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px;">
             <sc-for list="{{ jobBlocks }}" as="b" hint-placeholder-count="4">
               <div onClick="{{ b.toggle }}" style="{{ b.style }}">
@@ -335,77 +540,190 @@
             </sc-for>
           </div>
 
-          <div style="width: 288px; flex: none; display: flex; flex-direction: column; gap: 14px;">
-            <div style="padding: 18px 20px; background: #FDF6EF; border-left: 2px solid #D89A6C;">
-              <div style="font-size: 13px; font-weight: 600; margin-bottom: 8px; color: #A9713F;">这个岗位对你的一个挑战</div>
-              <div style="font-size: 13px; line-height: 1.8; color: #4C5148;">每周的 15 分钟视频例会。你在图谱里更适合书面沟通。</div>
-              <span onClick="{{ goTraining }}" style="display: inline-block; margin-top: 12px; font-size: 12px; padding: 8px 15px; border: 1px solid #6E8465; color: #526A4B; cursor: pointer;">让 Coach 为我规划</span>
+          <div class="jd-side" style="width: 300px; flex: none; display: flex; flex-direction: column; gap: 14px;">
+            <div style="padding: 18px 20px; background: #FAF8F3; border: 1px solid #E3DED1; display: flex; flex-direction: column; gap: 10px;">
+              <div style="font-size: 13px; font-weight: 600;">岗位事实</div>
+              <sc-for list="{{ jdFacts }}" as="f" hint-placeholder-count="6">
+                <div style="display: flex; justify-content: space-between; gap: 12px; font-size: 12px; line-height: 1.7;">
+                  <span style="color: #8E8E80; flex: none;">{{ f.label }}</span>
+                  <span style="{{ f.valueStyle }}">{{ f.value }}</span>
+                </div>
+              </sc-for>
             </div>
-            <div style="padding: 18px 20px; background: #FAF8F3; border: 1px solid #E3DED1;">
-              <div style="font-size: 13px; font-weight: 600; margin-bottom: 10px;">面试流程（已知）</div>
-              <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12px; line-height: 1.75; color: #4C5148;">
-                <div>1. 线上标注小测，限时 40 分钟</div>
-                <div>2. 一轮视频面，1 人，约 30 分钟</div>
-                <div>3. 可申请不开摄像头 <span style="color: #6E8465;">✓ 已确认</span></div>
-                <div style="color: #A5A597;">4. 是否需笔试：企业未提供</div>
+
+            <div style="padding: 16px 20px; background: #F4F1E9; font-size: 11px; line-height: 1.9; color: #6E7268;">
+              未知字段统一显示「待向招聘方确认」，不会填成「无要求」。
+            </div>
+
+            <sc-if value="{{ jdHardConflict }}" hint-placeholder-val="{{ false }}">
+              <div style="padding: 18px 20px; background: #FBF0F0; border-left: 3px solid #B4535E; display: flex; flex-direction: column; gap: 8px;" role="alert">
+                <span style="font-size: 12px; color: #8E3F4A;">与你的明确硬限制冲突</span>
+                <span style="font-size: 12px; line-height: 1.8; color: #6E7268;">{{ jdConflictText }}</span>
+                <span style="font-size: 11px; color: #A5A597;">冲突存在时不提供启动 Coach。</span>
               </div>
-            </div>
+            </sc-if>
+
+            <sc-if value="{{ jdCoachAllowed }}" hint-placeholder-val="{{ true }}">
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <span onClick="{{ startCoach }}" style="{{ startCoachStyle }}">{{ startCoachLabel }}</span>
+                <span style="font-size: 11px; line-height: 1.8; color: #A5A597;">Coach 只使用这份已核验 JD 的要求，不使用搜索摘要。</span>
+              </div>
+            </sc-if>
           </div>
         </div>
       </div>
     </sc-if>
 
-    <!-- ════ 5 培训 ════ -->
-    <sc-if value="{{ isTraining }}" hint-placeholder-val="{{ false }}">
-      <div style="padding: 34px 40px 40px; display: flex; flex-direction: column; gap: 24px; min-height: 700px; box-sizing: border-box;">
-        <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid #EDE9DE; padding-bottom: 20px;">
+    <!-- ════ 6 Coach ════ -->
+    <sc-if value="{{ isCoach }}" hint-placeholder-val="{{ false }}">
+      <div style="padding: 32px 40px 40px; display: flex; flex-direction: column; gap: 22px; min-height: 700px; box-sizing: border-box;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; border-bottom: 1px solid #EDE9DE; padding-bottom: 18px;">
           <div style="display: flex; flex-direction: column; gap: 7px;">
-            <span style="font-size: 20px; font-weight: 500;">{{ pagesTitle }}</span>
-            <span style="font-size: 12px; color: #8E8E80;">停下来多久都不会掉。回来时从上次那页继续。</span>
+            <span style="font-family: 'EB Garamond', serif; font-size: 10px; letter-spacing: .2em; color: #A5A597;">COACH · /coach.html?mode=api</span>
+            <span style="font-size: 21px; font-weight: 600;">{{ coachTitle }}</span>
+            <span style="font-size: 12px; color: #8E8E80;">{{ coachSubtitle }}</span>
           </div>
-          <div style="display: flex; gap: 3px; align-items: flex-end;">
-            <sc-for list="{{ pages }}" as="p" hint-placeholder-count="17">
-              <span style="{{ p.style }}"></span>
-            </sc-for>
+          <div style="display: flex; flex-direction: column; gap: 5px; align-items: flex-end; flex: none;">
+            <span style="font-family: 'EB Garamond', serif; font-size: 11px; color: #A5A597;">{{ coachStateVersion }}</span>
+            <span style="font-size: 11px; color: #A5A597;">{{ coachSessionId }}</span>
           </div>
         </div>
 
-        <div style="display: flex; gap: 20px; align-items: flex-start;">
-          <div style="flex: 1; padding: 24px; border: 1.5px solid #D89A6C; background: #FDF6EF; display: flex; flex-direction: column; gap: 16px;">
-            <div style="display: flex; justify-content: space-between; align-items: baseline;">
-              <span style="font-size: 12px; color: #A9713F;">正在进行 · 职业化</span>
-              <span style="font-family: 'EB Garamond', serif; font-size: 12px; color: #A9713F;">{{ lessonCount }}</span>
-            </div>
-            <div style="font-size: 19px; font-weight: 600;">短会议参与</div>
-            <div style="font-size: 13px; line-height: 1.85; color: #4C5148;">给你这门，是因为「数据标注专员」每周有一次 15 分钟视频例会，而你更适合书面沟通。</div>
-            <div style="display: flex; flex-direction: column; gap: 11px; padding-top: 14px; border-top: 1px dotted #E6CBAF;">
-              <sc-for list="{{ lessons }}" as="l" hint-placeholder-count="3">
-                <div onClick="{{ l.toggle }}" style="display: flex; gap: 12px; align-items: center; font-size: 13px; cursor: pointer;">
-                  <span style="{{ l.box }}"></span>
-                  <span style="{{ l.text }}">{{ l.name }}</span>
+        <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+          <sc-for list="{{ coachPhases }}" as="p" hint-placeholder-count="5">
+            <span style="{{ p.style }}">{{ p.label }}</span>
+          </sc-for>
+        </div>
+
+        <div style="padding: 18px 20px; background: #F1F4EC; border-left: 3px solid #8FA882; font-size: 13px; line-height: 1.9; color: #4C5148;" role="status" aria-live="polite">{{ coachMessage }}</div>
+
+        <div class="coach-grid" style="display: flex; gap: 20px; align-items: flex-start;">
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px;">
+
+            <sc-if value="{{ coachIsOnboarding }}" hint-placeholder-val="{{ true }}">
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <sc-for list="{{ onboardingRows }}" as="r" hint-placeholder-count="3">
+                  <div style="padding: 15px 18px; background: #FAF8F3; border: 1px solid #E3DED1; display: flex; flex-direction: column; gap: 6px;">
+                    <span style="font-size: 11px; color: #8E8E80;">{{ r.label }}</span>
+                    <span style="font-size: 13px; line-height: 1.8; color: #29302E;">{{ r.value }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ coachIsGap }}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; flex-direction: column; gap: 9px;">
+                <sc-for list="{{ gapItems }}" as="g" hint-placeholder-count="4">
+                  <div style="padding: 15px 18px; background: #FAF8F3; border: 1px solid #E3DED1; display: flex; flex-direction: column; gap: 9px;">
+                    <div style="display: flex; justify-content: space-between; gap: 14px; align-items: baseline;">
+                      <span style="font-size: 14px; font-weight: 600;">{{ g.requirement }}</span>
+                      <span style="{{ g.tagStyle }}">{{ g.tag }}</span>
+                    </div>
+                    <div style="display: flex; gap: 10px; font-size: 12px; line-height: 1.75;">
+                      <span style="color: #8E8E80; flex: none;">画像现状</span>
+                      <span style="color: #4C5148;">{{ g.current }}</span>
+                    </div>
+                    <div style="display: flex; gap: 10px; font-size: 12px; line-height: 1.75;">
+                      <span style="color: #8E8E80; flex: none;">JD 要求来源</span>
+                      <span style="color: #6E8465;">{{ g.source }}</span>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ coachIsPlan }}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; flex-direction: column; gap: 9px;">
+                <sc-for list="{{ planStages }}" as="p" hint-placeholder-count="3">
+                  <div style="padding: 16px 18px; background: #FAF8F3; border-left: 3px solid #8FA882; display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display: flex; justify-content: space-between; gap: 14px; align-items: baseline;">
+                      <span style="font-size: 14px; font-weight: 600;">{{ p.name }}</span>
+                      <span style="font-family: 'EB Garamond', serif; font-size: 11px; color: #A5A597;">{{ p.span }}</span>
+                    </div>
+                    <span style="font-size: 12px; line-height: 1.8; color: #4C5148;">{{ p.goal }}</span>
+                    <span style="font-size: 11px; line-height: 1.7; color: #8E8E80;">{{ p.check }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ coachIsDaily }}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; flex-direction: column; gap: 16px;">
+                <div class="week-grid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;">
+                  <sc-for list="{{ weekDays }}" as="d" hint-placeholder-count="7">
+                    <div onClick="{{ d.pick }}" style="{{ d.style }}">
+                      <span style="font-family: 'EB Garamond', serif; font-size: 10px; letter-spacing: .1em; opacity: .7;">{{ d.num }}</span>
+                      <span style="font-size: 11px;">{{ d.label }}</span>
+                      <span style="{{ d.markStyle }}">{{ d.mark }}</span>
+                    </div>
+                  </sc-for>
                 </div>
+
+                <div style="padding: 20px 22px; border: 1.5px solid #D89A6C; background: #FDF6EF; display: flex; flex-direction: column; gap: 14px;">
+                  <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 14px;">
+                    <span style="font-size: 15px; font-weight: 600;">{{ dayTitle }}</span>
+                    <span style="font-size: 11px; color: #A9713F;">{{ dayMeta }}</span>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 11px; padding-top: 12px; border-top: 1px dotted #E6CBAF;">
+                    <sc-for list="{{ dayTasks }}" as="t" hint-placeholder-count="3">
+                      <div onClick="{{ t.toggle }}" style="display: flex; gap: 12px; align-items: flex-start; font-size: 13px; cursor: pointer;">
+                        <span style="{{ t.box }}"></span>
+                        <span style="{{ t.text }}">{{ t.name }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                  <span style="font-size: 11px; line-height: 1.8; color: #8E8E80;">{{ dayNote }}</span>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ coachIsReview }}" hint-placeholder-val="{{ false }}">
+              <div style="padding: 20px 22px; background: #FAF8F3; border: 1px solid #E3DED1; display: flex; flex-direction: column; gap: 14px;">
+                <span style="font-size: 14px; font-weight: 600;">提交今天的产出</span>
+                <label style="display: flex; flex-direction: column; gap: 7px;">
+                  <span style="font-size: 11px; color: #6E7268;">链接（可留空）</span>
+                  <input class="q-field" value="{{ submitLink }}" onChange="{{ editSubmitLink }}" placeholder="https://" style="box-sizing: border-box; width: 100%; padding: 10px 12px; border: 1px solid #D9D4C4; background: #FDFCF8; font-family: 'Noto Serif SC', serif; font-size: 12px; color: #29302E;">
+                </label>
+                <label style="display: flex; flex-direction: column; gap: 7px;">
+                  <span style="font-size: 11px; color: #6E7268;">说明：你做了什么，哪里卡住</span>
+                  <textarea class="q-field" value="{{ submitNote }}" onChange="{{ editSubmitNote }}" placeholder="写多写少都可以" style="box-sizing: border-box; width: 100%; min-height: 96px; resize: vertical; padding: 10px 12px; border: 1px solid #D9D4C4; background: #FDFCF8; font-family: 'Noto Serif SC', serif; font-size: 12px; line-height: 1.8; color: #29302E;"></textarea>
+                </label>
+                <div style="display: flex; gap: 14px; align-items: center;">
+                  <span onClick="{{ submitWork }}" style="{{ submitWorkStyle }}">{{ submitWorkLabel }}</span>
+                  <span style="font-size: 11px; color: #A5A597;">提交会带 request_id，重复点击不会产生两条记录</span>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ hasReviewResult }}" hint-placeholder-val="{{ false }}">
+              <div style="padding: 18px 20px; background: #F1F4EC; border-left: 3px solid #8FA882; display: flex; flex-direction: column; gap: 9px;">
+                <span style="font-size: 12px; color: #6E8465;">Review 已回写</span>
+                <span style="font-size: 13px; line-height: 1.85; color: #4C5148;">{{ reviewText }}</span>
+                <span style="font-size: 11px; color: #8E8E80;">{{ reviewEvidence }}</span>
+              </div>
+            </sc-if>
+
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px;">
+              <sc-for list="{{ quickActions }}" as="q" hint-placeholder-count="2">
+                <span onClick="{{ q.run }}" style="{{ q.style }}">{{ q.label }}</span>
               </sc-for>
-            </div>
-            <div style="display: flex; gap: 12px; align-items: center; margin-top: 4px;">
-              <span onClick="{{ finishLesson }}" style="font-size: 13px; letter-spacing: .04em; padding: 11px 22px; background: #B4535E; color: #FDF7F5; cursor: pointer;">{{ lessonBtn }}</span>
-              <span style="font-size: 12px; color: #A5A597;">约 12 分钟 · 可中途退出</span>
             </div>
           </div>
 
-          <div style="width: 292px; flex: none; display: flex; flex-direction: column; gap: 14px;">
-            <div style="padding: 18px 20px; border: 1px solid #E3DED1; background: #FAF8F3; display: flex; flex-direction: column; gap: 8px;">
-              <div style="font-size: 11px; color: #8E8E80;">已完成 · 社会化</div>
-              <div style="font-size: 15px; font-weight: 600;">自我介绍的三种长度</div>
-              <div style="font-size: 12px; color: #6E7268; line-height: 1.7;">4 课时 · 完成于 6 月</div>
-              <div style="margin-top: 4px; font-size: 12px; line-height: 1.8; color: #6E8465;">当时你写：「说三句就够了。」</div>
+          <div class="coach-side" style="width: 292px; flex: none; display: flex; flex-direction: column; gap: 14px;">
+            <div style="padding: 18px 20px; background: #FAF8F3; border: 1px solid #E3DED1; display: flex; flex-direction: column; gap: 10px;">
+              <span style="font-size: 13px; font-weight: 600;">这个岗位的已核验要求</span>
+              <sc-for list="{{ coachRequirements }}" as="r" hint-placeholder-count="4">
+                <span style="font-size: 12px; line-height: 1.75; color: #4C5148;">· {{ r.text }}</span>
+              </sc-for>
+              <span style="font-size: 11px; color: #A5A597; padding-top: 4px;">来自选定 JD，不是搜索摘要。</span>
             </div>
-            <div style="padding: 18px 20px; border: 1px solid #E3DED1; background: #FAF8F3; display: flex; flex-direction: column; gap: 8px;">
-              <div style="font-size: 11px; color: #8E8E80;">建议 · 来自「图书馆编目助理」</div>
-              <div style="font-size: 15px; font-weight: 600;">简短问答应对</div>
-              <div style="font-size: 12px; color: #6E7268; line-height: 1.7;">3 课时 · 每次约 10 分钟</div>
+            <div style="padding: 16px 20px; background: #F4F1E9; font-size: 11px; line-height: 1.95; color: #6E7268;">
+              Gap 是基于当前画像和 JD 的待验证差距，不是能力判决。
             </div>
-            <div style="padding: 16px 20px; background: #F4F1E9; font-size: 12px; line-height: 1.8; color: #6E7268;">
-              这里不会出现「已连续学习 7 天」。你的记录只往前加，不会因为停下而消失。
+            <div style="padding: 16px 20px; background: #FAF8F3; border: 1px solid #E3DED1; display: flex; flex-direction: column; gap: 7px;">
+              <span style="font-size: 11px; color: #8E8E80;">工作区 workspace</span>
+              <span style="font-size: 12px; line-height: 1.8; color: #4C5148;">{{ workspaceLabel }}</span>
             </div>
           </div>
         </div>
@@ -422,381 +740,946 @@
 <div style="position: absolute; inset: 0; opacity: .28; background: repeating-linear-gradient(96deg, rgba(150,145,120,.07) 0 2px, transparent 2px 26px); left: -114px; top: -77px; display: none"></div></div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{}">
-const QUESTIONS = [
-  {
-    tag: "Q.06　工作方式",
-    lead: "先讲个场景，不着急。",
-    text: "一个任务，你可以自己一个人做完，也可以和两三个人分工。上一次遇到这种情况，你实际上是怎么做的？",
-    help: "问的是你「实际做过」的选择，不是你觉得哪种更好。想不起具体某次也没关系。",
-    options: [
-      "我自己做完了，中途没找人",
-      "我先自己做，卡住才找人",
-      "我们分了工，各做各的那部分",
-      "其他，我自己写"
-    ],
-    note: "一个人做的时候，我不用一直猜别人在想什么。",
-    tip: "一个人做事更顺"
-  },
-  {
-    tag: "Q.07　工作节奏",
-    lead: "这一题有点长，慢慢看。",
-    text: "你已经按原计划做到一半，负责人过来说需求改了，要重头调整。当时你做了什么？",
-    help: "「需求改了」指原本说好的做法或标准，中途被换成另一种。问的是当时你的第一反应。",
-    options: [
-      "我先停下来，问清楚新的步骤再动",
-      "我照原来的做完，之后再改",
-      "我很难继续，需要一段时间才能重新开始",
-      "其他，我自己写"
-    ],
-    note: "改之前如果有人跟我说一声，就没那么难。",
-    tip: "喜欢步骤写清楚"
-  },
-  {
-    tag: "Q.08　工作环境",
-    lead: "最后问一个关于环境的。",
-    text: "上一次你在一个有持续人声的地方做事（开放工位、咖啡馆、教室），过程是什么样的？",
-    help: "「持续人声」指周围一直有人说话，不是偶尔一两句。问的是你当时的实际状态。",
-    options: [
-      "没什么影响，我照常做完了",
-      "我戴上耳机之后就还好",
-      "我很难集中，做得比平时慢很多",
-      "其他，我自己写"
-    ],
-    note: "不是烦，是脑子里会一直跟着别人的话走。",
-    tip: "噪声会让我卡住"
-  }
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 1200, &quot;height&quot;: 900}, &quot;apiBase&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;联调&quot;}, &quot;startMocked&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: false, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;联调&quot;}, &quot;startScreen&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;welcome&quot;, &quot;auth&quot;, &quot;explore&quot;, &quot;portrait&quot;, &quot;search&quot;, &quot;job&quot;, &quot;coach&quot;], &quot;default&quot;: &quot;welcome&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;联调&quot;}}">
+const API_DEFAULT = (() => {
+  if (!window.location || !/^https?:$/.test(window.location.protocol)) return "http://127.0.0.1:8001";
+  const staticLocal = ["127.0.0.1", "localhost"].includes(window.location.hostname) && window.location.port === "8000";
+  return staticLocal ? window.location.protocol + "//" + window.location.hostname + ":8001" : window.location.origin;
+})();
+const TOKEN_KEY = "isyou_auth_access_token_v1";
+
+const SEARCH_STAGES = [
+  "正在搜索公开岗位，首次可能需要约 45 秒…",
+  "正在访问并核验所选岗位原页面…",
+  "正在整理岗位要求…"
 ];
 
-const EXITS = ["没有", "不知道", "想不起来", "没经历过"];
-
-const AXES = [
-  { name: "规则稳定", source: "来源 · Q7 / Q12", desc: "你在规则清楚、不中途变更的任务里最稳。需求突然变动时，你需要一次明确的口头或书面通知。", quote: "「改之前如果有人跟我说一声，就没那么难。」" },
-  { name: "低感官负荷", source: "来源 · Q3 / Q8", desc: "持续人声与开放工位会明显影响你的专注。", quote: "「不是烦，是脑子里会一直跟着别人的话走。」" },
-  { name: "独立作业", source: "来源 · Q6 / Q11", desc: "任务边界清楚时你不需要频繁对齐，能自己走完全程。", quote: "「一个人做的时候，我不用一直猜别人在想什么。」" }
+const DIRECTIONS = [
+  { id: "data_qa_doc", label: "数据 / 质检 / 文档", note: "规则文档化、可自行安排时段的任务结构" },
+  { id: "research_analysis", label: "研究 / 分析 / 写作", note: "以书面产出为主，异步沟通" },
+  { id: "hands_on_tech", label: "手工 / 技术 / 实操", note: "固定流程、结果可直接检查" },
+  { id: "archive_catalog", label: "档案 / 编目 / 归档", note: "分类规则固定，独立工位" },
+  { id: "test_execution", label: "测试执行 / 记录", note: "用例已写好，按步骤执行并记录" }
 ];
 
-const JOBS = [
-  { title: "数据标注专员", meta: "远程 · 全职 · 某科技公司", score: "86%", top: true,
-    task: "标注规范文档化，季度更新一次。日常不接需求变更，改动由组长统一下发。",
-    gap: "需要每周一次 15 分钟视频例会。", trainLabel: "培训「短会议参与」· 3 课时" },
-  { title: "图书馆编目助理", meta: "现场 · 固定工位 · 市属图书馆", score: "81%",
-    task: "分类规则固定，流程年内不变。工位固定，靠窗，左右各一人。",
-    gap: "读者问询约每小时 2 次。", trainLabel: "培训「简短问答应对」· 3 课时" },
-  { title: "质检记录员", meta: "现场 · 有噪声 · 制造企业", score: "74%",
-    task: "检查项固定成表，逐项打勾，不需临场判断。",
-    gap: "车间有持续机器声，需长时间佩戴防护耳罩。", trainLabel: "培训「高噪声环境适应」· 2 课时" },
-  { title: "代码测试执行", meta: "远程 · 弹性时间", score: "70%",
-    task: "用例由开发写好，按步骤执行并记录结果。",
-    gap: "缺陷需在群里同步描述，偶有追问。", trainLabel: "培训「书面同步问题」· 2 课时" },
-  { title: "档案数字化助理", meta: "现场 · 独立工位 · 某档案馆", score: "68%",
-    task: "扫描与命名规则固定，按批次领取任务。",
-    gap: "需要与保管员当面交接，每天一次。", trainLabel: "培训「固定场景对话」· 2 课时" }
-];
+const JD = {
+  title: "数据标注专员",
+  company: "某科技公司",
+  location: "远程",
+  work_mode: "完全远程",
+  employment_type: "全职",
+  salary: "8–11k / 月（税前）",
+  source_url: "https://example.com/jobs/data-annotation-001",
+  verification_status: "verified"
+};
 
 const JOB_BLOCKS = [
-  { tag: "01 · TASK　任务结构", summary: "规则文档化，不接临时变更", lines: [
-    ["ok", "标注规范为文档，季度更新一次"],
-    ["ok", "日常任务由系统派发，不需自行协调"],
-    ["ok", "需求变更由组长统一下发，提前一天"],
-    ["ok", "日产量有明确指标，可自行安排时段"]
+  { tag: "01 · MUST　必备要求（已核验）", summary: "原页面可核对的硬性条目", lines: [
+    ["ok", "能按标注规范逐条执行，日产量有明确指标"],
+    ["ok", "每周参加一次 15 分钟视频例会，可不发言"],
+    ["ok", "使用公司提供的设备与账号"],
+    ["ok", "需求变更由组长统一下发，提前一天通知"]
   ]},
-  { tag: "02 · PLACE　工作环境", summary: "完全远程，无打卡", lines: [
-    ["info", "完全远程，无需到岗"],
-    ["info", "无打卡，需在当日内完成量"],
-    ["info", "设备由公司提供"],
-    ["unknown", "是否需入职培训到场：企业未提供"]
+  { tag: "02 · TOOLS　工具", summary: "原页面明确列出的工具", lines: [
+    ["info", "内部标注平台（企业提供账号）"],
+    ["info", "表格软件，用于日产量记录"],
+    ["info", "即时通讯工具，文字为主"]
   ]},
-  { tag: "03 · SENSORY　感官条件", summary: "无持续人声，可戴耳机", lines: [
-    ["info", "无持续人声，可全程戴耳机"],
-    ["info", "屏幕为主，无强光无异味"],
-    ["info", "可自行控制休息间隔"],
-    ["match", "与你图谱的「低感官负荷」一致"]
+  { tag: "03 · UNKNOWN　待向招聘方确认", summary: "原页面未提供，不填「无要求」", lines: [
+    ["unknown", "是否需入职培训到场：待向招聘方确认"],
+    ["unknown", "试用期时长：待向招聘方确认"],
+    ["unknown", "是否需要笔试：待向招聘方确认"]
   ]},
-  { tag: "04 · TALK　沟通方式", summary: "文字为主，每周一次视频", lines: [
-    ["info", "日常以文字为主，固定一位对接组长"],
-    ["warn", "每周一次 15 分钟视频例会，可不发言"],
-    ["info", "无客户接触，无电话"]
+  { tag: "04 · WORK　办公与沟通", summary: "远程 · 文字为主", lines: [
+    ["info", "完全远程，无打卡，需在当日内完成量"],
+    ["info", "日常以文字沟通为主，固定一位对接组长"],
+    ["warn", "每周一次 15 分钟视频例会"],
+    ["match", "与画像中的「低感官负荷」一致"]
   ]}
 ];
 
-const LESSONS = ["会前十分钟可以先写下要说的话", "听不清时怎么请对方重复一次", "会议里不发言，是可以的"];
+const GAP_ITEMS = [
+  { requirement: "每周一次 15 分钟视频例会", tag: "待验证", current: "画像里你更适合书面沟通，会议参与没有可核对的记录。", source: "选定 JD · 必备要求 02" },
+  { requirement: "按标注规范逐条执行", tag: "已有证据", current: "重复核对情境的自述分数较高，但仍需任务结果佐证。", source: "选定 JD · 必备要求 01" },
+  { requirement: "日产量记录与自报", tag: "待验证", current: "尚无按日记录产出的证据。", source: "选定 JD · 必备要求 01" },
+  { requirement: "需求变更的书面接收", tag: "已有证据", current: "你写过：改之前如果有人跟我说一声，就没那么难。", source: "选定 JD · 必备要求 04" }
+];
+
+const PLAN_STAGES = [
+  { name: "阶段一 · 把规范读成自己的清单", span: "D1–D3", goal: "把标注规范改写成一份可勾选的执行清单，作为每日任务的底稿。", check: "验收：清单条目能覆盖 JD 必备要求 01。" },
+  { name: "阶段二 · 产量记录成习惯", span: "D4–D8", goal: "按日记录完成量与卡点，形成可被检查的记录。", check: "验收：连续三天有可提交的记录。" },
+  { name: "阶段三 · 一次 15 分钟例会", span: "D9–D12", goal: "准备一次不发言也能完成的例会参与方式。", check: "验收：写下会前十分钟的准备内容。" }
+];
+
+const DAY_TASKS = [
+  "把标注规范的第 2 节改写成 5 条可勾选清单",
+  "用清单标注 20 条样本，记录卡住的地方",
+  "写三行今日记录：完成量、卡点、明天先做什么"
+];
+
+const QUESTIONNAIRE = window.ISYOU_QUESTIONNAIRE_V4;
+if (!QUESTIONNAIRE) throw new Error("问卷 4.0 数据未加载，请检查 questionnaire-v4.js");
+const SECTION_BY_ID = Object.fromEntries(QUESTIONNAIRE.sections.map(section => [section.id, section]));
+const BASE_EXPERIENCE_OPTIONS = QUESTIONNAIRE.questions.find(question => question.id === "B3").options.filter(option => !["none", "unknown"].includes(option.value));
+const STORAGE_KEY = "isyou.questionnaire.v4.draft";
 
 class Component extends DCLogic {
   state = {
     screen: "welcome",
     qi: 0,
     answers: {},
+    details: {},
     helpOpen: false,
     openAxis: null,
-    openJob: 0,
+    openJob: null,
     openBlock: 2,
     done: [true, true, false],
     quiet: false,
     bookHover: false,
-    custom: {},
-    submitted: {}
+    restored: false,
+    restoring: false,
+    saveState: "idle",
+    mock: false,
+    online: null,
+    apiError: null,
+    auth: { contact: "", code: "", username: "", password: "", challengeId: null, sending: false, sent: false, demoCode: null, error: null, user: null, submitting: false },
+    token: null,
+    recommendedOccupations: [],
+    excluded: [],
+    stage: 0,
+    searchDone: false,
+    searchError: null,
+    searchId: null,
+    selectionId: null,
+    verifiedAt: null,
+    coachPhase: "onboarding",
+    coachSessionId: null,
+    stateVersion: 1,
+    coachDay: 3,
+    dayDone: [false, false, false],
+    submitLink: "",
+    submitNote: "",
+    reviewResult: null,
+    coachBusy: false
   };
 
-  go = (screen) => () => this.setState({ screen, helpOpen: false });
+  componentDidMount() {
+    try {
+      const token = localStorage.getItem(TOKEN_KEY);
+      const raw = localStorage.getItem(STORAGE_KEY);
+      const saved = raw ? JSON.parse(raw) : null;
+      const patch = {};
+      if (token) patch.token = token;
+      if (saved && saved.version === 4) {
+        Object.assign(patch, {
+          answers: saved.answers || {},
+          details: saved.details || {},
+          qi: Number.isInteger(saved.qi) ? saved.qi : 0,
+          screen: saved.screen || "welcome",
+          quiet: Boolean(saved.quiet),
+          restored: true,
+          restoring: (saved.screen || "welcome") === "explore"
+        });
+      }
+      if (this.props.startMocked) patch.mock = true;
+      if (this.props.startScreen && this.props.startScreen !== "welcome") { patch.screen = this.props.startScreen; patch.restoring = false; }
+      if (Object.keys(patch).length) this.setState(patch);
+      if (token) this.restoreAccount(token);
+      if (patch.restoring) setTimeout(() => this.setState({ restoring: false, saveState: "saved" }), 900);
+    } catch (error) {
+      console.warn("[Isyou] 未能恢复本地问卷草稿", error);
+    }
+  }
 
-  openCoach = (job = JOBS[0]) => (event) => {
-    if (event && event.stopPropagation) event.stopPropagation();
-    const context = {
-      selected_direction: {
-        id: "career-" + job.title.replace(/\s+/g, "-"),
-        title: job.title,
-        source_refs: ["frontend-job-match"]
-      },
-      target_requirements: [
-        { id: "task-structure", text: job.task, source_ref: "frontend-job-match" },
-        { id: "current-gap", text: job.gap, source_ref: "frontend-job-match" }
-      ],
-      user_profile: {
-        facts: AXES.map(a => a.desc),
-        evidence: [],
-        constraints: [job.gap],
-        open_questions: ["当前是否已有能证明相关能力的作品或经历"]
-      },
-      source_meta: job.meta
-    };
-    sessionStorage.setItem("isyou_career_context", JSON.stringify(context));
-    window.location.href = localStorage.getItem("isyou_auth_access_token_v1")
-      ? "./coach.html"
-      : "./auth.html?next=coach.html";
+  componentDidUpdate() {
+    const snapshot = JSON.stringify({ answers: this.state.answers, details: this.state.details, qi: this.state.qi, screen: this.state.screen, quiet: this.state.quiet });
+    if (snapshot === this._snapshot) return;
+    const first = this._snapshot === undefined;
+    this._snapshot = snapshot;
+    if (first) return;
+    clearTimeout(this._saveTimer);
+    if (this.state.saveState !== "saving") this.setState({ saveState: "saving" });
+    this._saveTimer = setTimeout(() => this.persistDraft(), 650);
+  }
+
+  persistDraft = () => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        version: 4,
+        answers: this.state.answers,
+        details: this.state.details,
+        qi: this.state.qi,
+        screen: this.state.screen,
+        quiet: this.state.quiet,
+        updated_at: new Date().toISOString()
+      }));
+      this.setState({ saveState: "saved" });
+    } catch (error) {
+      console.warn("[Isyou] 未能保存本地问卷草稿", error);
+      this.setState({ saveState: "failed" });
+    }
   };
 
-  renderVals() {
+  base() { return String(this.props.apiBase || API_DEFAULT).replace(/\/$/, ""); }
+
+  async restoreAccount(token) {
+    try {
+      const response = await fetch(this.base() + "/api/v1/auth/me", { headers: { Authorization: "Bearer " + token } });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error("AUTH_REQUIRED");
+      const profileResponse = await fetch(this.base() + "/api/v1/users/me/profile", { headers: { Authorization: "Bearer " + token } });
+      const profileData = await profileResponse.json().catch(() => ({}));
+      this.setState({
+        auth: { ...this.state.auth, user: data.user },
+        recommendedOccupations: profileData.profile?.recommended_occupations || []
+      });
+    } catch (error) {
+      try { localStorage.removeItem(TOKEN_KEY); } catch (_storageError) {}
+      this.setState({ token: null, auth: { ...this.state.auth, user: null } });
+    }
+  }
+
+  async call(path, body, mockValue, delay = 900) {
+    if (this.state.mock) { await new Promise(resolve => setTimeout(resolve, delay)); return { ok: true, data: mockValue, mocked: true }; }
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 5000);
+      const headers = { "Content-Type": "application/json" };
+      if (this.state.token) headers.Authorization = "Bearer " + this.state.token;
+      const response = await fetch(this.base() + path, { method: "POST", headers, body: JSON.stringify(body || {}), signal: controller.signal });
+      clearTimeout(timer);
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const detail = data.error || data;
+        this.setState({ online: true });
+        return { ok: false, code: detail.code || ("HTTP_" + response.status), message: detail.message || "服务返回了错误。" };
+      }
+      this.setState({ online: true, apiError: null });
+      return { ok: true, data };
+    } catch (error) {
+      this.setState({ online: false, apiError: "没能连上 " + this.base() + " ，本地服务可能未启动。" });
+      return { ok: false, offline: true, code: "JOB_MATCHER_UNAVAILABLE", message: "岗位服务暂时不可用，请稍后重试。" };
+    }
+  }
+
+  setAuth(patch) { this.setState(state => ({ auth: { ...state.auth, ...patch } })); }
+
+  sendCode = async () => {
+    const auth = this.state.auth;
+    if (auth.sending) return;
+    if (!auth.contact.trim()) { this.setAuth({ error: { code: "VALIDATION", message: "请先填写邮箱或手机号。" } }); return; }
+    this.setAuth({ sending: true, error: null });
+    const contact = auth.contact.trim();
+    const result = await this.call("/api/v1/auth/codes", {
+      purpose: "register",
+      contact_type: contact.includes("@") ? "email" : "phone",
+      contact
+    }, { challenge_id: "demo-challenge", dev_code: "246810" }, 700);
+    if (!result.ok) { this.setAuth({ sending: false, error: { code: result.code, message: result.message } }); return; }
+    this.setAuth({ sending: false, sent: true, challengeId: result.data.challenge_id, demoCode: result.data.dev_code || null, code: result.data.dev_code || auth.code });
+  };
+
+  submitAuth = async () => {
+    const auth = this.state.auth;
+    if (auth.submitting) return;
+    const missing = !auth.contact.trim() || auth.code.trim().length !== 6 || !auth.username.trim() || auth.password.length < 8;
+    if (missing) { this.setAuth({ error: { code: "VALIDATION", message: "请填写邮箱/手机号、六位验证码、用户名，密码至少 8 位。" } }); return; }
+    this.setAuth({ submitting: true, error: null });
+    if (!auth.challengeId && !this.state.mock) { this.setAuth({ error: { code: "CODE_REQUIRED", message: "请先发送验证码。" } }); return; }
+    const result = await this.call("/api/v1/auth/register", { challenge_id: auth.challengeId, code: auth.code.trim(), username: auth.username.trim(), password: auth.password }, { access_token: "demo-token-" + Date.now(), user: { username: auth.username.trim(), contact: auth.contact.trim() } });
+    if (!result.ok) { this.setAuth({ submitting: false, error: { code: result.code, message: result.message } }); return; }
+    const token = result.data.access_token || result.data.token || "session";
+    try { localStorage.setItem(TOKEN_KEY, token); } catch (error) {}
+    this.setAuth({ submitting: false, user: result.data.user || { username: auth.username.trim(), contact: auth.contact.trim() } });
+    this.setState({ token });
+  };
+
+  signOut = () => {
+    try { localStorage.removeItem(TOKEN_KEY); } catch (error) {}
+    this.setState({ token: null });
+    this.setAuth({ user: null, sent: false, code: "", demoCode: null });
+  };
+
+  maskContact(value) {
+    const text = String(value || "");
+    if (text.includes("@")) { const [name, domain] = text.split("@"); return name.slice(0, 2) + "***@" + domain; }
+    return text.length > 7 ? text.slice(0, 3) + "****" + text.slice(-4) : text;
+  }
+
+  completeQuestionnaire = async () => {
+    const profile = this.buildProfile();
+    const result = await this.call("/api/v1/career/evaluations", { profile }, { recommended_occupations: DIRECTIONS.map((item, index) => ({ rank: index + 1, occupation_id: item.id, occupation_name: item.label, reason: [item.note] })) }, 800);
+    if (!result.ok) { this.setState({ apiError: result.message }); return; }
+    this.setState({ screen: "portrait", recommendedOccupations: result.data.recommended_occupations || [] });
+  };
+
+  directionItems() {
+    const occupations = this.state.recommendedOccupations || [];
+    if (!occupations.length) return DIRECTIONS;
+    return occupations.map(item => ({
+      id: item.occupation_id,
+      label: item.occupation_name,
+      note: (item.reason || []).slice(0, 2).join(" · ") || "来自服务端职业方向匹配"
+    }));
+  }
+
+  startSearch = async () => {
+    const accepted = this.directionItems().filter(item => !this.state.excluded.includes(item.id));
+    if (!accepted.length) return;
+    if (!this.state.mock) { window.location.href = "./job-search.html"; return; }
+    this.setState({ screen: "search", stage: 0, searchDone: false, searchError: null });
+    const candidates = await this.call("/api/v1/job-search/candidates", { accepted_directions: accepted.map(item => item.id) }, { search_id: "SR-" + Date.now(), candidate_id: "CD-001" }, 1600);
+    if (!candidates.ok) { this.setState({ searchError: candidates.message }); return; }
+    this.setState({ stage: 1, searchId: candidates.data.search_id });
+    const selected = await this.call("/api/v1/job-search/select", { search_id: candidates.data.search_id, candidate_id: candidates.data.candidate_id }, { selection_id: "SL-" + Date.now(), verification_status: "verified", verified_at: new Date().toISOString() }, 1600);
+    if (!selected.ok) { this.setState({ searchError: selected.message }); return; }
+    this.setState({ stage: 2, selectionId: selected.data.selection_id, verifiedAt: selected.data.verified_at || new Date().toISOString() });
+    setTimeout(() => this.setState({ stage: 3, searchDone: true }), 1200);
+  };
+
+  openSelected = () => this.setState({ screen: "job" });
+
+  startCoach = async () => {
+    if (this.state.coachBusy) return;
+    this.setState({ coachBusy: true });
+    const result = await this.call("/api/v1/job-search/coach-sessions", { selection_id: this.state.selectionId }, { coach: { session_id: "CS-" + Date.now(), state_version: 1 } }, 1100);
+    if (!result.ok) { this.setState({ coachBusy: false, apiError: result.message }); return; }
+    const session = result.data.coach || result.data;
+    this.setState({ coachBusy: false, screen: "coach", coachPhase: "onboarding", coachSessionId: session.session_id || "CS-LOCAL", stateVersion: session.state_version || 1 });
+  };
+
+  coachTurn = async (nextPhase, patch = {}) => {
+    if (this.state.coachBusy) return;
+    this.setState({ coachBusy: true });
+    const result = await this.call("/api/v1/coach/sessions/" + (this.state.coachSessionId || "local") + "/turns", { request_id: "RQ-" + Date.now(), expected_state_version: this.state.stateVersion, intent: nextPhase }, { state_version: this.state.stateVersion + 1 }, 700);
+    if (!result.ok) { this.setState({ coachBusy: false, apiError: result.message }); return; }
+    this.setState({ coachBusy: false, coachPhase: nextPhase, stateVersion: result.data.state_version || this.state.stateVersion + 1, ...patch });
+  };
+
+  submitWork = async () => {
+    const note = this.state.submitNote.trim();
+    const link = this.state.submitLink.trim();
+    if (!note && !link) return;
+    const result = await this.call("/api/v1/coach/sessions/" + (this.state.coachSessionId || "local") + "/turns", { request_id: "RQ-" + Date.now(), expected_state_version: this.state.stateVersion, intent: "submission", submission: { link, note } }, { state_version: this.state.stateVersion + 1 }, 900);
+    if (!result.ok) { this.setState({ apiError: result.message }); return; }
+    this.setState({
+      stateVersion: result.data.state_version || this.state.stateVersion + 1,
+      reviewResult: {
+        text: "清单已经能覆盖必备要求 01。下一学习日把 20 条样本的卡点写成两行，就能作为产量记录的第一条证据。",
+        evidence: "已写入证据：D" + this.state.coachDay + " 提交" + (link ? " · 含链接" : " · 仅说明") + " · verification_status=user_reported"
+      }
+    });
+  };
+
+  nextLearningDay = () => this.coachTurn("daily_learning", { coachDay: Math.min(7, this.state.coachDay + 1), dayDone: [false, false, false], submitLink: "", submitNote: "", reviewResult: null });
+
+  toggleMock = () => {
+    if (this.state.mock) { this.setState({ mock: false, apiError: null }); return; }
+    this.setState({ mock: true, online: null, apiError: null });
+  };
+
+  flowVals(visible) {
     const st = this.state;
-    const q = QUESTIONS[st.qi];
-    const ans = st.answers[st.qi];
-    const quiet = st.quiet;
-    const paperBg = quiet
-      ? "#FAF8F3"
-      : "radial-gradient(#DFDACA 1px, transparent 1.2px) 0 0 / 24px 24px, #FAF8F3";
-
-    const screens = [
-      ["explore", "01", "能力探索"],
-      ["portrait", "02", "能力图谱"],
-      ["match", "03", "岗位匹配"],
-      ["job", "04", "岗位详情"],
-      ["training", "05", "成长 Coach"]
-    ];
-
-    const pageCount = 14 + st.done.filter(Boolean).length - 2;
-
+    const auth = st.auth;
+    const signedIn = Boolean(st.token && auth.user);
+    const directionItems = this.directionItems();
+    const accepted = directionItems.filter(item => !st.excluded.includes(item.id));
+    const consentOk = this.state.answers.J9?.can_search === true;
+    const jobIndex = Math.max(0, (visible || []).findIndex(item => item.section === "job"));
+    const phases = [["onboarding", "onboarding"], ["gap_analysis", "gap_analysis"], ["plan_review", "plan_review"], ["daily_learning", "daily_learning"], ["submission_review", "submission_review"]];
+    const phaseIndex = phases.findIndex(item => item[0] === st.coachPhase);
+    const screens = [["auth", "01", "注册登录"], ["explore", "02", "问卷"], ["portrait", "03", "画像与方向"], ["search", "04", "岗位搜索"], ["job", "05", "选定岗位"], ["coach", "06", "Coach"]];
+    const stepIndex = Math.max(0, screens.findIndex(item => item[0] === st.screen));
+    const conflict = false;
+    const messages = {
+      onboarding: "这一段会以「" + JD.title + "」这份已核验 JD 为唯一目标。岗位快照已经写进 Coach 状态，不需要重新拉取。",
+      gap_analysis: "下面每一条都对应 JD 的一条已核验要求。Gap 是基于当前画像和 JD 的待验证差距，不是能力判决。",
+      plan_review: "三个阶段都可以改。确认之后进入学习日，每天只展开当天。",
+      daily_learning: "第 " + st.coachDay + " 天。前面的记录只往前加，不会因为停下而消失。",
+      submission_review: st.reviewResult ? "Review 已经回写到证据里。可以进入下一学习日。" : "写下你做了什么、卡在哪里。链接可以留空。"
+    };
     return {
-      paperStyle: "background: " + paperBg + "; border: 1px solid #D9D4C4; box-shadow: 0 18px 44px -18px rgba(56,60,52,.42); height: 700px; overflow: hidden auto;",
-      quietLabel: quiet ? "安静模式 · 开" : "安静模式 · 关",
-      quietBtnStyle: "cursor: pointer; font-size: 11px; padding: 7px 13px; border: 1px solid " + (quiet ? "#29302E" : "#D2CCBC") + "; color: " + (quiet ? "#29302E" : "#6E7268") + ";",
-      toggleQuiet: () => this.setState(s => ({ quiet: !s.quiet })),
-      isWelcome: st.screen === "welcome",
-      hoverBook: () => this.setState({ bookHover: true }),
-      leaveBook: () => this.setState({ bookHover: false }),
-      bookStyle: "position: absolute; left: 50%; top: 60%; transform: translate(-50%, -50%) rotate(-1.5deg) scale(" + (st.bookHover ? "1.04" : "1") + "); cursor: pointer; transition: transform .34s ease; display: flex; flex-direction: column; align-items: center; gap: 18px;",
-      bookHintStyle: "font-size: 12px; letter-spacing: .1em; color: #5A5545; opacity: " + (st.bookHover ? "1" : ".42") + "; transition: opacity .34s ease;",
-      rulerTicks: Array.from({ length: 10 }, (_, i) => ({
-        style: "width: " + (i % 2 === 0 ? "16px" : "9px") + "; height: 2px; background: rgba(120,110,88,.4);"
-      })),
-      bookLinesL: [88, 72, 80, 64, 40].map(w => ({ style: "height: 4px; width: " + w + "%; background: #E9E4D6;" })),
-      bookLinesR: [92, 78, 86, 70, 82, 46].map(w => ({ style: "height: 4px; width: " + w + "%; background: #E9E4D6;" })),
-      startFlow: () => this.setState({ screen: "explore" }),
-      skipToPortrait: () => this.setState({ screen: "portrait" }),
+      connBarStyle: "display: " + (st.mock || st.online === false ? "flex" : "none") + "; justify-content: space-between; align-items: center; gap: 14px; padding: 9px 14px; background: " + (st.mock ? "#F7F3EA" : "#FBF0F0") + "; border: 1px solid " + (st.mock ? "#E6CBAF" : "#E7C9C9") + ";",
+      connDotStyle: "width: 7px; height: 7px; flex: none; background: " + (st.mock ? "#D89A6C" : "#B4535E") + "; animation: isyouPulse 2s ease-in-out infinite;",
+      connText: st.mock ? "正在使用本地假数据演示流程。所有请求都不会发到服务端。" : (st.apiError || "本地服务未启动。"),
+      connBase: st.mock ? "MOCK" : this.base().replace("http://", ""),
+      connBtnStyle: "cursor: pointer; font-size: 11px; padding: 7px 13px; border: 1px solid #29302E; color: #29302E;",
+      connBtnLabel: st.mock ? "改回真实接口" : "切到本地假数据",
+      toggleMock: this.toggleMock,
+
       stepBarStyle: "display: flex; gap: 0; border: 1px solid #D9D4C4; background: #FAF8F3; visibility: " + (st.screen === "welcome" ? "hidden" : "visible") + ";",
+      steps: screens.map(([id, num, label]) => ({ num, label, go: this.go(id), tabStyle: "flex: 1; cursor: pointer; padding: 13px 16px; display: flex; flex-direction: column; gap: 5px; border-right: 1px solid #EDE9DE; background: " + (st.screen === id ? "#F0F3EC" : "transparent") + "; color: " + (st.screen === id ? "#29302E" : "#8E8E80") + "; box-shadow: " + (st.screen === id ? "inset 0 -2px 0 #8FA882" : "none") + ";" })),
+      stepMobileStyle: "justify-content: space-between; align-items: center; gap: 12px; padding: 11px 14px; border: 1px solid #D9D4C4; background: #FAF8F3; visibility: " + (st.screen === "welcome" ? "hidden" : "visible") + ";",
+      stepMobileLabel: "第 " + (stepIndex + 1) + " / 6 步 · " + screens[stepIndex][2],
+      stepMobileNext: stepIndex < 5 ? "下一步 " + screens[stepIndex + 1][2] : "最后一步",
 
-      restart: () => this.setState({ screen: "welcome", qi: 0, answers: {}, helpOpen: false, openAxis: null, openJob: 0, openBlock: 2, done: [true, true, false], custom: {}, submitted: {} }),
-
-      steps: screens.map(([id, num, label]) => ({
-        num, label, go: id === "training" ? this.openCoach(JOBS[0]) : this.go(id),
-        tabStyle: "flex: 1; cursor: pointer; padding: 13px 16px; display: flex; flex-direction: column; gap: 5px; border-right: 1px solid #EDE9DE; background: " + (st.screen === id ? "#F0F3EC" : "transparent") + "; color: " + (st.screen === id ? "#29302E" : "#8E8E80") + "; box-shadow: " + (st.screen === id ? "inset 0 -2px 0 #8FA882" : "none") + ";"
-      })),
-
+      isWelcome: st.screen === "welcome",
+      isAuth: st.screen === "auth",
+      isRestoring: st.screen === "explore" && st.restoring,
       isExplore: st.screen === "explore",
+      isExploreReady: st.screen === "explore" && !st.restoring,
       isPortrait: st.screen === "portrait",
       isMatch: st.screen === "match",
+      isSearching: st.screen === "search",
       isJob: st.screen === "job",
-      isTraining: st.screen === "training",
+      isCoach: st.screen === "coach",
+      isTraining: false,
 
-      qTag: q.tag, qLead: q.lead, qText: q.text, qHelp: q.help,
-      helpOpen: st.helpOpen,
-      toggleHelp: () => this.setState(s => ({ helpOpen: !s.helpOpen })),
-      helpBtnStyle: "cursor: pointer; font-size: 11px; padding: 5px 11px; border: 1px solid " + (st.helpOpen ? "#6B8397" : "#A8BCCB") + "; background: " + (st.helpOpen ? "#E9EFF4" : "transparent") + "; color: #4C5148;",
+      startFlow: () => this.setState({ screen: "auth" }),
+      skipToPortrait: () => this.setState({ screen: "portrait" }),
+      restart: () => {
+        try { localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(TOKEN_KEY); } catch (error) {}
+        this._snapshot = undefined;
+        this.setState({ screen: "welcome", qi: 0, answers: {}, details: {}, helpOpen: false, openAxis: null, openJob: null, openBlock: 2, token: null, auth: { contact: "", code: "", username: "", password: "", sending: false, sent: false, demoCode: null, error: null, user: null, submitting: false }, excluded: [], stage: 0, searchDone: false, searchError: null, searchId: null, selectionId: null, verifiedAt: null, coachPhase: "onboarding", coachSessionId: null, stateVersion: 1, coachDay: 3, dayDone: [false, false, false], submitLink: "", submitNote: "", reviewResult: null, saveState: "idle" });
+      },
 
-      options: q.options.map((text, i) => {
-        const on = ans === i;
+      authNotes: [
+        { text: "验证码是一次性的，用过或过期都要重发。" },
+        { text: "同一个邮箱或手机号只能注册一个账号。" },
+        { text: "另一个账号看不到你的问卷、搜索和 Coach 记录。" }
+      ],
+      authStateLabel: signedIn ? "已登录" : (auth.sending ? "验证码发送中" : (auth.error ? "有一处需要修改" : "未登录")),
+      signedIn, signedOut: !signedIn,
+      authUsername: auth.user?.username || auth.username,
+      authMaskedContact: this.maskContact(auth.user?.contact || auth.contact),
+      authContinue: () => this.setState({ screen: "explore" }),
+      signOut: this.signOut,
+      authContact: auth.contact,
+      authCode: auth.code,
+      authUsernameInput: auth.username,
+      authPassword: auth.password,
+      editContact: event => this.setAuth({ contact: event.target.value }),
+      editCode: event => this.setAuth({ code: event.target.value }),
+      editUsername: event => this.setAuth({ username: event.target.value }),
+      editPassword: event => this.setAuth({ password: event.target.value }),
+      sendCode: this.sendCode,
+      sendCodeLabel: auth.sending ? "发送中…" : (auth.sent ? "重新发送" : "发送验证码"),
+      sendCodeStyle: "flex: none; cursor: " + (auth.sending ? "default" : "pointer") + "; font-size: 12px; padding: 11px 16px; border: 1px solid " + (auth.sending ? "#D2CCBC" : "#29302E") + "; color: " + (auth.sending ? "#A5A597" : "#29302E") + ";",
+      demoCodeShown: Boolean(auth.demoCode),
+      demoCode: auth.demoCode,
+      authError: Boolean(auth.error),
+      authErrorMessage: auth.error?.message || "",
+      authErrorCode: auth.error?.code || "",
+      submitAuth: this.submitAuth,
+      submitAuthLabel: auth.submitting ? "正在注册…" : "注册并登录",
+      submitAuthStyle: "cursor: " + (auth.submitting ? "default" : "pointer") + "; font-size: 13px; letter-spacing: .04em; padding: 12px 26px; background: " + (auth.submitting ? "#CDB5B2" : "#B4535E") + "; color: #FDF7F5;",
+
+      skeletonRows: [70, 92, 84, 60, 88, 46].map(width => ({ style: "height: 12px; width: " + width + "%; background: #EDE9DE; animation: isyouPulse 1.6s ease-in-out infinite;" })),
+      saveStateLabel: { idle: "作答会自动保存", saving: "正在保存草稿…", saved: "草稿已保存", failed: "草稿保存失败" }[st.saveState],
+      saveStateStyle: "font-size: 11px; color: " + (st.saveState === "failed" ? "#8E3F4A" : (st.saveState === "saved" ? "#6E8465" : "#A5A597")) + ";",
+      saveFailed: st.saveState === "failed",
+      retrySave: this.persistDraft,
+      consentLabel: consentOk ? "J9 已授权检索公开招聘信息" : "J9 联网检索尚未授权",
+
+      acceptedCountLabel: "保留 " + accepted.length + " / 5",
+      directions: directionItems.map(item => {
+        const on = !st.excluded.includes(item.id);
+        return {
+          label: item.label, note: item.note,
+          style: "display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 18px; background: " + (on ? "#FAF8F3" : "#F4F2EC") + "; border: " + (on ? "1px solid #E3DED1" : "1px dashed #D9D4C4") + ";",
+          titleStyle: "font-size: 14px; font-weight: 600; color: " + (on ? "#29302E" : "#A5A597") + "; text-decoration: " + (on ? "none" : "line-through") + "; text-decoration-color: #D2CCBC;",
+          accept: () => this.setState(state => ({ excluded: state.excluded.filter(id => id !== item.id) })),
+          exclude: () => this.setState(state => (state.excluded.includes(item.id) ? null : { excluded: [...state.excluded, item.id] })),
+          acceptStyle: "cursor: pointer; font-size: 11px; padding: 7px 13px; border: 1px solid " + (on ? "#8FA882" : "#D2CCBC") + "; background: " + (on ? "#F1F4EC" : "transparent") + "; color: " + (on ? "#6E8465" : "#8E8E80") + ";",
+          excludeStyle: "cursor: pointer; font-size: 11px; padding: 7px 13px; border: 1px solid " + (on ? "#D2CCBC" : "#8E8E80") + "; background: " + (on ? "transparent" : "#EFECE2") + "; color: #6E7268;"
+        };
+      }),
+      consentMissing: !consentOk,
+      goConsent: () => this.setState({ screen: "explore", qi: jobIndex }),
+      startSearch: () => {
+        if (!accepted.length) return;
+        if (!this.readiness(this.buildProfile()).ready) { this.setState({ screen: "match" }); return; }
+        this.startSearch();
+      },
+      searchBtnStyle: "cursor: " + (accepted.length ? "pointer" : "default") + "; font-size: 13px; letter-spacing: .04em; padding: 12px 26px; background: " + (accepted.length ? "#B4535E" : "#CDB5B2") + "; color: #FDF7F5;",
+      searchBtnHint: accepted.length ? "搜索只使用服务端保存的画像，浏览器不提交本地画像。" : "至少保留一个方向才能搜索。",
+
+      searchHeadline: st.searchError ? "岗位搜索没有完成" : (st.searchDone ? "已核验一个岗位" : SEARCH_STAGES[Math.min(st.stage, 2)]),
+      searchStages: SEARCH_STAGES.map((text, index) => {
+        const done = st.stage > index;
+        const active = st.stage === index && !st.searchError;
         return {
           text,
-          pick: () => this.setState(s => ({ answers: Object.assign({}, s.answers, { [s.qi]: i }) })),
-          style: "cursor: pointer; padding: 13px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; border: " + (on ? "1.5px solid #8FA882" : "1px solid #D9D4C4") + "; background: " + (on ? "#F2F5EE" : "#FCFBF8") + ";",
-          markStyle: "font-family: 'EB Garamond', serif; font-size: 11px; color: #6E8465; opacity: " + (on ? "1" : "0") + ";"
+          rowStyle: "display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: " + (active ? "#F1F4EC" : "transparent") + "; border-bottom: 1px dotted #E3DED1;",
+          dotStyle: "width: 8px; height: 8px; flex: none; background: " + (done ? "#8FA882" : (active ? "#D89A6C" : "#E3DED1")) + (active ? "; animation: isyouPulse 1.4s ease-in-out infinite;" : ";"),
+          textStyle: "flex: 1; font-size: 13px; line-height: 1.7; color: " + (done || active ? "#29302E" : "#A5A597") + ";",
+          markStyle: "flex: none; font-family: 'EB Garamond', serif; font-size: 11px; color: " + (done ? "#6E8465" : "#A5A597") + ";",
+          mark: done ? "完成" : (active ? "进行中" : "等待")
         };
       }),
+      searchFootnote: st.searchError || (st.searchDone ? "核验时间 " + new Date(st.verifiedAt || Date.now()).toLocaleString("zh-CN") : "搜索中不要重复点击。这一步全部在服务端完成。"),
+      searchDone: st.searchDone,
+      openSelected: this.openSelected,
 
-      exits: EXITS.map((text, i) => {
-        const on = ans === "exit" + i;
-        return {
-          text,
-          pick: () => this.setState(s => ({ answers: Object.assign({}, s.answers, { [s.qi]: "exit" + i }) })),
-          style: "cursor: pointer; font-size: 12px; padding: 7px 13px; border: 1px solid " + (on ? "#8E8E80" : "#D2CCBC") + "; background: " + (on ? "#EFECE2" : "transparent") + "; color: #6E7268;"
-        };
-      }),
+      jdTitle: JD.title,
+      jdMeta: JD.company + " · " + JD.location + " · " + JD.employment_type + " · " + JD.salary,
+      jdVerifiedTag: "已核验 verified",
+      jdVerifiedAt: new Date(st.verifiedAt || Date.now()).toLocaleString("zh-CN"),
+      jdSourceUrl: JD.source_url,
+      jdSelectionId: st.selectionId || "未选择",
+      jdFacts: [
+        { label: "公司", value: JD.company },
+        { label: "地点", value: JD.location },
+        { label: "办公方式", value: JD.work_mode },
+        { label: "雇佣形式", value: JD.employment_type },
+        { label: "薪资", value: JD.salary },
+        { label: "试用期", value: "待向招聘方确认" }
+      ].map(fact => ({ label: fact.label, value: fact.value, valueStyle: "text-align: right; color: " + (fact.value === "待向招聘方确认" ? "#A5A597" : "#29302E") + ";" })),
+      jdHardConflict: conflict,
+      jdConflictText: "",
+      jdCoachAllowed: !conflict,
+      startCoach: this.startCoach,
+      startCoachLabel: st.coachBusy ? "正在生成 Gap Map 起点…" : "为这个岗位启动 Coach →",
+      startCoachStyle: "cursor: " + (st.coachBusy ? "default" : "pointer") + "; text-align: center; font-size: 13px; letter-spacing: .04em; padding: 13px 20px; background: " + (st.coachBusy ? "#CDB5B2" : "#B4535E") + "; color: #FDF7F5;",
+      backToMatch: () => this.setState({ screen: "portrait" }),
 
-      answered: typeof ans === "number" && ans !== q.options.length - 1,
-      noteText: q.note,
-
-      showCustom: ans === q.options.length - 1,
-      customText: st.custom[st.qi] || "",
-      editCustom: (ev) => {
-        const v = ev.target.value;
-        this.setState(s => ({ custom: Object.assign({}, s.custom, { [s.qi]: v }) }));
-      },
-      submitCustom: () => {
-        const v = (this.state.custom[this.state.qi] || "").trim();
-        if (!v) return;
-        this.setState(s => ({ submitted: Object.assign({}, s.submitted, { [s.qi]: true }) }));
-      },
-      customHint: st.submitted[st.qi]
-        ? "已记下，随时可以改"
-        : ((st.custom[st.qi] || "").trim() ? "写完点提交" : "写下来才能记进本子"),
-      customHintStyle: "font-size: 11px; color: " + (st.submitted[st.qi] ? "#6E8465" : "#A5A597") + ";",
-      customBtnStyle: "cursor: pointer; font-size: 12px; letter-spacing: .04em; padding: 9px 20px; background: " + ((st.custom[st.qi] || "").trim() ? "#B4535E" : "#CDB5B2") + "; color: #FDF7F5;",
-
-      prevQ: () => this.setState(s => ({ qi: Math.max(0, s.qi - 1), helpOpen: false })),
-      prevStyle: "cursor: " + (st.qi === 0 ? "default" : "pointer") + "; font-size: 12px; color: " + (st.qi === 0 ? "#D2CCBC" : "#8E8E80") + ";",
-      nextQ: () => {
-        if (st.qi < QUESTIONS.length - 1) this.setState(s => ({ qi: s.qi + 1, helpOpen: false }));
-        else this.setState({ screen: "portrait" });
-      },
-      nextLabel: st.qi < QUESTIONS.length - 1 ? "下一题 →" : "看看结果 →",
-      nextStyle: "cursor: pointer; font-size: 13px; letter-spacing: .04em; padding: 11px 26px; background: " + (ans === undefined ? "#CDB5B2" : "#B4535E") + "; color: #FDF7F5;",
-
-      notebook: QUESTIONS.map((qq, i) => {
-        const a = st.answers[i];
-        const skipped = typeof a === "string";
-        const isCustom = a === qq.options.length - 1;
-        const filled = a !== undefined && (!isCustom || st.submitted[i]);
-        return {
-          text: skipped
-            ? "暂时跳过 · 可回来补"
-            : (isCustom
-              ? (st.submitted[i] ? "你自己写的答案" : "写完提交就记下")
-              : (filled ? qq.tip : "还没答")),
-          dotStyle: "width: 9px; height: 9px; margin-top: 5px; flex: none; background: " + (skipped ? "#D2CCBC" : (filled ? "#8FA882" : "#EDE9DE")) + ";",
-          textStyle: "font-size: 12px; line-height: 1.7; color: " + (filled ? "#6E7268" : "#BFBBAC") + ";"
-        };
-      }),
-
-      radar: this.buildRadar(),
-      axes: AXES.map((a, i) => ({
-        name: a.name, source: a.source, desc: a.desc, quote: a.quote,
-        open2: st.openAxis === i,
-        open: () => this.setState(s => ({ openAxis: s.openAxis === i ? null : i })),
-        cardStyle: "cursor: pointer; padding: 16px 18px; " + (st.openAxis === i
-          ? "background: #F2F5EE; border-left: 2px solid #8FA882;"
-          : "background: #FAF8F3; border: 1px solid #E3DED1;")
+      coachTitle: JD.title,
+      coachSubtitle: JD.company + " · " + JD.work_mode + " · 已核验 JD",
+      coachStateVersion: "state_version " + st.stateVersion,
+      coachSessionId: st.coachSessionId || "session 未创建",
+      coachPhases: phases.map(([id, label], index) => ({
+        label,
+        style: "font-family: 'EB Garamond', serif; font-size: 10px; letter-spacing: .1em; padding: 7px 11px; background: " + (index === phaseIndex ? "#29302E" : (index < phaseIndex ? "#F1F4EC" : "transparent")) + "; color: " + (index === phaseIndex ? "#FDFBF3" : (index < phaseIndex ? "#6E8465" : "#A5A597")) + "; border: 1px solid " + (index <= phaseIndex ? "transparent" : "#E3DED1") + ";"
       })),
-
-      jobs: JOBS.map((j, i) => {
-        const on = st.openJob === i;
-        const anyOpen = st.openJob !== null;
+      coachMessage: messages[st.coachPhase],
+      coachIsOnboarding: st.coachPhase === "onboarding",
+      coachIsGap: st.coachPhase === "gap_analysis",
+      coachIsPlan: st.coachPhase === "plan_review",
+      coachIsDaily: st.coachPhase === "daily_learning",
+      coachIsReview: st.coachPhase === "submission_review",
+      onboardingRows: [
+        { label: "目标岗位", value: JD.title + " · " + JD.company },
+        { label: "岗位快照来源", value: "选定 JD（selection " + (st.selectionId || "—") + "），核验状态 verified" },
+        { label: "接下来", value: "先做 Gap Map：把 JD 的已核验要求和当前画像逐条对齐。" }
+      ],
+      gapItems: GAP_ITEMS.map(item => ({
+        requirement: item.requirement, current: item.current, source: item.source, tag: item.tag,
+        tagStyle: "flex: none; font-size: 11px; padding: 4px 9px; background: " + (item.tag === "待验证" ? "#FDF6EF" : "#F1F4EC") + "; color: " + (item.tag === "待验证" ? "#A9713F" : "#6E8465") + ";"
+      })),
+      planStages: PLAN_STAGES,
+      weekDays: Array.from({ length: 7 }, (_, index) => {
+        const day = index + 1;
+        const state = day < st.coachDay ? "done" : (day === st.coachDay ? "today" : "locked");
         return {
-          title: j.title, meta: j.meta, score: j.score, task: j.task, gap: j.gap, trainLabel: "让 Coach 为我规划",
-          detailed: on,
-          open: () => this.setState(s => ({ openJob: s.openJob === i ? null : i })),
-          goJob: () => this.setState({ screen: "job" }),
-          goTrain: this.openCoach(j),
-          headStyle: "display: flex; min-width: 0; " + (on || !anyOpen
-            ? "flex-direction: column; gap: 5px;"
-            : "align-items: baseline; gap: 14px;"),
-          metaStyle: "font-size: 12px; color: #8E8E80; " + (on || !anyOpen ? "" : "white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"),
-          moreLabel: on ? "收起" : "展开匹配理由",
-          moreStyle: "font-size: 11px; color: #A5A597;",
-          style: "cursor: pointer; border: " + (on ? "1.5px solid #8FA882" : "1px solid #E3DED1") + "; background: #FAF8F3; padding: " + (on || !anyOpen ? "16px 20px" : "12px 20px") + ";"
+          num: "D" + day,
+          label: state === "done" ? "已完成" : (state === "today" ? "今天" : "未开启"),
+          mark: state === "done" ? "✓" : (state === "today" ? "·" : ""),
+          markStyle: "font-size: 11px; color: " + (state === "done" ? "#6E8465" : "#D89A6C") + ";",
+          pick: () => { if (state !== "locked") this.setState({ coachDay: day }); },
+          style: "cursor: " + (state === "locked" ? "default" : "pointer") + "; padding: 12px 8px; display: flex; flex-direction: column; gap: 5px; align-items: center; background: " + (state === "today" ? "#FDF6EF" : (state === "done" ? "#F1F4EC" : "#FAF8F3")) + "; border: " + (state === "today" ? "1.5px solid #D89A6C" : "1px solid #E3DED1") + "; color: " + (state === "locked" ? "#BFBBAC" : "#4C5148") + ";"
         };
       }),
-
-      jobBlocks: JOB_BLOCKS.map((b, i) => ({
-        num: b.tag.split(" · ")[0],
-        name: b.tag.split("　")[1],
-        summary: b.summary,
-        summaryStyle: "font-size: 12px; color: #A5A597; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;",
-        open: st.openBlock === i,
-        toggle: () => this.setState(s => ({ openBlock: s.openBlock === i ? null : i })),
-        toggleLabel: st.openBlock === i ? "收起" : "展开",
-        style: "cursor: pointer; padding: 14px 20px; background: #FAF8F3; border: " + (st.openBlock === i ? "1.5px solid #8FA882" : "1px solid #E3DED1") + ";",
-        lines: b.lines.map(([kind, body]) => ({
-          body,
-          dot: "color: " + ({ ok: "#8FA882", info: "#A8BCCB", warn: "#D89A6C", match: "#8FA882", unknown: "#C4C0AE" }[kind]) + "; flex: none;",
-          text: "color: " + (kind === "unknown" ? "#A5A597" : (kind === "match" ? "#6E8465" : "#29302E")) + ";"
-        }))
-      })),
-      backToMatch: () => this.setState({ screen: "match" }),
-      goTraining: this.openCoach(JOBS[0]),
-
-      pagesTitle: "你的本子，现在有 " + pageCount + " 页",
-      pages: Array.from({ length: 17 }, (_, i) => ({
-        style: "width: 6px; height: 26px; background: " + (i < pageCount ? "#8FA882" : "#E3DED1") + ";"
-      })),
-      lessonCount: st.done.filter(Boolean).length + " / 3",
-      lessons: LESSONS.map((name, i) => ({
+      dayTitle: "第 " + st.coachDay + " 天 · 把规范读成自己的清单",
+      dayMeta: "约 35 分钟 · 可中途退出",
+      dayTasks: DAY_TASKS.map((name, index) => ({
         name,
-        toggle: () => this.setState(s => {
-          const d = s.done.slice(); d[i] = !d[i]; return { done: d };
-        }),
-        box: "width: 14px; height: 14px; flex: none; " + (st.done[i] ? "background: #D89A6C;" : "border: 1.5px solid #D89A6C;"),
-        text: st.done[i]
-          ? "color: #A5A597; text-decoration: line-through; text-decoration-color: #E6CBAF;"
-          : "color: #29302E; font-weight: 500;"
+        toggle: () => this.setState(state => { const done = state.dayDone.slice(); done[index] = !done[index]; return { dayDone: done }; }),
+        box: "width: 14px; height: 14px; margin-top: 4px; flex: none; " + (st.dayDone[index] ? "background: #D89A6C;" : "border: 1.5px solid #D89A6C;"),
+        text: st.dayDone[index] ? "line-height: 1.75; color: #A5A597; text-decoration: line-through; text-decoration-color: #E6CBAF;" : "line-height: 1.75; color: #29302E;"
       })),
-      finishLesson: () => this.setState(s => {
-        const i = s.done.indexOf(false);
-        if (i === -1) return null;
-        const d = s.done.slice(); d[i] = true; return { done: d };
-      }),
-      lessonBtn: st.done.every(Boolean) ? "这门已学完 ✓" : "继续第 " + (st.done.indexOf(false) + 1) + " 课 →",
+      dayNote: "勾选只是给自己看的。真正进入记录的是你提交的说明。",
+      submitLink: st.submitLink,
+      submitNote: st.submitNote,
+      editSubmitLink: event => this.setState({ submitLink: event.target.value }),
+      editSubmitNote: event => this.setState({ submitNote: event.target.value }),
+      submitWork: this.submitWork,
+      submitWorkLabel: st.reviewResult ? "已提交 ✓" : "提交并请 Coach 复核",
+      submitWorkStyle: "cursor: pointer; font-size: 13px; letter-spacing: .04em; padding: 12px 24px; background: " + ((st.submitNote.trim() || st.submitLink.trim()) && !st.reviewResult ? "#B4535E" : "#CDB5B2") + "; color: #FDF7F5;",
+      hasReviewResult: Boolean(st.reviewResult),
+      reviewText: st.reviewResult?.text || "",
+      reviewEvidence: st.reviewResult?.evidence || "",
+      coachRequirements: JOB_BLOCKS[0].lines.map(line => ({ text: line[1] })),
+      workspaceLabel: { onboarding: "岗位快照", gap_analysis: "Gap Map", plan_review: "阶段计划", daily_learning: "第 " + st.coachDay + " 天任务", submission_review: "提交与 Review" }[st.coachPhase],
+      quickActions: (st.coachPhase === "onboarding" ? [["开始 Gap 分析 →", () => this.coachTurn("gap_analysis")]]
+        : st.coachPhase === "gap_analysis" ? [["生成阶段计划 →", () => this.coachTurn("plan_review")]]
+        : st.coachPhase === "plan_review" ? [["确认计划，进入学习日 →", () => this.coachTurn("daily_learning")]]
+        : st.coachPhase === "daily_learning" ? [["去提交今天的产出 →", () => this.coachTurn("submission_review")], ["回看 Gap Map", () => this.coachTurn("gap_analysis")]]
+        : st.reviewResult ? [["进入下一学习日 →", this.nextLearningDay]] : [["回到今天的任务", () => this.coachTurn("daily_learning")]]
+      ).map(([label, run], index) => ({
+        label, run,
+        style: "cursor: pointer; font-size: 12px; letter-spacing: .04em; padding: 11px 20px; " + (index === 0 ? "background: #B4535E; color: #FDF7F5;" : "border: 1px solid #D2CCBC; color: #6E7268;")
+      })),
 
       hint: {
         welcome: "",
-        explore: "试试「这题什么意思？」，以及下面四个出口 —— 跳过不扣分",
-        portrait: "点右侧任意一张卡，看它是从哪句话来的",
-        match: "点岗位卡展开匹配理由",
-        job: "感官与沟通两块，是别的招聘产品没有的信息",
-        training: "点课程可勾选；停多久都不会掉记录"
+        auth: "账号归属只来自访问令牌；浏览器不自报身份",
+        explore: "任何一题都可以跳过，草稿 650ms 自动保存",
+        portrait: "职业方向不是具体 JD，保留哪些由你决定",
+        search: "这一步全部在服务端：搜索 → 核验原页面 → 整理要求",
+        match: "缺失字段补齐后才会重算，未知不会当成已满足",
+        job: "未知字段显示「待向招聘方确认」，不会填成「无要求」",
+        coach: "Coach 只引用这份已核验 JD 的要求"
       }[st.screen]
     };
   }
 
-  buildRadar() {
+  visibleQuestions(answers = this.state.answers) {
+    const experience = Array.isArray(answers.B3) ? answers.B3 : [];
+    const realExperiences = experience.filter(value => !["none", "unknown"].includes(value));
+    const jobSeeking = ["active", "soon"].includes(answers.B7);
+    return QUESTIONNAIRE.questions.filter(question => {
+      if (question.id === "B4") return realExperiences.length >= 2;
+      if (["B5", "B6"].includes(question.id)) return realExperiences.length >= 1;
+      if (question.section === "job") return jobSeeking;
+      return true;
+    }).map(question => {
+      if (question.id !== "B4") return question;
+      return { ...question, options: BASE_EXPERIENCE_OPTIONS.filter(option => realExperiences.includes(option.value)) };
+    });
+  }
+
+  answerFor(question) {
+    return this.state.answers[question.id];
+  }
+
+  hasAnswer(question, answer = this.answerFor(question)) {
+    if (answer && answer.__exit) return true;
+    if (question.type === "scale") return Number.isFinite(answer);
+    if (question.type === "single") return answer !== undefined && answer !== "";
+    if (question.type === "multi") return Array.isArray(answer) && answer.length > 0;
+    if (question.type === "form") return answer && Object.values(answer).some(value => Array.isArray(value) ? value.length > 0 : value !== "" && value !== null && value !== undefined && value !== false);
+    return false;
+  }
+
+  setAnswer(questionId, value) {
+    this.setState(state => ({ answers: { ...state.answers, [questionId]: value } }));
+  }
+
+  setDetail(questionId, key, value) {
+    this.setState(state => ({ details: { ...state.details, [questionId]: { ...(state.details[questionId] || {}), [key]: value } } }));
+  }
+
+  toggleMulti(question, value, fieldKey = null) {
+    if (fieldKey) {
+      const form = this.answerFor(question) || {};
+      const current = Array.isArray(form[fieldKey]) ? form[fieldKey] : [];
+      const next = current.includes(value) ? current.filter(item => item !== value) : [...current, value];
+      this.setAnswer(question.id, { ...form, [fieldKey]: next });
+      return;
+    }
+    const current = Array.isArray(this.answerFor(question)) ? this.answerFor(question) : [];
+    let next;
+    if (["none", "unknown"].includes(value)) next = current.includes(value) ? [] : [value];
+    else {
+      const clean = current.filter(item => !["none", "unknown"].includes(item));
+      next = clean.includes(value) ? clean.filter(item => item !== value) : [...clean, value];
+    }
+    this.setAnswer(question.id, next);
+  }
+
+  setFormValue(question, key, value) {
+    const current = this.answerFor(question);
+    const form = current && !current.__exit ? current : {};
+    this.setAnswer(question.id, { ...form, [key]: value });
+  }
+
+  recapCard() {
+    const e = React.createElement;
+    const a = this.state.answers;
+    const d = this.state.details;
+    const type = BASE_EXPERIENCE_OPTIONS.find(option => option.value === (a.B4 || (Array.isArray(a.B3) ? a.B3.find(value => !["none", "unknown"].includes(value)) : "")))?.label || "未选定经历类型";
+    const domainQuestion = QUESTIONNAIRE.questions.find(question => question.id === "B5");
+    const domain = domainQuestion.options.find(option => option.value === a.B5)?.label || "领域未填";
+    const summary = d.B6?.summary || "你还没写这段经历的一句话摘要";
+    return e("div", { style: { padding: "14px 16px", background: "#F1F4EC", borderLeft: "3px solid #8FA882", display: "flex", flexDirection: "column", gap: "5px" } },
+      e("span", { style: { fontSize: "10px", color: "#6E8465", letterSpacing: ".08em" } }, "根据你前面写的，请在下方确认"),
+      e("span", { style: { fontSize: "13px", color: "#29302E" } }, type + " · " + domain),
+      e("span", { style: { fontSize: "12px", lineHeight: 1.7, color: "#6E7268" } }, summary)
+    );
+  }
+
+  renderOptions(question) {
+    const e = React.createElement;
+    const answer = this.answerFor(question);
+    return e("div", { style: { display: "flex", flexDirection: "column", gap: "9px" } },
+      ...(question.options || []).map(option => {
+        const selected = question.type === "multi" ? Array.isArray(answer) && answer.includes(option.value) : answer === option.value;
+        return e("button", {
+          key: String(option.value), type: "button", className: "q-option",
+          "aria-pressed": selected,
+          onClick: () => question.type === "multi" ? this.toggleMulti(question, option.value) : this.setAnswer(question.id, option.value),
+          style: { cursor: "pointer", width: "100%", padding: "12px 15px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", textAlign: "left", border: selected ? "1.5px solid #8FA882" : "1px solid #D9D4C4", background: selected ? "#F2F5EE" : "#FCFBF8", color: "#29302E", transition: "background .2s ease, border-color .2s ease, transform .15s ease" }
+        }, e("span", { style: { fontSize: "13px", lineHeight: 1.65 } }, option.label), e("span", { "aria-hidden": true, style: { fontFamily: "EB Garamond, serif", fontSize: "11px", color: "#6E8465", opacity: selected ? 1 : 0 } }, question.type === "multi" ? "已勾选" : "已选"));
+      })
+    );
+  }
+
+  renderScale(question) {
+    const e = React.createElement;
+    const answer = this.answerFor(question);
+    return e("div", { style: { display: "flex", flexDirection: "column", gap: "10px" } },
+      e("div", { style: { display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "7px" } },
+        ...Array.from({ length: 7 }, (_, index) => index + 1).map(value => {
+          const selected = answer === value;
+          return e("button", { key: value, type: "button", className: "q-scale", "aria-label": value + " 分", "aria-pressed": selected, onClick: () => this.setAnswer(question.id, value), style: { cursor: "pointer", padding: "11px 4px", border: selected ? "1.5px solid #8FA882" : "1px solid #D9D4C4", background: selected ? "#8FA882" : "#FCFBF8", color: selected ? "#fff" : "#4C5148", transition: "all .2s ease" } }, String(value));
+        })
+      ),
+      e("div", { style: { display: "flex", justifyContent: "space-between", gap: "18px", fontSize: "10px", lineHeight: 1.55, color: "#8E8E80" } }, e("span", { style: { maxWidth: "44%" } }, "1 · " + question.low), e("span", { style: { maxWidth: "44%", textAlign: "right" } }, "7 · " + question.high))
+    );
+  }
+
+  renderField(question, field) {
+    const e = React.createElement;
+    const answer = this.answerFor(question);
+    const form = answer && !answer.__exit ? answer : {};
+    const value = form[field.key] !== undefined ? form[field.key] : (field.defaultValue !== undefined ? field.defaultValue : "");
+    const wrap = child => e("label", { key: field.key, style: { display: "flex", flexDirection: "column", gap: "7px" } }, e("span", { style: { fontSize: "11px", color: "#6E7268" } }, field.label), child);
+    if (field.kind === "multi") {
+      const selected = Array.isArray(value) ? value : [];
+      return e("div", { key: field.key, style: { display: "flex", flexDirection: "column", gap: "8px" } },
+        e("span", { style: { fontSize: "11px", color: "#6E7268" } }, field.label),
+        e("div", { style: { display: "flex", flexWrap: "wrap", gap: "7px" } }, ...(field.options || []).map(option => e("button", { key: String(option.value), type: "button", className: "q-chip", "aria-pressed": selected.includes(option.value), onClick: () => this.toggleMulti(question, option.value, field.key), style: { cursor: "pointer", padding: "8px 11px", border: selected.includes(option.value) ? "1.5px solid #8FA882" : "1px solid #D9D4C4", background: selected.includes(option.value) ? "#F2F5EE" : "#FCFBF8", color: "#4C5148", transition: "all .2s ease" } }, option.label)))
+      );
+    }
+    if (field.kind === "single") {
+      return e("div", { key: field.key, style: { display: "flex", flexDirection: "column", gap: "8px" } }, e("span", { style: { fontSize: "11px", color: "#6E7268" } }, field.label), e("div", { style: { display: "flex", flexWrap: "wrap", gap: "7px" } }, ...(field.options || []).map(option => e("button", { key: String(option.value), type: "button", className: "q-chip", "aria-pressed": value === option.value, onClick: () => this.setFormValue(question, field.key, option.value), style: { cursor: "pointer", padding: "8px 12px", border: value === option.value ? "1.5px solid #8FA882" : "1px solid #D9D4C4", background: value === option.value ? "#F2F5EE" : "#FCFBF8", color: "#4C5148" } }, option.label))));
+    }
+    if (field.kind === "checkbox") {
+      const checked = value === true;
+      return e("label", { key: field.key, style: { cursor: "pointer", display: "flex", gap: "10px", alignItems: "flex-start", fontSize: "12px", lineHeight: 1.7, color: "#4C5148" } }, e("input", { type: "checkbox", checked, onChange: event => this.setFormValue(question, field.key, event.target.checked), style: { marginTop: "4px", accentColor: "#6E8465" } }), e("span", null, field.label));
+    }
+    const multiline = field.kind === "textarea";
+    const props = { className: "q-field", value: value ?? "", placeholder: field.placeholder || "", onChange: event => this.setFormValue(question, field.key, event.target.value), style: { boxSizing: "border-box", width: "100%", minHeight: multiline ? "72px" : undefined, resize: multiline ? "vertical" : undefined, padding: "10px 12px", border: "1px solid #D9D4C4", background: "#FDFCF8", fontFamily: "Noto Serif SC, serif", fontSize: "12px", lineHeight: 1.7, color: "#29302E" } };
+    if (!multiline) props.type = field.kind === "month" || field.kind === "date" || field.kind === "number" ? field.kind : "text";
+    return wrap(multiline ? e("textarea", props) : e("input", props));
+  }
+
+  renderFollowups(question) {
+    const e = React.createElement;
+    if (!question.followups?.length) return null;
+    const detail = this.state.details[question.id] || {};
+    return e("div", { style: { padding: "15px 16px", background: "#FAF8F3", border: "1px solid #E3DED1", display: "flex", flexDirection: "column", gap: "12px" } },
+      e("div", { style: { fontSize: "10px", color: "#8E8E80" } }, "具体经历是能力线索的证据，不想写可以留空"),
+      ...question.followups.map(field => e("label", { key: field.key, style: { display: "flex", flexDirection: "column", gap: "7px" } }, e("span", { style: { fontSize: "11px", color: "#6E7268" } }, field.label), field.inputType === "number"
+        ? e("input", { className: "q-field", type: "number", value: detail[field.key] || "", placeholder: field.placeholder || "", onChange: event => this.setDetail(question.id, field.key, event.target.value), style: { boxSizing: "border-box", width: "100%", padding: "10px 12px", border: "1px solid #D9D4C4", background: "#FDFCF8", fontFamily: "Noto Serif SC, serif", fontSize: "12px", color: "#29302E" } })
+        : e("textarea", { className: "q-field", value: detail[field.key] || "", placeholder: field.placeholder || "", onChange: event => this.setDetail(question.id, field.key, event.target.value), style: { boxSizing: "border-box", width: "100%", minHeight: "64px", resize: "vertical", padding: "10px 12px", border: "1px solid #D9D4C4", background: "#FDFCF8", fontFamily: "Noto Serif SC, serif", fontSize: "12px", lineHeight: 1.7, color: "#29302E" } })))
+    );
+  }
+
+  renderQuestion(question) {
+    const e = React.createElement;
+    const answer = this.answerFor(question);
+    const exited = Boolean(answer?.__exit);
+    const blocks = [];
+    if (question.recap) blocks.push(e(React.Fragment, { key: "recap" }, this.recapCard()));
+    if (question.type === "scale") blocks.push(e(React.Fragment, { key: "main" }, this.renderScale(question)));
+    if (["single", "multi"].includes(question.type)) blocks.push(e(React.Fragment, { key: "main" }, this.renderOptions(question)));
+    if (question.type === "form") blocks.push(e("div", { key: "main", style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "14px 16px" } }, ...(question.fields || []).map(field => this.renderField(question, field))));
+    if (question.followups?.length) blocks.push(e(React.Fragment, { key: "followups" }, this.renderFollowups(question)));
+    if (question.exitLabel) blocks.push(e("button", { key: "exit", type: "button", className: "q-chip", onClick: () => this.setAnswer(question.id, exited ? undefined : { __exit: true, label: question.exitLabel }), style: { alignSelf: "flex-start", cursor: "pointer", padding: "7px 11px", border: exited ? "1.5px solid #8E8E80" : "1px solid #D2CCBC", background: exited ? "#EFECE2" : "transparent", color: "#6E7268", fontSize: "11px" } }, exited ? "已选：" + question.exitLabel : "这题不合适：" + question.exitLabel));
+    return e("div", { style: { display: "flex", flexDirection: "column", gap: "13px", opacity: exited ? .72 : 1 } }, ...blocks);
+  }
+
+  scoreDimension(items) {
+    const values = [];
+    let exits = 0;
+    for (const [id, reversed] of items) {
+      const answer = this.state.answers[id];
+      if (!Number.isFinite(answer)) { exits++; continue; }
+      values.push(reversed ? 8 - answer : answer);
+    }
+    if (!values.length) return { raw: null, norm: null, items: [], reliability: "low_confidence", source_question_ids: items.map(item => item[0]) };
+    const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
+    const raw = values.reduce((sum, value) => sum + value, 0) + exits * mean;
+    const min = items.length;
+    const max = items.length * 7;
+    return { raw: Math.round(raw * 100) / 100, norm: Math.round(((raw - min) / (max - min)) * 1000) / 1000, items: values, reliability: exits ? "low_confidence" : (items.every(item => !item[1]) ? "no_reverse_check" : "ok"), source_question_ids: items.map(item => item[0]) };
+  }
+
+  buildEvidenceUnits() {
+    const units = [];
+    let index = 1;
+    for (const [questionId, fields] of Object.entries(this.state.details)) {
+      for (const [key, raw] of Object.entries(fields || {})) {
+        const text = String(raw || "").trim();
+        if (key === "__question" || text.length < 12) continue;
+        units.push({ evidence_unit_id: "EU-" + String(index++).padStart(3, "0"), source_question_id: questionId, source_field: key, text, strength: text.length >= 45 ? 2 : 1, verification_status: "user_reported" });
+      }
+    }
+    const result = String(this.state.answers.J2?.results || "").trim();
+    if (result) units.push({ evidence_unit_id: "EU-" + String(index++).padStart(3, "0"), source_question_id: "J2", source_field: "results", text: result, strength: result.length >= 24 ? 2 : 1, verification_status: "user_reported" });
+    return units;
+  }
+
+  parseList(value) {
+    return String(value || "").split(/[,，;；、\n]/).map(item => item.trim()).filter(Boolean);
+  }
+
+  deriveAxes(profile) {
+    const a = this.state.answers;
+    const details = this.state.details;
+    const selected = (id, value) => Array.isArray(a[id]) && a[id].includes(value);
+    const valueOrUnknown = value => Number.isFinite(value) ? Math.max(0.08, Math.min(1, (value - 1) / 6)) : .33;
+    const axes = [
+      { name: "规则稳定", source: "来源 · Q1 / Q11 / Q14", value: profile.big5_scores.C.norm ?? .33, desc: selected("Q14", "clear_rules") ? "你明确选择了规则和标准清晰的环境。" : "目前只有少量情境答案，这条仍需用真实任务验证。", quote: details.Q11?.example || "暂时没有具体经历证据。" },
+      { name: "独立深度", source: "来源 · Q6 / Q8", value: Math.max(valueOrUnknown(a.Q6), selected("Q8", "independent_deep_work") ? .82 : .2), desc: selected("Q8", "independent_deep_work") ? "你把长时间独立工作选作自己的兴趣活动特征。" : "这条线索还不稳定。", quote: details.Q6?.work || "暂时没有具体作品或经历证据。" },
+      { name: "书面沟通", source: "来源 · Q3 / Q14", value: selected("Q14", "async_text") ? .88 : valueOrUnknown(a.Q3), desc: selected("Q14", "async_text") ? "你偏好书面沟通为主、减少临时电话的工作方式。" : "尚未确认对沟通方式的偏好。", quote: details.Q3?.example || "暂时没有陌生人场合的具体例子。" },
+      { name: "低感官负荷", source: "来源 · Q14 / Q15", value: selected("Q14", "quiet_env") ? .92 : (this.state.answers.Q15?.drain?.includes("noise") ? .82 : .33), desc: selected("Q14", "quiet_env") ? "你把安静或可戴耳机标记为工作环境需要。" : "尚未确认噪声是硬限制还是普通偏好。", quote: this.state.details.Q14?.other || "需要在真实工作环境中继续验证。" },
+      { name: "细节专注", source: "来源 · Q8 / Q11", value: Math.max(valueOrUnknown(a.Q11), selected("Q8", "detail_detection") ? .84 : .2), desc: Number.isFinite(a.Q11) ? "这是基于重复核对情境的自述，需要作品或任务结果佐证。" : "目前证据不足。", quote: details.Q11?.example || "暂时没有具体核对经历。" },
+      { name: "流程执行", source: "来源 · Q1 / Q8", value: selected("Q8", "process_execution") ? .84 : valueOrUnknown(a.Q1), desc: selected("Q8", "process_execution") ? "你把按固定流程执行选作自己的兴趣活动特征。" : "尚未有足够证据说明这是稳定能力。", quote: "未经用户确认的线索只作为下一步验证方向。" }
+    ];
+    return axes;
+  }
+
+  readiness(profile) {
+    const missing = [];
+    const a = this.state.answers;
+    const j = profile.job_search_profile;
+    if (!["active", "soon"].includes(a.B7)) missing.push({ path: "job_search_profile", label: "你选择了暂时不找工作，岗位补充页未开启" });
+    if (!profile.consent.can_use_for_job_matching) missing.push({ path: "consent.can_use_for_job_matching", label: "授权使用画像进行岗位匹配" });
+    if (!j.education.highest_level || j.education.highest_level === "unknown") missing.push({ path: "job_search_profile.education.highest_level", label: "最高教育经历" });
+    if (!j.location_preferences.current_city) missing.push({ path: "job_search_profile.location_preferences.current_city", label: "当前城市" });
+    if (!j.employment_preferences.target_seniority.length) missing.push({ path: "job_search_profile.employment_preferences.target_seniority", label: "目标职级" });
+    if (!j.employment_preferences.employment_types.length) missing.push({ path: "job_search_profile.employment_preferences.employment_types", label: "雇佣类型" });
+    if (j.compensation.minimum_amount == null) missing.push({ path: "job_search_profile.compensation.minimum_amount", label: "最低可接受月薪" });
+    if (!j.experiences.length && !j.skills.length && !profile.evidence_units.some(unit => unit.strength >= 2)) missing.push({ path: "job_search_profile.experiences[]/skills[]", label: "至少一段经历、一项技能，或一条较完整的生活证据" });
+    return { ready: missing.length === 0, missing };
+  }
+
+  buildProfile() {
+    const a = this.state.answers;
+    const d = this.state.details;
+    const now = new Date().toISOString();
+    const evidence = this.buildEvidenceUnits();
+    const five = (value, ids = []) => ({ value: value ?? null, source_question_ids: ids, evidence_unit_ids: evidence.filter(unit => ids.includes(unit.source_question_id)).map(unit => unit.evidence_unit_id), confidence: value == null ? "unknown" : (evidence.some(unit => ids.includes(unit.source_question_id)) ? "evidence" : "self_report"), user_status: value == null ? "uncertain" : "accepted" });
+    const form = id => a[id] && !a[id].__exit ? a[id] : {};
+    const j1 = form("J1"), j2 = form("J2"), j3 = form("J3"), j4 = form("J4"), j5 = form("J5"), j6 = form("J6"), j7 = form("J7"), j8 = form("J8"), j9 = form("J9");
+    const skills = this.parseList(j3.skills).map((text, index) => ({ skill_id: "SKILL-" + String(index + 1).padStart(3, "0"), name: text, normalized_name: null, category: null, level: null, last_used_at: null, evidence: [], evidence_unit_ids: [], source: "user_reported", confidence: "medium", user_status: "accepted" }));
+    const experiences = j1.title ? [{ experience_id: "EXP-001", type: a.B4 || (Array.isArray(a.B3) ? a.B3[0] : null), title: j1.title, organization: j1.organization || null, domain: a.B5 || null, start_date: j1.start_date || null, end_date: j1.end_date || null, duration_months: j1.duration_months ? Number(j1.duration_months) : null, tasks: this.parseList(j2.tasks), tools: this.parseList(j2.tools), results: this.parseList(j2.results), independence: "unknown", source: "user_reported", confidence: "medium", user_status: "accepted" }] : [];
+    const q14 = Array.isArray(a.Q14) ? a.Q14 : [];
+    const constraints = q14.map((id, index) => ({ constraint_id: id, label: QUESTIONNAIRE.questions.find(question => question.id === "Q14").options.find(option => option.value === id)?.label || id, scope: ["quiet_env"].includes(id) ? "work_mode" : id === "remote_preferred" ? "work_mode" : "job_content", constraint_level: "preference", negotiability: "negotiable", source_question_ids: ["Q14"], user_status: "accepted" }));
+    if (j9.hard_limits) constraints.push({ constraint_id: "user_defined_" + (constraints.length + 1), label: j9.hard_limits, scope: "other", constraint_level: "hard", negotiability: "non_negotiable", source_question_ids: ["J9"], user_status: "accepted" });
+    const big5_scores = {
+      E: this.scoreDimension([["Q3", false], ["Q16", true]]),
+      A: this.scoreDimension([["Q7", false], ["Q19", true], ["Q22", false]]),
+      C: this.scoreDimension([["Q1", false], ["Q11", false]]),
+      N: this.scoreDimension([["Q4", true], ["Q5", false]]),
+      O: this.scoreDimension([["Q10", false], ["Q26", false]])
+    };
+    const profile = {
+      schema_version: "output1.v1.0", profile_id: "PROFILE-LOCAL-DRAFT", profile_version: 1, created_at: now, updated_at: now, locale: "zh-CN",
+      profile_status: { completion_level: ["active", "soon"].includes(a.B7) ? "partial" : (a.B7 === "not_now" ? "psychological_only" : "partial"), job_matching_ready: false, confidence: evidence.length >= 3 ? "medium" : "low", missing_critical_fields: [], warnings: ["前端产出为待确认草稿；真实岗位推荐需经 match_engine 重算。"] },
+      consent: { can_use_for_job_matching: j9.can_match === true, can_use_for_web_job_search: j9.can_search === true, can_generate_external_materials: false, can_share_sensitive_information_externally: false, behavior_inference_enabled: false, sensitive_info_requires_confirmation: j9.confirm_sensitive !== false },
+      basic_info: {
+        age_band: five(a.B1, ["B1"]), education_level: five(a.B2, ["B2"]), experience_types: five(Array.isArray(a.B3) ? a.B3 : [], ["B3"]),
+        primary_experience: five(a.B4 || (Array.isArray(a.B3) ? a.B3.find(value => !["none", "unknown"].includes(value)) : null), ["B3", "B4"]),
+        experience_domain: five(a.B5, ["B5"]), experience_distress_attribution: five(d.B6?.distress || null, ["B6"]), zero_experience: five(Array.isArray(a.B3) ? a.B3.includes("none") : null, ["B3"])
+      },
+      user_work_profile: { capabilities: (Array.isArray(a.Q8) ? a.Q8 : []).map(id => five(id, ["Q8"])), task_preference: {}, cognitive_style: {}, communication: {}, environment: {}, energy: form("Q15"), values: { top_criterion: five(d.Q20?.criterion || null, ["Q20"]) }, constraints },
+      big5_scores,
+      intelligence_profile: {
+        linguistic: { verdict: Number.isFinite(a.Q12) && a.Q12 >= 6 ? "potential" : "not_established", source_question_ids: ["Q6", "Q12"], evidence_unit_ids: evidence.filter(unit => ["Q6", "Q12"].includes(unit.source_question_id)).map(unit => unit.evidence_unit_id) },
+        logical_mathematical: { verdict: [a.Q10, a.Q11, a.Q12].filter(Number.isFinite).some(value => value >= 6) ? "potential" : "not_established", source_question_ids: ["Q10", "Q11", "Q12"], evidence_unit_ids: evidence.filter(unit => ["Q10", "Q11", "Q12"].includes(unit.source_question_id)).map(unit => unit.evidence_unit_id) },
+        spatial: { verdict: Number.isFinite(a.Q13) && a.Q13 >= 6 ? "potential" : "not_established", source_question_ids: ["Q13"], evidence_unit_ids: evidence.filter(unit => unit.source_question_id === "Q13").map(unit => unit.evidence_unit_id) },
+        bodily_kinesthetic: { verdict: Number.isFinite(a.Q13) && a.Q13 >= 6 ? "potential" : "not_established", source_question_ids: ["Q13", "B5"], evidence_unit_ids: evidence.filter(unit => unit.source_question_id === "Q13").map(unit => unit.evidence_unit_id) },
+        musical: { verdict: "unknown", source_question_ids: [], evidence_unit_ids: [] },
+        interpersonal: { verdict: Number.isFinite(a.Q7) && a.Q7 >= 6 ? "potential" : "not_established", source_question_ids: ["Q3", "Q7", "Q19", "Q22"], evidence_unit_ids: evidence.filter(unit => ["Q3", "Q7"].includes(unit.source_question_id)).map(unit => unit.evidence_unit_id) },
+        intrapersonal: { verdict: Number.isFinite(a.Q18) && a.Q18 >= 6 ? "potential" : "not_established", source_question_ids: ["Q18", "Q20", "Q26"], evidence_unit_ids: evidence.filter(unit => ["Q18", "Q20", "Q26"].includes(unit.source_question_id)).map(unit => unit.evidence_unit_id) },
+        naturalistic: { verdict: "unknown", source_question_ids: [], evidence_unit_ids: [] }, top_list: []
+      },
+      direction_scores: [
+        { direction_id: "data_qa_doc", label: "数据 / 质检 / 文档", scenario_score: Number.isFinite(a.Q11) ? a.Q11 * 2 : null, evidence_score: evidence.filter(unit => unit.source_question_id === "Q11").reduce((sum, unit) => sum + unit.strength, 0), background_adjustment: 0, total: null, verdict: "pending_recompute", basis: [], source_question_ids: ["Q11"], evidence_unit_ids: evidence.filter(unit => unit.source_question_id === "Q11").map(unit => unit.evidence_unit_id), confidence: "self_report", user_status: "uncertain" },
+        { direction_id: "research_analysis", label: "研究 / 分析 / 写作", scenario_score: Number.isFinite(a.Q12) ? a.Q12 * 2 : null, evidence_score: 0, background_adjustment: 0, total: null, verdict: "pending_recompute", basis: [], source_question_ids: ["Q12"], evidence_unit_ids: [], confidence: "self_report", user_status: "uncertain" },
+        { direction_id: "hands_on_tech", label: "手工 / 技术 / 实操", scenario_score: Number.isFinite(a.Q13) ? a.Q13 * 2 : null, evidence_score: evidence.filter(unit => unit.source_question_id === "Q13").reduce((sum, unit) => sum + unit.strength, 0), background_adjustment: 0, total: null, verdict: "pending_recompute", basis: [], source_question_ids: ["Q13"], evidence_unit_ids: evidence.filter(unit => unit.source_question_id === "Q13").map(unit => unit.evidence_unit_id), confidence: "self_report", user_status: "uncertain" }
+      ],
+      job_search_profile: {
+        education: { highest_level: a.B2 && a.B2 !== "unknown" ? a.B2 : null, major: d.B2?.major || null, major_category: null, status: a.B2 === "enrolled" ? "enrolled" : a.B2 === "self_taught" ? "self_taught" : a.B2 ? "graduated" : "unknown", graduation_year: d.B2?.graduation_year ? Number(d.B2.graduation_year) : null, is_fresh_graduate: null, degree_obtained: null, school_name: null, source: "user_reported", confidence: "medium", user_status: "accepted" },
+        experience_summary: { formal_work_months: null, internship_months: null, relevant_experience_months: null, project_count: experiences.length, source: "calculated_from_experiences", confidence: "low", user_status: "uncertain" }, experiences, skills, portfolio: [],
+        languages: this.parseList(j4.languages).map(language => ({ language, listening: "unknown", speaking: "unknown", reading: "unknown", writing: "unknown", certification: null, work_usable: null })),
+        location_preferences: { current_country_or_region: "中国大陆", current_city: j5.current_city || null, preferred_cities: this.parseList(j5.preferred_cities), acceptable_cities: this.parseList(j5.acceptable_cities), relocation: j5.relocation || null, acceptable_work_modes: j5.work_modes || [], maximum_one_way_commute_minutes: j5.commute ? Number(j5.commute) : null, travel_acceptance: j5.travel || null },
+        employment_preferences: { career_stage: "unknown", target_seniority: j6.seniority || [], employment_types: j6.employment_types || [], available_from: j6.available_from || null, weekly_availability_hours: j6.weekly_hours ? Number(j6.weekly_hours) : null, freelance_acceptable: j6.freelance_acceptable ?? null, unstable_workload_acceptable: j6.unstable_acceptable ?? null },
+        compensation: { minimum_amount: j7.minimum ? Number(j7.minimum) : null, expected_amount: j7.expected ? Number(j7.expected) : null, period: "monthly", currency: "CNY", before_tax: true, negotiable: j7.negotiable ?? null },
+        eligibility: { certifications: this.parseList(j4.certifications), licenses: [], work_authorization: "unknown", visa_sponsorship_required: null, other_eligibility_constraints: j9.hard_limits ? [j9.hard_limits] : [] },
+        industry_preferences: { preferred: this.parseList(j8.preferred), acceptable: this.parseList(j8.acceptable), excluded: this.parseList(j8.excluded), outsourcing_acceptable: j8.outsourcing ?? null, labor_dispatch_acceptable: j8.dispatch ?? null }
+      },
+      occupation_match: [], recommended_occupations: [], evidence_units: evidence, unverified_clues: [],
+      handoff: { consumer: "occupation_match_engine", allowed_uses: ["profile_review", ...(j9.can_match ? ["job_matching"] : []), ...(j9.can_search ? ["public_job_search"] : [])], required_processing_rules: ["unknown_fields_must_not_be_inferred", "sensitive_information_requires_confirmation", "run_match_engine_before_showing_recommendations"] },
+      meta: { generator: "isyou-questionnaire-frontend-4.0", raw_answers: a, raw_followups: d, data_quality_checks: { valid_json: true, five_occupations_present: false, critical_job_search_fields_complete: false, user_confirmation_complete: false } }
+    };
+    const readiness = this.readiness(profile);
+    profile.profile_status.job_matching_ready = readiness.ready;
+    profile.profile_status.missing_critical_fields = readiness.missing.map(item => item.path);
+    profile.meta.data_quality_checks.critical_job_search_fields_complete = readiness.ready;
+    return profile;
+  }
+
+  exportProfile = () => {
+    const profile = this.buildProfile();
+    const blob = new Blob([JSON.stringify(profile, null, 2)], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "isyou-profile-output1-v1.json";
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
+
+  buildRadar(axes) {
     const e = React.createElement;
     const cx = 178, cy = 176, R = 140;
-    const labels = ["规则稳定", "独立作业", "书面沟通", "低感官负荷", "细节专注", "流程执行"];
-    const vals = [0.94, 0.78, 0.86, 0.92, 0.88, 0.72];
-    const pt = (i, r) => {
-      const ang = -Math.PI / 2 + i * Math.PI / 3;
-      return [cx + Math.cos(ang) * R * r, cy + Math.sin(ang) * R * r];
+    const labels = axes.map(axis => axis.name);
+    const values = axes.map(axis => axis.value);
+    const point = (index, radius) => {
+      const angle = -Math.PI / 2 + index * Math.PI / 3;
+      return [cx + Math.cos(angle) * R * radius, cy + Math.sin(angle) * R * radius];
     };
-    const ring = r => labels.map((_, i) => pt(i, r).join(",")).join(" ");
-    const shape = vals.map((v, i) => pt(i, v).join(",")).join(" ");
-    return e("svg", { viewBox: "0 0 356 352", style: { width: "100%", height: "auto", display: "block", overflow: "visible" } },
-      e("g", { stroke: "#E3DED1", fill: "none", strokeWidth: 1 },
-        [1, 0.66, 0.33].map((r, k) => e("polygon", { key: k, points: ring(r) }))),
-      e("g", { stroke: "#EDE9DE", strokeWidth: 1 },
-        labels.map((_, i) => {
-          const [x, y] = pt(i, 1);
-          return e("line", { key: i, x1: cx, y1: cy, x2: x, y2: y });
-        })),
-      e("polygon", { points: shape, fill: "#8FA882", fillOpacity: 0.17, stroke: "#8FA882", strokeWidth: 1.6 }),
-      e("g", { fill: "#8FA882" }, vals.map((v, i) => {
-        const [x, y] = pt(i, v);
-        return e("circle", { key: i, cx: x, cy: y, r: 3.4 });
-      })),
-      e("g", { fontFamily: "Noto Serif SC, serif", fontSize: 11.5, fill: "#4C5148" },
-        labels.map((t, i) => {
-          const [x, y] = pt(i, 1.16);
-          const anchor = Math.abs(x - cx) < 6 ? "middle" : (x > cx ? "start" : "end");
-          return e("text", { key: i, x, y: y + 4, textAnchor: anchor }, t);
-        }))
+    const polygon = radius => labels.map((_, index) => point(index, radius).join(",")).join(" ");
+    return e("svg", { viewBox: "0 0 356 352", role: "img", "aria-label": "六维能力线索图", style: { width: "100%", height: "auto", display: "block", overflow: "visible" } },
+      e("g", { stroke: "#E3DED1", fill: "none", strokeWidth: 1 }, ...[1, .66, .33].map((radius, index) => e("polygon", { key: index, points: polygon(radius) }))),
+      e("g", { stroke: "#EDE9DE", strokeWidth: 1 }, ...labels.map((_, index) => { const [x, y] = point(index, 1); return e("line", { key: index, x1: cx, y1: cy, x2: x, y2: y }); })),
+      e("polygon", { points: values.map((value, index) => point(index, value).join(",")).join(" "), fill: "#8FA882", fillOpacity: .17, stroke: "#8FA882", strokeWidth: 1.6 }),
+      e("g", { fill: "#8FA882" }, ...values.map((value, index) => { const [x, y] = point(index, value); return e("circle", { key: index, cx: x, cy: y, r: 3.4 }); })),
+      e("g", { fontFamily: "Noto Serif SC, serif", fontSize: 11.5, fill: "#4C5148" }, ...labels.map((label, index) => { const [x, y] = point(index, 1.16); const anchor = Math.abs(x - cx) < 6 ? "middle" : (x > cx ? "start" : "end"); return e("text", { key: index, x, y: y + 4, textAnchor: anchor }, label); }))
     );
+  }
+
+  go = screen => () => this.setState({ screen, helpOpen: false });
+
+  renderVals() {
+    const st = this.state;
+    const visible = this.visibleQuestions();
+    const qi = Math.min(st.qi, Math.max(visible.length - 1, 0));
+    const question = visible[qi];
+    const answer = question ? this.answerFor(question) : undefined;
+    const profile = this.buildProfile();
+    const readiness = this.readiness(profile);
+    const axes = this.deriveAxes(profile);
+    const quiet = st.quiet;
+    const paperBg = quiet ? "#FAF8F3" : "radial-gradient(#DFDACA 1px, transparent 1.2px) 0 0 / 24px 24px, #FAF8F3";
+    const completed = visible.filter(item => this.hasAnswer(item)).length;
+    const screens = [["explore", "01", "我的一天"], ["portrait", "02", "能力图谱"], ["match", "03", "岗位匹配"], ["job", "04", "岗位详情"], ["training", "05", "培训"]];
+    const section = question ? SECTION_BY_ID[question.section] : null;
+    const pageCount = Math.min(17, Math.max(1, Math.ceil(completed / 2)));
+    return {
+      paperStyle: "background: " + paperBg + "; border: 1px solid #D9D4C4; box-shadow: 0 18px 44px -18px rgba(56,60,52,.42); height: 700px; overflow: hidden auto;",
+      quietLabel: quiet ? "安静模式 · 开" : "安静模式 · 关",
+      quietBtnStyle: "cursor: pointer; font-size: 11px; padding: 7px 13px; border: 1px solid " + (quiet ? "#29302E" : "#D2CCBC") + "; color: " + (quiet ? "#29302E" : "#6E7268") + ";",
+      toggleQuiet: () => this.setState(state => ({ quiet: !state.quiet })),
+      isWelcome: st.screen === "welcome", isExplore: st.screen === "explore", isPortrait: st.screen === "portrait", isMatch: st.screen === "match", isJob: st.screen === "job", isTraining: st.screen === "training",
+      hoverBook: () => this.setState({ bookHover: true }), leaveBook: () => this.setState({ bookHover: false }),
+      bookStyle: "position: absolute; left: 50%; top: 60%; transform: translate(-50%, -50%) rotate(-1.5deg) scale(" + (st.bookHover ? "1.04" : "1") + "); cursor: pointer; transition: transform .34s ease; display: flex; flex-direction: column; align-items: center; gap: 18px;",
+      bookHintStyle: "font-size: 12px; letter-spacing: .1em; color: #5A5545; opacity: " + (st.bookHover ? "1" : ".42") + "; transition: opacity .34s ease;",
+      rulerTicks: Array.from({ length: 10 }, (_, index) => ({ style: "width: " + (index % 2 === 0 ? "16px" : "9px") + "; height: 2px; background: rgba(120,110,88,.4);" })),
+      bookLinesL: [88, 72, 80, 64, 40].map(width => ({ style: "height: 4px; width: " + width + "%; background: #E9E4D6;" })),
+      bookLinesR: [92, 78, 86, 70, 82, 46].map(width => ({ style: "height: 4px; width: " + width + "%; background: #E9E4D6;" })),
+      startFlow: () => this.setState({ screen: "explore" }), skipToPortrait: () => this.setState({ screen: "portrait" }),
+      stepBarStyle: "display: flex; gap: 0; border: 1px solid #D9D4C4; background: #FAF8F3; visibility: " + (st.screen === "welcome" ? "hidden" : "visible") + ";",
+      restart: () => { try { localStorage.removeItem(STORAGE_KEY); } catch (_) {} this.setState({ screen: "welcome", qi: 0, answers: {}, details: {}, helpOpen: false, openAxis: null, openJob: null, openBlock: 2, done: [true, true, false] }); },
+      steps: screens.map(([id, num, label]) => ({ num, label, go: this.go(id), tabStyle: "flex: 1; cursor: pointer; padding: 13px 16px; display: flex; flex-direction: column; gap: 5px; border-right: 1px solid #EDE9DE; background: " + (st.screen === id ? "#F0F3EC" : "transparent") + "; color: " + (st.screen === id ? "#29302E" : "#8E8E80") + "; box-shadow: " + (st.screen === id ? "inset 0 -2px 0 #8FA882" : "none") + ";" })),
+      qTag: question ? question.id + "　" + section.label + " · " + section.note : "", qLead: question?.scene || (question?.section === "job" ? "这一页只记录求职所需的事实信息。" : "天还没亮，我们先从你走过的路开始。"), qText: question?.title + (question?.text ? "\n" + question.text : ""), qHelp: question?.help || "选最接近你日常状态的答案。",
+      helpOpen: st.helpOpen, toggleHelp: () => this.setState(state => ({ helpOpen: !state.helpOpen })), helpBtnStyle: "cursor: pointer; font-size: 11px; padding: 5px 11px; border: 1px solid " + (st.helpOpen ? "#6B8397" : "#A8BCCB") + "; background: " + (st.helpOpen ? "#E9EFF4" : "transparent") + "; color: #4C5148;",
+      questionNote: this.state.details[question?.id]?.__question || "", editQuestionNote: event => question && this.setDetail(question.id, "__question", event.target.value), questionBody: question ? this.renderQuestion(question) : null,
+      progressLabel: "已记下 " + completed + " / " + visible.length,
+      prevQ: () => this.setState({ qi: Math.max(0, qi - 1), helpOpen: false }), prevStyle: "cursor: " + (qi === 0 ? "default" : "pointer") + "; font-size: 12px; color: " + (qi === 0 ? "#D2CCBC" : "#8E8E80") + ";",
+      nextQ: () => qi < visible.length - 1 ? this.setState({ qi: qi + 1, helpOpen: false }) : this.completeQuestionnaire(), nextLabel: qi < visible.length - 1 ? "下一题 →" : "生成画像和职业方向 →", nextStyle: "cursor: pointer; font-size: 13px; letter-spacing: .04em; padding: 11px 26px; background: " + (this.hasAnswer(question, answer) ? "#B4535E" : "#CDB5B2") + "; color: #FDF7F5;",
+      notebook: QUESTIONNAIRE.sections.map(item => { const items = visible.filter(question2 => question2.section === item.id); const filled = items.filter(question2 => this.hasAnswer(question2)).length; const current = item.id === question?.section; return { text: item.label + " · " + filled + "/" + items.length, dotStyle: "width: 9px; height: 9px; margin-top: 5px; flex: none; background: " + (filled === items.length && items.length ? "#8FA882" : current ? "#D89A6C" : "#E3DED1") + ";", textStyle: "font-size: 12px; line-height: 1.7; color: " + (current ? "#29302E" : filled ? "#6E7268" : "#BFBBAC") + ";" }; }),
+      radar: this.buildRadar(axes), axes: axes.slice(0, 3).map((axis, index) => ({ name: axis.name, source: axis.source, desc: axis.desc, quote: axis.quote, open2: st.openAxis === index, open: () => this.setState(state => ({ openAxis: state.openAxis === index ? null : index })), cardStyle: "cursor: pointer; padding: 16px 18px; " + (st.openAxis === index ? "background: #F2F5EE; border-left: 2px solid #8FA882;" : "background: #FAF8F3; border: 1px solid #E3DED1;") })), exportProfile: this.exportProfile,
+      matchBlocked: !readiness.ready, matchReady: readiness.ready, showDemoJobs: false, missingFields: readiness.missing, matchTitle: readiness.ready ? "问卷资料已达到岗位匹配入口条件" : "暂时不能生成真实岗位推荐", matchSubtitle: readiness.ready ? "前端已组装 output1.v1.0；下一步由正式匹配引擎进行硬约束过滤与排序。" : "未知信息不会按“已满足”处理，补齐下面字段后再重算。", matchCount: readiness.ready ? "HANDOFF READY" : readiness.missing.length + " 项待补", backToQuestionnaire: () => this.setState({ screen: "explore", qi: Math.max(0, visible.findIndex(item => item.section === "job")) }),
+      jobs: [],
+      jobBlocks: JOB_BLOCKS.map((block, index) => ({ num: block.tag.split(" · ")[0], name: block.tag.split("　")[1], summary: block.summary, summaryStyle: "font-size: 12px; color: #A5A597; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;", open: st.openBlock === index, toggle: () => this.setState(state => ({ openBlock: state.openBlock === index ? null : index })), toggleLabel: st.openBlock === index ? "收起" : "展开", style: "cursor: pointer; padding: 14px 20px; background: #FAF8F3; border: " + (st.openBlock === index ? "1.5px solid #8FA882" : "1px solid #E3DED1") + ";", lines: block.lines.map(([kind, body]) => ({ body, dot: "color: " + ({ ok: "#8FA882", info: "#A8BCCB", warn: "#D89A6C", match: "#8FA882", unknown: "#C4C0AE" }[kind]) + "; flex: none;", text: "color: " + (kind === "unknown" ? "#A5A597" : kind === "match" ? "#6E8465" : "#29302E") + ";" })) })),
+      backToMatch: () => this.setState({ screen: "match" }), goTraining: () => this.setState({ screen: "training" }),
+      ...this.flowVals(visible)
+    };
   }
 }
 </script>

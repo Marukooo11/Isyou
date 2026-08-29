@@ -21,7 +21,8 @@ COACH_ALLOW_DEMO_DATE=1 python3 scripts/run_stack.py
 
 ## Files
 
-- `index.html`：主 Demo，包含欢迎页、能力探索、能力图谱、岗位匹配和岗位详情，并把所选岗位上下文传给 Coach。
+- `index.html`：新版手帐式全流程入口，包含注册、问卷、能力图谱与职业方向；真实岗位阶段交给账号化 `job-search.html`，Mock 模式可在单页内演示完整视觉流程。
+- `questionnaire-v4.js`：新版手帐问卷的 35 题结构与条件分支定义。
 - `coach.html`、`coach.css`、`coach-page.js`：正式 Coach 交互页，包含对话、状态路径、8 类卡片、恢复会话和两日演示链路。
 - `coach-client.js`：Coach API 客户端。
 - `auth.html`：手机号/邮箱验证码注册，以及密码或验证码登录页。
