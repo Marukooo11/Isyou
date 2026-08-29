@@ -493,7 +493,7 @@
     }[status] || status || "待确认";
   }
 
-  function renderQuestion(block) {
+  function renderQuestion(block, interactive) {
     const body = element("div", "ui-block__body question");
     body.appendChild(element("div", "block-label", "Coach 想先确认"));
     body.appendChild(element("p", "question__prompt", block.data.prompt || "请补充你的情况。"));
@@ -503,14 +503,17 @@
       options.forEach(function (option) {
         const button = element("button", "option-button", option);
         button.type = "button";
+        button.disabled = !interactive || isBusy;
         if (selectedAnswer === option) button.classList.add("is-selected");
-        button.addEventListener("click", function () {
-          selectedAnswer = option;
-          ui.input.value = option;
-          ui.hint.classList.remove("is-error");
-          ui.hint.textContent = "已选中。你可以直接提交，也可以继续补充。";
-          renderTimeline();
-        });
+        if (interactive) {
+          button.addEventListener("click", function () {
+            selectedAnswer = option;
+            ui.input.value = option;
+            ui.hint.classList.remove("is-error");
+            ui.hint.textContent = "已选中。你可以直接提交，也可以继续补充。";
+            renderTimeline();
+          });
+        }
         list.appendChild(button);
       });
       body.appendChild(list);
@@ -636,7 +639,7 @@
   function renderBlock(block, interactive) {
     const wrapper = element("article", "ui-block ui-block--" + block.type);
     const renderers = {
-      question: renderQuestion,
+      question: function (value) { return renderQuestion(value, interactive); },
       gap_map: renderGapMap,
       stage_plan: renderStagePlan,
       daily_task: function (value) { return renderDailyTask(value, interactive); },
@@ -669,7 +672,7 @@
 
   function renderCoachTurn(item, isLatest) {
     const response = item.response;
-    const turn = element("section", "turn");
+    const turn = element("section", "turn" + (isLatest ? "" : " turn--history"));
     turn.dataset.responseKey = item.key;
     turn.appendChild(element("div", "turn__stamp", "Coach　Day " + response.state_summary.current_day));
     turn.appendChild(element("div", "coach-message", response.coach_message));

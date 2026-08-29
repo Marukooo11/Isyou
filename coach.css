@@ -223,6 +223,9 @@ textarea:focus-visible,
 
 .coach-pane {
   min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   background:
@@ -266,6 +269,11 @@ textarea:focus-visible,
   max-width: 760px;
   margin: 0 auto 30px;
   animation: turn-in 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.turn--history .option-button {
+  cursor: default;
+  opacity: 0.56;
 }
 
 .turn__stamp {
