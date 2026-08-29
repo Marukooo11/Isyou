@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#e4e6dc">
+  <meta name="description" content="Isyou 成长 Coach，根据目标、差距和真实进度动态规划每天的行动。">
+  <title>Isyou 成长 Coach</title>
+  <link rel="stylesheet" href="./coach.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <button class="topbar__back" id="back-button" type="button">返回岗位</button>
+      <div class="topbar__brand">Isyou</div>
+      <div class="topbar__actions">
+        <div class="connection" id="connection" aria-live="polite">
+          <span class="connection__mark" aria-hidden="true"></span>
+          <span id="connection-label">正在连接 Coach</span>
+        </div>
+        <button class="quiet-button" id="pause-button" type="button">暂停</button>
+        <button class="text-button" id="reset-button" type="button">重新规划</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <aside class="sidebar" aria-label="成长路径">
+        <div class="sidebar__target-label">当前目标</div>
+        <h1 class="sidebar__target" id="target-title">为你规划中</h1>
+        <p class="sidebar__target-meta" id="target-meta">先确认目标和能力起点，再进入每天的行动。</p>
+        <ol class="journey" id="journey">
+          <li class="journey__item is-active" data-step="discover">
+            <span class="journey__number">1</span>
+            <span class="journey__copy"><span class="journey__name">认识你</span><span class="journey__hint">目标与起点</span></span>
+          </li>
+          <li class="journey__item" data-step="gap">
+            <span class="journey__number">2</span>
+            <span class="journey__copy"><span class="journey__name">确认差距</span><span class="journey__hint">证据与未知</span></span>
+          </li>
+          <li class="journey__item" data-step="plan">
+            <span class="journey__number">3</span>
+            <span class="journey__copy"><span class="journey__name">一起规划</span><span class="journey__hint">阶段与节奏</span></span>
+          </li>
+          <li class="journey__item" data-step="learn">
+            <span class="journey__number">4</span>
+            <span class="journey__copy"><span class="journey__name">每天行动</span><span class="journey__hint">复盘后调整</span></span>
+          </li>
+        </ol>
+        <div class="sidebar__footer">
+          <div class="day-status"><span>学习日</span><strong id="sidebar-day">Day 1</strong></div>
+          <div class="day-status" style="margin-top: 9px;"><span>进度</span><strong id="sidebar-progress">首次对话</strong></div>
+        </div>
+      </aside>
+
+      <section class="coach-pane" aria-label="Coach 对话">
+        <header class="summary">
+          <div>
+            <div class="summary__label">成长 Coach</div>
+            <div class="summary__title" id="summary-title">先聊聊你真正想解决的事</div>
+          </div>
+          <div class="summary__meta" id="summary-meta">Day 1</div>
+        </header>
+
+        <div class="timeline" id="timeline" aria-live="polite" aria-busy="true">
+          <div class="loading" id="loading-state" aria-label="Coach 正在准备">
+            <div class="skeleton"></div>
+            <div class="skeleton"></div>
+          </div>
+        </div>
+
+        <form class="composer" id="composer">
+          <div class="composer__row">
+            <textarea id="message-input" aria-label="回复 Coach" placeholder="写下你的回答，也可以点击上面的选项" rows="2"></textarea>
+            <button class="primary-button" id="send-button" type="submit">发送</button>
+          </div>
+          <div class="composer__hint" id="composer-hint">你的回答会用来调整后续规划，不会覆盖你已经完成的记录。</div>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast is-hidden" id="toast" role="status"></div>
+
+  <script src="./coach-client.js"></script>
+  <script src="./coach-page.js"></script>
+</body>
+</html>
