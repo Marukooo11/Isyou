@@ -793,6 +793,34 @@ class Component extends DCLogic {
 
   go = (screen) => () => this.setState({ screen, helpOpen: false });
 
+  openCoach = (job) => (event) => {
+    if (event && event.stopPropagation) event.stopPropagation();
+    const assessment = window.IsyouAssessment.assessIsyou({ answers: this.state.answers, followups: this.state.followups });
+    const target = job || assessment.jobs[0];
+    if (!target) return;
+    const facts = (assessment.axes || []).map(axis => axis.desc).filter(Boolean);
+    const context = {
+      selected_direction: {
+        id: target.occupationId || target.id || "career-target",
+        title: target.title || "当前职业方向",
+        source_refs: ["isyou-job-match"]
+      },
+      target_requirements: [
+        { id: "target-gap", text: target.gap || "岗位差距仍待进一步确认", source_ref: "isyou-job-match" },
+        { id: "target-task", text: target.task || "岗位任务仍待进一步确认", source_ref: "isyou-job-match" }
+      ],
+      user_profile: {
+        facts,
+        evidence: [],
+        constraints: facts.filter(text => /环境|规则|沟通|感官|独立|噪/.test(text)),
+        open_questions: ["当前是否已有能证明相关能力的作品、练习或具体经历"]
+      },
+      source_meta: target.meta || "来自 Isyou 岗位匹配"
+    };
+    sessionStorage.setItem("isyou_career_context", JSON.stringify(context));
+    window.location.href = "./coach.html";
+  };
+
   getNextQi(qi) {
     let next = qi + 1;
     while (next < QUESTIONS.length) {
@@ -815,9 +843,9 @@ class Component extends DCLogic {
     try {
       const saved = JSON.parse(localStorage.getItem(STATE_STORAGE_KEY) || "null");
       if (!saved || typeof saved !== "object") return;
-      const screens = new Set(["welcome", "explore", "portrait", "match", "job", "training"]);
+      const screens = new Set(["welcome", "explore", "portrait", "match", "job"]);
       this.setState({
-        screen: screens.has(saved.screen) ? saved.screen : "welcome",
+        screen: saved.screen === "training" ? "match" : (screens.has(saved.screen) ? saved.screen : "welcome"),
         qi: Math.max(0, Math.min(QUESTIONS.length - 1, Number(saved.qi) || 0)),
         answers: saved.answers && typeof saved.answers === "object" ? saved.answers : {},
         followups: saved.followups && typeof saved.followups === "object" ? saved.followups : {},
@@ -1001,7 +1029,7 @@ class Component extends DCLogic {
       ["portrait", "02", "能力图谱"],
       ["match", "03", "岗位匹配"],
       ["job", "04", "岗位详情"],
-      ["training", "05", "培训"]
+      ["training", "05", "成长 Coach"]
     ];
 
     const pageCount = 14 + st.done.filter(Boolean).length - 2;
@@ -1031,7 +1059,7 @@ class Component extends DCLogic {
       },
 
       steps: screens.map(([id, num, label]) => ({
-        num, label, go: this.go(id),
+        num, label, go: id === "training" ? this.openCoach(selectedJob) : this.go(id),
         tabStyle: "flex: 1; cursor: pointer; padding: 13px 16px; display: flex; flex-direction: column; gap: 5px; border-right: 1px solid #EDE9DE; background: " + (st.screen === id ? "#F0F3EC" : "transparent") + "; color: " + (st.screen === id ? "#29302E" : "#8E8E80") + "; box-shadow: " + (st.screen === id ? "inset 0 -2px 0 #8FA882" : "none") + ";"
       })),
 
@@ -1230,11 +1258,11 @@ class Component extends DCLogic {
         const on = st.openJob === i;
         const anyOpen = st.openJob !== null;
         return {
-          title: j.title, meta: j.meta, score: j.scoreNumber + "%", task: j.task, gap: j.gap, trainLabel: j.trainLabel,
+          title: j.title, meta: j.meta, score: j.scoreNumber + "%", task: j.task, gap: j.gap, trainLabel: "让 Coach 为我规划 →",
           detailed: on,
           open: () => this.setState(s => ({ openJob: s.openJob === i ? null : i })),
           goJob: () => this.setState({ screen: "job", selectedJobId: j.id }),
-          goTrain: () => this.setState({ screen: "training", selectedJobId: j.id }),
+          goTrain: this.openCoach(j),
           headStyle: "display: flex; min-width: 0; " + (on || !anyOpen
             ? "flex-direction: column; gap: 5px;"
             : "align-items: baseline; gap: 14px;"),
@@ -1248,7 +1276,7 @@ class Component extends DCLogic {
       selectedJobTitle: selectedJob.title || "",
       selectedJobMeta: selectedJob.meta || "",
       selectedJobGap: selectedJob.gap || "",
-      selectedJobTraining: selectedJob.trainLabel || "",
+      selectedJobTraining: "让 Coach 为我规划 →",
       trainingTitle: (selectedJob.trainLabel || "").split("·")[0].replace(/^培训「/, "").replace(/」$/, ""),
       trainingReason: selectedJob.title ? "推荐这门训练，是因为「" + selectedJob.title + "」的岗位要求中需要注意：" + selectedJob.gap : "",
 
@@ -1268,7 +1296,7 @@ class Component extends DCLogic {
         }))
       })),
       backToMatch: () => this.setState({ screen: "match" }),
-      goTraining: () => this.setState({ screen: "training" }),
+      goTraining: this.openCoach(selectedJob),
 
       pagesTitle: "你的本子，现在有 " + pageCount + " 页",
       pages: Array.from({ length: 17 }, (_, i) => ({

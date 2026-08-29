@@ -71,3 +71,46 @@ test("公开 API 启用最小速率限制", async () => {
     assert.equal((await second.json()).error.code, "RATE_LIMITED");
   });
 });
+
+test("统一服务提供可携带岗位上下文的 Coach 全链路接口", async () => {
+  await withServer({ API_RATE_LIMIT_MAX: "20", API_RATE_LIMIT_WINDOW_MS: "60000" }, async baseUrl => {
+    const health = await fetch(`${baseUrl}/api/v1/health`);
+    assert.equal(health.status, 200);
+    assert.equal((await health.json()).service, "isyou-coach");
+
+    const created = await fetch(`${baseUrl}/api/v1/coach/sessions`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        domain: "career",
+        career_context: {
+          selected_direction: { id: "job-1", title: "内容运营" },
+          target_requirements: [{ id: "gap-1", text: "缺少可展示的内容策划证据" }],
+          user_profile: { facts: ["偏好边界清楚的任务"], constraints: ["临时变更会增加启动困难"] }
+        }
+      })
+    });
+    assert.equal(created.status, 201);
+    const session = await created.json();
+    assert.equal(session.phase, "onboarding");
+    assert.equal(session.state_summary.target_title, "内容运营");
+
+    const turn = await fetch(`${baseUrl}/api/v1/coach/sessions/${session.session_id}/turns`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        request_id: "server-flow-1",
+        expected_state_version: session.state_version,
+        event: { type: "answer_question", message: "先找到能力差距" }
+      })
+    });
+    assert.equal(turn.status, 200);
+    const gap = await turn.json();
+    assert.equal(gap.phase, "gap_analysis");
+    assert.match(JSON.stringify(gap.ui_blocks), /缺少可展示的内容策划证据/);
+
+    const restored = await fetch(`${baseUrl}/api/v1/coach/sessions/${session.session_id}`);
+    assert.equal(restored.status, 200);
+    assert.equal((await restored.json()).state_version, gap.state_version);
+  });
+});

@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import runHandler from "./api/job-search/run.mjs";
 import candidatesHandler from "./api/job-search/candidates.mjs";
 import selectHandler from "./api/job-search/select.mjs";
+import { createCoachHandler } from "./api/coach.mjs";
 
 dotenv.config({ path: resolve(import.meta.dirname, ".env.local"), override: true });
 
@@ -119,6 +120,7 @@ export function createIsyouServer({ root = defaultRoot, env = process.env } = {}
     windowMs: Number(env.API_RATE_LIMIT_WINDOW_MS ?? 600_000)
   });
   const trustProxy = env.TRUST_PROXY === "1";
+  const coachHandler = createCoachHandler();
 
   return createServer(async (request, response) => {
     setSecurityHeaders(response);
@@ -140,6 +142,14 @@ export function createIsyouServer({ root = defaultRoot, env = process.env } = {}
         if (!limit.allowed) return sendJson(response, 429, { error: { code: "RATE_LIMITED", message: "请求过于频繁，请稍后再试。" } }, { "retry-after": String(limit.retryAfter) });
         request.body = await readBody(request);
         return apiHandler(request, response, { env });
+      }
+
+      if (pathname.startsWith("/api/v1/")) {
+        const limit = rateLimit(requestIp(request, trustProxy));
+        response.setHeader("x-ratelimit-remaining", String(limit.remaining));
+        if (!limit.allowed) return sendJson(response, 429, { error: { code: "RATE_LIMITED", message: "请求过于频繁，请稍后再试。", retryable: true } }, { "retry-after": String(limit.retryAfter) });
+        if (request.method === "POST") request.body = await readBody(request);
+        return coachHandler(request, response, pathname);
       }
 
       if (!["GET", "HEAD"].includes(request.method)) {
