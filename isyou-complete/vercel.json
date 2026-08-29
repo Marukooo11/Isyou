@@ -1,0 +1,12 @@
+{
+  "functions": {
+    "api/job-search/run.mjs": { "maxDuration": 300 },
+    "api/job-search/candidates.mjs": { "maxDuration": 60 },
+    "api/job-search/select.mjs": { "maxDuration": 60 }
+  },
+  "rewrites": [
+    { "source": "/api/job-search/run", "destination": "/api/job-search/run.mjs" },
+    { "source": "/api/job-search/candidates", "destination": "/api/job-search/candidates.mjs" },
+    { "source": "/api/job-search/select", "destination": "/api/job-search/select.mjs" }
+  ]
+}
