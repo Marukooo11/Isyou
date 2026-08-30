@@ -73,9 +73,14 @@ try {
   Write-Host "Downloading Marukooo11/Isyou main branch..."
   Invoke-WebRequest -Uri "https://github.com/Marukooo11/Isyou/archive/refs/heads/main.zip" -OutFile $archivePath -UseBasicParsing
   Expand-Archive -LiteralPath $archivePath -DestinationPath $extractRoot -Force
-  $sourceRoot = Join-Path $extractRoot "Isyou-main\isyou-complete"
+  $repositoryRoot = Join-Path $extractRoot "Isyou-main"
+  $sourceRoot = if (Test-Path -LiteralPath (Join-Path $repositoryRoot "server.mjs")) {
+    $repositoryRoot
+  } else {
+    Join-Path $repositoryRoot "isyou-complete"
+  }
   if (-not (Test-Path -LiteralPath (Join-Path $sourceRoot "server.mjs"))) {
-    throw "The downloaded repository does not contain isyou-complete/server.mjs."
+    throw "The downloaded repository does not contain a runnable server.mjs."
   }
   Move-Item -LiteralPath $sourceRoot -Destination $InstallRoot
 
