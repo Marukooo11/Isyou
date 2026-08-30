@@ -103,8 +103,17 @@ try {
   }
 
   $firewallName = "Isyou Demo TCP $Port"
-  if (-not (Get-NetFirewallRule -DisplayName $firewallName -ErrorAction SilentlyContinue)) {
-    New-NetFirewallRule -DisplayName $firewallName -Direction Inbound -Action Allow -Protocol TCP -LocalPort $Port | Out-Null
+  try {
+    if (-not (Get-NetFirewallRule -DisplayName $firewallName -ErrorAction SilentlyContinue)) {
+      New-NetFirewallRule -DisplayName $firewallName -Direction Inbound -Action Allow -Protocol TCP -LocalPort $Port -ErrorAction Stop | Out-Null
+    }
+    Write-Host "Windows Firewall TCP $Port rule: OK"
+  } catch {
+    Write-Warning "The Firewall PowerShell API is unavailable; trying netsh instead. $($_.Exception.Message)"
+    & netsh.exe advfirewall firewall add rule name="$firewallName" dir=in action=allow protocol=TCP localport=$Port | Out-Host
+    if ($LASTEXITCODE -ne 0) {
+      Write-Warning "Windows Firewall could not be changed automatically. Deployment will continue; open TCP $Port in Tencent Cloud and Windows Firewall manually if required."
+    }
   }
 
   & (Join-Path $InstallRoot "deploy\windows\install-startup.ps1") -TaskName $taskName -AppDirectory $InstallRoot
