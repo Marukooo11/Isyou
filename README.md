@@ -64,7 +64,6 @@ JOB_SEARCH_PROVIDER=google
 6. 从岗位卡片或详情进入通用成长 Coach，确认 Gap Map、阶段计划与第一项行动。
 7. 提交行动结果，Coach 保存为待复核证据，并在下一学习日先 Review 再调整任务。
 
-演示岗位与实时岗位在界面中明确区分，不会把 mock 数据冒充为实时招聘。
 
 ## 成长 Coach
 
