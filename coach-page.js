@@ -140,6 +140,7 @@
         context: context,
         pausedFrom: null,
         lastBeforePause: null,
+        currentTask: null,
       };
       return this.save(this.onboarding());
     }
@@ -247,9 +248,10 @@
       this.state.day += 1;
       this.state.phase = "daily_review";
       this.state.stateVersion += 1;
+      const previousDay = this.state.day - 1;
       return this.save(this.respond(
         "开始今天的内容前，我们先复盘昨天。重点不是打卡，而是判断任务是否合适、产生了什么证据。",
-        [{ id: "review-day-1", type: "review", data: { previous_day: this.state.day - 1, previous_task: { title: "选择一份最能代表当前起点的已有材料" }, prompt: "昨天完成到哪里？最大的困难是什么？" } }],
+        [{ id: "review-day-" + previousDay, type: "review", data: { previous_day: previousDay, previous_task: this.state.currentTask || { title: "确认上一学习日的完成情况" }, prompt: "昨天完成到哪里？最大的困难是什么？" } }],
         [
           { id: "review-complete", label: "顺利完成", event_type: "answer_question", action_id: "review_complete" },
           { id: "review-partial", label: "只完成一部分", event_type: "answer_question", action_id: "review_partial" },
@@ -376,9 +378,11 @@
         },
       };
       const task = tasks[mode] || tasks.first;
+      const taskData = Object.assign({ target: this.state.target }, task);
+      this.state.currentTask = taskData;
       return this.respond(
         task.intro,
-        [{ id: "task-day-" + this.state.day, type: "daily_task", data: Object.assign({ target: this.state.target }, task) }],
+        [{ id: "task-day-" + this.state.day, type: "daily_task", data: taskData }],
         [
           { id: "task-done", label: "我完成了", event_type: "submit_result" },
           { id: "task-partial", label: "我只完成了一部分", event_type: "submit_result" },
@@ -683,9 +687,11 @@
     if (blocks.children.length) turn.appendChild(blocks);
     if (isLatest && (response.quick_actions || []).length) turn.appendChild(renderActions(response));
     if (isLatest && response.phase === "submission_review") {
+      const currentDay = Number((response.state_summary || {}).current_day) || 1;
+      const nextDay = currentDay + 1;
       const next = element("div", "next-day");
-      next.appendChild(element("p", "", "Demo 演示可以直接进入下一学习日。真实使用时，用户下次打开会自动先做 Review。"));
-      const button = element("button", "secondary-button", "进入第 2 天 Review");
+      next.appendChild(element("p", "", "Demo 演示可以直接进入第 " + nextDay + " 学习日。真实使用时，用户下次打开会自动先做 Review。"));
+      const button = element("button", "secondary-button", "进入第 " + nextDay + " 天 Review");
       button.type = "button";
       button.disabled = isBusy;
       button.addEventListener("click", advanceDay);
