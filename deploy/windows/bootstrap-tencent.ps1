@@ -89,9 +89,9 @@ try {
   }
 
   $envPath = Join-Path $InstallRoot ".env.local"
-  $envLines = if (Test-Path -LiteralPath $envPath) { Get-Content -LiteralPath $envPath -Encoding utf8 } else { @() }
-  $envLines = @($envLines | Where-Object { $_ -notmatch '^(HOST|PORT)=' })
-  @("HOST=0.0.0.0", "PORT=$Port") + $envLines | Set-Content -LiteralPath $envPath -Encoding utf8
+  $envLines = if (Test-Path -LiteralPath $envPath) { Get-Content -LiteralPath $envPath } else { @() }
+  $envLines = @($envLines | Where-Object { $_ -notmatch '^\s*(HOST|PORT)\s*=' })
+  @("HOST=0.0.0.0", "PORT=$Port") + $envLines | Set-Content -LiteralPath $envPath -Encoding ascii
 
   Write-Host "Installing production dependencies..."
   Push-Location $InstallRoot
@@ -118,7 +118,22 @@ try {
 
   & (Join-Path $InstallRoot "deploy\windows\install-startup.ps1") -TaskName $taskName -AppDirectory $InstallRoot
   Start-Sleep -Seconds 3
-  $health = Invoke-RestMethod -Uri "http://127.0.0.1:${Port}/health" -TimeoutSec 15
+  try {
+    $health = Invoke-RestMethod -Uri "http://127.0.0.1:${Port}/health" -TimeoutSec 15
+  } catch {
+    Write-Warning "Health check failed. Recent Isyou logs:"
+    $outLog = Join-Path $InstallRoot "logs\isyou.out.log"
+    $errLog = Join-Path $InstallRoot "logs\isyou.err.log"
+    if (Test-Path -LiteralPath $outLog) {
+      Write-Host "--- isyou.out.log ---"
+      Get-Content -LiteralPath $outLog -Tail 80
+    }
+    if (Test-Path -LiteralPath $errLog) {
+      Write-Host "--- isyou.err.log ---"
+      Get-Content -LiteralPath $errLog -Tail 80
+    }
+    throw
+  }
   if ($health.status -ne "ok") {
     throw "The health check returned an unexpected response."
   }
