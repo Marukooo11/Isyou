@@ -9,7 +9,7 @@
   "scripts": {
     "start": "node server.mjs",
     "dev": "node server.mjs",
-    "test": "node --test tests",
+    "test": "node --test tests/*.test.mjs",
     "check": "node --check api/job-search/run.mjs && node --check api/job-search/candidates.mjs && node --check api/job-search/select.mjs && node --check api/coach.mjs && node --check lib/job-search/pipeline.mjs && node --check lib/job-search/selection-pipeline.mjs && node --check lib/coach/service.mjs && node --check server.mjs",
     "verify": "npm run check && npm test",
     "probe:provider": "node scripts/probe-provider.mjs",
