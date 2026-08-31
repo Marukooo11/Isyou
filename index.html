@@ -360,7 +360,9 @@
                         <span style="font-size: 11px; color: #8E8E80; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ c.meta }}</span>
                         <a href="{{ c.sourceUrl }}" target="_blank" rel="noopener noreferrer" style="font-size: 11px; color: #6E8465;">打开招聘来源 ↗</a>
                       </div>
-                      <span onClick="{{ c.download }}" style="{{ c.downloadStyle }}">{{ c.downloadLabel }}</span>
+                      <sc-if value="{{ c.showDownload }}" hint-placeholder-val="{{ true }}">
+                        <span onClick="{{ c.download }}" style="{{ c.downloadStyle }}">{{ c.downloadLabel }}</span>
+                      </sc-if>
                     </div>
                   </sc-for>
                 </div>
@@ -1092,6 +1094,7 @@ class Component extends DCLogic {
         title: candidate.title || "未命名岗位",
         meta: [candidate.company, candidate.location, candidate.direction_title].filter(Boolean).join(" · ") || "请打开来源核对详细信息",
         sourceUrl: candidate.source_url,
+        showDownload: candidate.discovery_status !== "demo_fallback_unverified",
         download: () => this.downloadLiveJob(candidate),
         downloadLabel: st.liveBusyCandidate === candidate.candidate_id ? "核验中……" : "生成岗位说明",
         downloadStyle: "font-size: 11px; padding: 8px 12px; border: 1px solid #D89A6C; color: #A9713F; cursor: " + (st.liveBusyCandidate ? "wait" : "pointer") + "; flex: none;"

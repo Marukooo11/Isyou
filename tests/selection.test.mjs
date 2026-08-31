@@ -17,6 +17,20 @@ test("快速候选阶段只调用一次搜索并返回5个岗位名称", async (
   assert.equal(result.candidates[0].discovery_status, "search_result_unverified");
 });
 
+test("快速候选阶段在搜索网络失败时返回演示检索入口", async () => {
+  const provider = {
+    name: "broken",
+    async search() {
+      throw Object.assign(new Error("connect timeout"), { code: "SEARCH_PROVIDER_NETWORK_ERROR" });
+    }
+  };
+  const result = await searchJobCandidates({ profile: sample }, { provider });
+  assert.equal(result.status, "fallback");
+  assert.equal(result.candidate_count, 5);
+  assert.equal(result.candidates[0].discovery_status, "demo_fallback_unverified");
+  assert.match(result.warning, /演示检索入口/);
+});
+
 test("用户选定后只生成一份 jd_selected.md", async () => {
   const verifyResult = async result => ({
     opportunity_id: "OPP-SELECTED", title: result.title, company: result.company, url: result.url, opportunity_type: "employment",
