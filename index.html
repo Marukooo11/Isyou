@@ -763,6 +763,7 @@ const DRAIN_ITEMS = [
 const B4_LABELS = {A:"全职工作",B:"实习",C:"兼职/零工",D:"自由职业/接单",E:"自己长期折腾过的项目或爱好（没人付钱也算）"};
 
 const SECTION_NAMES = ["第零部分　基础信息","第一部分　清晨 · 底色","第二部分　上午 · 能力","第三部分　中午 · 环境","第四部分　傍晚 · 经历","第五部分　夜晚 · 价值","第六部分　岗位补充"];
+const FALLBACK_DIMENSION_LABELS = ["规则稳定", "独立作业", "书面沟通", "低感官负荷", "细节专注", "流程执行"];
 
 const LESSONS = ["会前十分钟可以先写下要说的话", "听不清时怎么请对方重复一次", "会议里不发言，是可以的"];
 const STATE_STORAGE_KEY = "isyou-v2-progress";
@@ -997,16 +998,19 @@ class Component extends DCLogic {
 
   renderVals() {
     const st = this.state;
-    const q = QUESTIONS[st.qi];
-    const ans = st.answers[q.id];
+    const q = QUESTIONS[st.qi] || QUESTIONS[0];
+    const answers = (st.answers && typeof st.answers === "object") ? st.answers : {};
+    const followups = (st.followups && typeof st.followups === "object") ? st.followups : {};
+    const liveCandidates = Array.isArray(st.liveCandidates) ? st.liveCandidates : [];
+    const ans = answers[q.id];
     const assessment = (window.IsyouAssessment && window.IsyouAssessment.assessIsyou)
-      ? window.IsyouAssessment.assessIsyou({ answers: st.answers, followups: st.followups })
+      ? window.IsyouAssessment.assessIsyou({ answers, followups })
       : null;
     const _jobs = (assessment && Array.isArray(assessment.jobs)) ? assessment.jobs : [];
     const _axes = (assessment && Array.isArray(assessment.axes)) ? assessment.axes : [];
     const _radar = (assessment && assessment.radar)
       ? assessment.radar
-      : { labels: DIMENSION_LABELS, values: [0.5, 0.5, 0.5, 0.5, 0.5, 0.5] };
+      : { labels: FALLBACK_DIMENSION_LABELS, values: [0.5, 0.5, 0.5, 0.5, 0.5, 0.5] };
     const selectedJob = _jobs.find(job => job.id === st.selectedJobId)
       || _jobs[st.openJob]
       || _jobs[0]
@@ -1083,8 +1087,8 @@ class Component extends DCLogic {
       searchLiveJobs: () => this.runLiveSearch(),
       liveMessage: st.liveMessage,
       liveMessageStyle: "padding: 10px 12px; font-size: 11px; line-height: 1.7; border-left: 2px solid " + (st.liveMessageKind === "error" ? "#B4535E" : st.liveMessageKind === "success" ? "#8FA882" : "#A8BCCB") + "; background: " + (st.liveMessageKind === "error" ? "#FDF2F1" : st.liveMessageKind === "success" ? "#F0F4ED" : "#EEF3F6") + "; color: #4C5148;",
-      hasLiveCandidates: st.liveCandidates.length > 0,
-      liveCandidates: st.liveCandidates.map(candidate => ({
+      hasLiveCandidates: liveCandidates.length > 0,
+      liveCandidates: liveCandidates.map(candidate => ({
         title: candidate.title || "未命名岗位",
         meta: [candidate.company, candidate.location, candidate.direction_title].filter(Boolean).join(" · ") || "请打开来源核对详细信息",
         sourceUrl: candidate.source_url,
@@ -1103,7 +1107,7 @@ class Component extends DCLogic {
           const b3 = Array.isArray(st.answers.B3) ? st.answers.B3 : [];
           opts = b3.filter(k => ["A","B","C","D","E"].includes(k)).map(k => k + ". " + B4_LABELS[k]);
         }
-        return opts.map((text) => {
+        return (Array.isArray(opts) ? opts : []).map((text) => {
           const on = ans === text.charAt(0);
           return {
             text,
@@ -1334,8 +1338,12 @@ class Component extends DCLogic {
   buildRadar(radar) {
     const e = React.createElement;
     const cx = 178, cy = 176, R = 140;
-    const labels = radar.labels;
-    const vals = radar.values;
+    const labels = Array.isArray(radar?.labels) && radar.labels.length
+      ? radar.labels
+      : FALLBACK_DIMENSION_LABELS;
+    const vals = Array.isArray(radar?.values) && radar.values.length
+      ? radar.values.map(value => Math.max(0, Math.min(1, Number(value) || 0)))
+      : [0.5, 0.5, 0.5, 0.5, 0.5, 0.5];
     const pt = (i, r) => {
       const ang = -Math.PI / 2 + i * Math.PI / 3;
       return [cx + Math.cos(ang) * R * r, cy + Math.sin(ang) * R * r];
